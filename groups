@@ -1,3 +1,6 @@
-# UUID       	Group Name
+# UUID                 	Group Name
 #
-user:LeeLeahy	user/Lee Leahy (LeeLeahy)
+global:Anonymous-Users 	Anonymous Users
+global:Registered-Users	Registered Users
+user:LeeLeahy          	user/Lee Leahy (LeeLeahy)
+user:feizwang          	user/Fei Wang (feizwang)
