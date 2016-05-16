@@ -26,7 +26,6 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include <IntelQNCConfig.h>
 #include <Pcal9555.h>
 #include <Platform.h>
-#include <PlatformBoards.h>
 
 #include <Library/PlatformPcieHelperLib.h>
 
