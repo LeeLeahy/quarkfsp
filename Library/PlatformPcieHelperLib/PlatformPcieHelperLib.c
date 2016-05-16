@@ -16,6 +16,12 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include "CommonHeader.h"
 
 //
+// Legacy Gpio to be used to assert / deassert PCI express PERST# signal
+// on Galileo Gen 2 platform.
+//
+#define GALILEO_GEN2_PCIEXP_PERST_RESUMEWELL_GPIO       0
+
+//
 // Routines local to this source module.
 //
 VOID
