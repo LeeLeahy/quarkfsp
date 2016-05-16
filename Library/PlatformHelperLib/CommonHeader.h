@@ -25,6 +25,7 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include <Library/CapsuleLib.h>
 #include <Library/IntelQNCLib.h>
 #include <Platform.h>
+#include <PlatformBoards.h>
 #include <Pcal9555.h>
 #include <QNCAccess.h>
 #include <Library/QNCAccessLib.h>
