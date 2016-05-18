@@ -40,12 +40,6 @@
   DEFINE PERFORMANCE_ENABLE  = FALSE
   DEFINE LOGGING             = FALSE
 
-  !if $(GALILEO) == GEN1
-    DEFINE BAUD_RATE         = 460800
-  !endif
-  !if $(GALILEO) == GEN2
-    DEFINE BAUD_RATE         = 921600
-  !endif
   !if $(TARGET) == "DEBUG"
     DEFINE LOGGING = TRUE
   !endif
@@ -216,10 +210,6 @@
 !endif
   gEfiMdePkgTokenSpaceGuid.PcdPostCodePropertyMask|0x18
   gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress|0xE0000000
-  gEfiMdePkgTokenSpaceGuid.PcdUartDefaultBaudRate|$(BAUD_RATE)
-  gEfiMdePkgTokenSpaceGuid.PcdUartDefaultDataBits|8
-  gEfiMdePkgTokenSpaceGuid.PcdUartDefaultParity|1
-  gEfiMdePkgTokenSpaceGuid.PcdUartDefaultStopBits|1
   gEfiMdePkgTokenSpaceGuid.PcdDefaultTerminalType|0
   gEfiMdePkgTokenSpaceGuid.PcdPerformanceLibraryPropertyMask|0x00
   gEfiMdeModulePkgTokenSpaceGuid.PcdLoadModuleAtFixAddressEnable|0
@@ -229,16 +219,7 @@
   # waiting for RTC to be busy.
   gEfiMdeModulePkgTokenSpaceGuid.PcdRealTimeClockUpdateTimeout|500000
 
-  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialUseMmio|TRUE
-  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase|0x9000B000
-  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialBaudRate|$(BAUD_RATE)
-  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialUseHardwareFlowControl|FALSE
-  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialLineControl|0x03
-  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialFifoControl|0x07
-  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialDetectCable|FALSE
-  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialClockRate|44236800
-  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialPciDeviceInfo|{0x14, 0x05, 0x84, 0x00, 0xFF}
-  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterStride|4
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase|0xA0019000
 
   #
   #  typedef struct {
