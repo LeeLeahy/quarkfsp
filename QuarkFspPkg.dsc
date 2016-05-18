@@ -149,7 +149,7 @@
   #
   IohLib|QuarkSocPkg/QuarkSouthCluster/Library/IohLib/IohLib.inf
   I2cLib|QuarkSocPkg/QuarkSouthCluster/Library/I2cLib/I2cLib.inf
-  SerialPortLib|QuarkFspPkg/Override/MdeModulePkg/Library/BaseSerialPortLib16550/BaseSerialPortLib16550.inf
+  SerialPortLib|QuarkFspPkg/Library/SerialPortLib/SerialPortLib.inf
 
   #
   # Quark Platform

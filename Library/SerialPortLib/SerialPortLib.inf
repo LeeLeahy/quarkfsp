@@ -14,8 +14,8 @@
 
 [Defines]
   INF_VERSION                    = 0x00010005
-  BASE_NAME                      = BaseSerialPortLib16550
-  MODULE_UNI_FILE                = BaseSerialPortLib16550.uni
+  BASE_NAME                      = SerialPortLib
+  MODULE_UNI_FILE                = SerialPortLib.uni
   FILE_GUID                      = 9E7C00CF-355A-4d4e-BF60-0428CFF95540
   MODULE_TYPE                    = BASE
   VERSION_STRING                 = 1.1
@@ -31,7 +31,7 @@
   PciLib
 
 [Sources]
-  BaseSerialPortLib16550.c
+  SerialPortLib.c
 
 [Pcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase            ## CONSUMES
