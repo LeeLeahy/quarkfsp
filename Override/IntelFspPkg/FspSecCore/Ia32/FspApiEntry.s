@@ -19,8 +19,6 @@
 .equ MSR_IA32_BIOS_UPDT_TRIG,                0x00000079
 .equ MSR_IA32_BIOS_SIGN_ID,                  0x0000008b
 
-.extern SecCarInit
-
 MicrocodeHdr:
 .equ        MicrocodeHdrVersion,                 0x0000
 .equ        MicrocodeHdrRevision,                0x0004
@@ -86,7 +84,7 @@ LoadMicrocodeParamsEnd:
 
 .macro LOAD_REGS
   pshufd     $0xe4, %xmm7, %xmm7
-  movd       %xmm7, %ebp 
+  movd       %xmm7, %ebp
   pshufd     $0xe4, %xmm7, %xmm7
 #
   pshufd     $0x39, %xmm7, %xmm7
@@ -147,12 +145,12 @@ ASM_PFX(mFpuControlWord): .word     0x027F
     # all exceptions masked, round-to-nearest, flush to zero for masked underflow
     #
 ASM_PFX(mMmxControlWord): .long     0x01F80
-SseError:      
+SseError:
     #
     # Processor has to support SSE
     #
-    jmp     SseError      
-NextAddress:            
+    jmp     SseError
+NextAddress:
     #
     # Initialize floating point units
     #
@@ -549,14 +547,6 @@ ASM_PFX(TempRamInitApi):
   movl      $0x80000002, %eax
   jz        TempRamInitExit
 
-  # Call Sec CAR Init
-  lea       SecCarInitDone, %eax
-  jmp       SecCarInit
-
-SecCarInitDone:
-  cmpl      $0, %eax
-  jnz       TempRamInitExit
-
   #
   # Save return address to ecx
   #
@@ -692,7 +682,7 @@ ASM_PFX(FspApiCommon):
 
   #
   # Stack must be ready
-  #  
+  #
   pushl   %eax
   addl    $0x04, %esp
   cmpl    -4(%esp), %eax
@@ -727,8 +717,8 @@ FspApiCommonL1:
 FspApiCommonL2:
   #
   # FspInit and FspMemoryInit APIs, setup the initial stack frame
-  #  
-  
+  #
+
   #
   # Place holder to store the FspInfoHeader pointer
   #
@@ -767,7 +757,7 @@ FspApiCommonL2:
   # Pass the API Idx to SecStartup
   #
   pushl   %eax
-  
+
   #
   # Pass the BootLoader stack to SecStartup
   #

@@ -61,34 +61,6 @@ ASM_PFX(_ModuleEntryPoint):
 
     jmp     .
 
-#-----------------------------------------------------------------------
-# FUNCTION:
-#    This fucntion will be called by TempRamInit FSP API to do platfrom
-#    specific NEM initialization.
-#
-# IN:
-#    EAX:  Return address
-#    ESP:  TempRamInit fake stack pointer
-#      [ESP+00h]:  TempRamInit API return address
-#      [ESP+04h]:  TempRamInit parameter block pointer
-#
-# OUT:
-#    EAX:  Error code
-#               0:  Success
-#          Others:  Failure
-#
-#-----------------------------------------------------------------------
-ASM_GLOBAL ASM_PFX(SecCarInit)
-ASM_PFX(SecCarInit):
-
-    #
-    # coreboot should initialize ESRAM before TempRamInit API,
-    # do nothing here.
-    #
-    movl    %eax, %edx
-    xorl    %eax, %eax
-    jmp     %edx
-
     #
     # Reference the routines to get the linker to pull them in
     #
