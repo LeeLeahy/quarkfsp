@@ -548,52 +548,6 @@ ASM_PFX(TempRamInitApi):
   jz        TempRamInitExit
 
   #
-  # Save return address to ecx
-  #
-  movl      %esp, %ecx
-
-  #
-  # Save parameter pointer in edx
-  #
-  movl      4(%esp), %edx
-
-  #
-  # Enable FSP STACK
-  #
-  movl      PcdGet32 (PcdTemporaryRamBase), %esp
-  addl      PcdGet32 (PcdTemporaryRamSize), %esp
-
-  pushl     $DATA_LEN_OF_MCUD     # Size of the data region
-  pushl     $0x4455434D           # Signature of the  data region 'MCUD'
-  pushl     12(%edx)              # Code size
-  pushl     8(%edx)               # Code base
-  pushl     4(%edx)               # Microcode size, 0, no ucode for Quark
-  pushl     (%edx)                # Microcode base, 0, no ucode for Quark
-
-  #
-  # Save API entry/exit timestamp into stack
-  #
-  pushl     $DATA_LEN_OF_PER0    # Size of the data region
-  pushl     $0x30524550          # Signature of the  data region 'PER0'
-  xorl      %edx, %edx
-  pushl     %edx
-  xorl      %eax, %eax
-  pushl     %eax
-  rdtsc
-  pushl     %edx
-  pushl     %eax
-
-  #
-  # Terminator for the data on stack
-  #
-  pushl     $0
-
-  #
-  # Restore return address to esp
-  #
-  movl      %ecx, %esp
-
-  #
   # Set ECX/EDX to the bootloader temporary memory range
   #
   movl      PcdGet32 (PcdTemporaryRamBase), %ecx
@@ -642,6 +596,50 @@ ASM_PFX(NotifyPhaseApi):
 #----------------------------------------------------------------------------
 ASM_GLOBAL ASM_PFX(FspMemoryInitApi)
 ASM_PFX(FspMemoryInitApi):
+  #
+  # Save return address to ecx
+  #
+  movl      %esp, %ecx
+
+  #
+  # Enable FSP STACK
+  #
+  movl      PcdGet32 (PcdTemporaryRamBase), %esp
+  addl      PcdGet32 (PcdTemporaryRamSize), %esp
+
+  pushl     $DATA_LEN_OF_MCUD     # Size of the data region
+  pushl     $0x4455434D           # Signature of the  data region 'MCUD'
+  pushl     $0x00800000           # Code size
+  pushl     $0xff800000           # Code base
+  pushl     $0                    # Microcode size, 0, no ucode for Quark
+  pushl     $0                    # Microcode base, 0, no ucode for Quark
+
+  #
+  # Save API entry/exit timestamp into stack
+  #
+  pushl     $DATA_LEN_OF_PER0    # Size of the data region
+  pushl     $0x30524550          # Signature of the  data region 'PER0'
+  xorl      %edx, %edx
+  pushl     %edx
+  xorl      %eax, %eax
+  pushl     %eax
+  rdtsc
+  pushl     %edx
+  pushl     %eax
+
+  #
+  # Terminator for the data on stack
+  #
+  pushl     $0
+
+  #
+  # Restore return address to esp
+  #
+  movl      %ecx, %esp
+
+  #
+  # Call MemoryInit
+  #
   movl   $0x03, %eax
   jmp    FspApiCommon
 
