@@ -4,9 +4,9 @@
 # This package provides specific modules of FSP for Intel Quark X1000 SoC.
 # Copyright (c) 2013 - 2016 Intel Corporation.
 #
-# This program and the accompanying materials
-# are licensed and made available under the terms and conditions of the BSD License
-# which accompanies this distribution.  The full text of the license may be found at
+# This program and the accompanying materials are licensed and made available
+# under the terms and conditions of the BSD License which accompanies this
+# distribution.  The full text of the license may be found at
 # http://opensource.org/licenses/bsd-license.php
 #
 # THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
@@ -25,8 +25,8 @@ DEFINE FLASH_SIZE       = 0x00040000     #The flash size in bytes of the FSP
 DEFINE FLASH_BLOCK_SIZE = 0x00001000     #The block size
 DEFINE FLASH_NUM_BLOCKS = 0x40           #The number of blocks
 
-DEFINE FLASH_FSP_FV2_OFFSET  = 0x00000000
-DEFINE FLASH_FSP_FV2_SIZE    = 0x00008000
+DEFINE FLASH_FSP_FV2_OFFSET   = 0x00000000
+DEFINE FLASH_FSP_FV2_SIZE     = 0x00008000
 DEFINE FLASH_FSP_FV1_OFFSET   = 0x00008000
 DEFINE FLASH_FSP_FV1_SIZE     = 0x00038000
 
