@@ -41,6 +41,7 @@
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec  
   IntelFsp2Pkg/IntelFsp2Pkg.dec
+  QuarkFspPkg/QuarkFspPkg.dec
 
 [LibraryClasses]
   BaseMemoryLib
@@ -50,7 +51,6 @@
   SerialPortLib
   FspSwitchStackLib
   FspCommonLib
-  FspSecPlatformLib
 
 [Pcd]
   gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress           ## UNDEFINED

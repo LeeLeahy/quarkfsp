@@ -15,8 +15,9 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 
 #include <PiPei.h>
 #include <Library/PcdLib.h>
-#include <FspInfoHeader.h>
-#include <FspPatchTable.h>
+#include <FspEas.h>
+#include <FspDataTable.h>
+#include <FspGlobalData.h>
 
 #define  UINT64_TO_BYTE_ARRAY(x)  {(UINT8)(x),(UINT8)((x)>>8),(UINT8)((x)>>16),\
                                    (UINT8)((x)>>24),(UINT8)((x)>>32), \
@@ -26,6 +27,7 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 typedef struct{
   FSP_INFO_HEADER          FspInfoHeader;
   FSP_INFO_EXTENDED_HEADER FspInfoExtendedHeader;
+  FSP_DATA_TABLE           FspDataTable;
   FSP_PATCH_TABLE          FspPatchTable;
 }TABLES;
 
@@ -36,27 +38,29 @@ TABLES mTable =
   {
     FSP_INFO_HEADER_SIGNATURE,             // UINT32  Signature  (FSPH)
     sizeof(FSP_INFO_HEADER),               // UINT32  HeaderLength;
-    {0x00, 0x00, 0x00},                    // UINT8   Reserved1[3];
+    {0x00, 0x00},                          // UINT8   Reserved1[2];
+    0,                                     // UINT8   SpecVersion
     FixedPcdGet8(PcdFspHeaderRevision),    // UINT8   HeaderRevision;
     FixedPcdGet32(PcdFspImageRevision),    // UINT32  ImageRevision;
 
-    UINT64_TO_BYTE_ARRAY(
+    UINT64_TO_BYTE_ARRAY( \
     FixedPcdGet64(PcdFspImageIdString)),   // CHAR8   ImageId[8];
 
     FixedPcdGet32(PcdFspAreaSize),         // UINT32  ImageSize;
     FixedPcdGet32(PcdFspAreaBaseAddress),  // UINT32  ImageBase;
 
-    FixedPcdGet16(PcdFspImageAttributes),  // UINT32  ImageAttribute;
+    FixedPcdGet16(PcdFspImageAttributes),  // UINT16  ImageAttribute;
+    FixedPcdGet16(PcdFspComponentAttributes),// UINT16  ComponentAttribute;
     0x12345678,                            // UINT32  CfgRegionOffset;
     0x12345678,                            // UINT32  CfgRegionSize;
     0x00000006,                            // UINT32  ApiEntryNum;
 
-    0x12345678,                            // UINT32  TempRamInitEntry;
-    0x12345678,                            // UINT32  FspInitEntry;
-    0x12345678,                            // UINT32  NotifyPhaseEntry;
-    0x12345678,                            // UINT32  FspMemoryInitEntry;
-    0x12345678,                            // UINT32  TempRamExitEntry;
-    0x12345678,                            // UINT32  FspSiliconInitEntry;
+    0x00000000,                            // UINT32  TempRamInitEntry;
+    0x00000000,                            // UINT32  FspInitEntry;
+    0x00000000,                            // UINT32  NotifyPhaseEntry;
+    0x00000000,                            // UINT32  FspMemoryInitEntry;
+    0x00000000,                            // UINT32  TempRamExitEntry;
+    0x00000000,                            // UINT32  FspSiliconInitEntry;
   },
   {
     FSP_INFO_EXTENDED_HEADER_SIGNATURE,    // UINT32  Signature  (FSPE)
@@ -68,17 +72,23 @@ TABLES mTable =
     0x00000000,                            // UINT32  FspProducerDataSize;
   },
   {
+    FSP_DATA_SIGNATURE,                    // UINT32  Signature  (FSPD)
+    sizeof(FSP_DATA_TABLE),                // UINT32  Length;
+    FixedPcdGet32(PcdFlashFvFsptBase),     // UINT32  FsptBase;
+    FixedPcdGet32(PcdFlashFvFspmBase),     // UINT32  FspmBase;
+    FixedPcdGet32(PcdFlashFvFspsBase),     // UINT32  FspsBase;
+  },
+  {
     FSP_FSPP_SIGNATURE,                    // UINT32  Signature  (FSPP)
     sizeof(FSP_PATCH_TABLE),               // UINT16  HeaderLength;
     FSPP_HEADER_REVISION_1,                // UINT8   HeaderRevision;
     0x00,                                  // UINT8   Reserved;
     2,                                     // UINT32  PatchEntryNum;
-    {
-      0xFFFFFFFC,                          // UINT32  Patch FVBASE at end of FV
-      0x12345678                           // UINT32  Patch VpdBase
-    }
+    {0xFFFFFFFC,                           // UINT32  Patch FVBASE at end of FV
+     0x12345678}                           // UINT32  Patch VpdBase
   }
 };
+
 
 VOID*
 ReferenceAcpiTable (
