@@ -46,7 +46,7 @@ TABLES mTable =
     FixedPcdGet32(PcdFspAreaSize),         // UINT32  ImageSize;
     FixedPcdGet32(PcdFspAreaBaseAddress),  // UINT32  ImageBase;
 
-    FixedPcdGet32(PcdFspImageAttributes),  // UINT32  ImageAttribute;
+    FixedPcdGet16(PcdFspImageAttributes),  // UINT32  ImageAttribute;
     0x12345678,                            // UINT32  CfgRegionOffset;
     0x12345678,                            // UINT32  CfgRegionSize;
     0x00000006,                            // UINT32  ApiEntryNum;

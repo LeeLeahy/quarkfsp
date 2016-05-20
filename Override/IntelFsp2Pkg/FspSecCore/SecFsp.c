@@ -12,6 +12,8 @@
 **/
 
 #include "SecFsp.h"
+#include "SecMain.h"
+#include <Library/DirectSerial.h>
 
 /**
 
@@ -132,17 +134,48 @@ FspGlobalDataInit (
   //
   // Set FSP Global Data pointer
   //
+SerialPortWriteString("FspGlobalDataInit entered\r\n");
+SerialPortWriteString("  Parameters:\r\n    ");
+SerialPortWriteAddress(PeiFspData);
+SerialPortWriteString(": PeiFspData\r\n    ");
+SerialPortWriteHex4(BootLoaderStack);
+SerialPortWriteString(": BootLoaderStack\r\n    ");
+SerialPortWriteHex1(ApiIdx);
+SerialPortWriteString(": ApiIdx\r\n");
+
+SerialPortWriteString("  Calling SetFspGlobalDataPointer\r\n");
   SetFspGlobalDataPointer    (PeiFspData);
+
+  //
+  // Ensure the golbal data pointer is valid
+  //
+SerialPortWriteString("  Calling GetFspGlobalDataPointer\r\n");
+SerialPortWriteAddress(PeiFspData);
+SerialPortWriteString(": GetFspGlobalDataPointer()\r\n");
+SerialPortWriteString("  Calling ASSERT\r\n");
+  ASSERT (GetFspGlobalDataPointer () == PeiFspData);
+
+SerialPortWriteString("  Calling ZeroMem ( 0x");
+SerialPortWriteAddress(PeiFspData);
+SerialPortWriteString(", 0x");
+SerialPortWriteHex4(sizeof(FSP_GLOBAL_DATA));
+SerialPortWriteString(" ) at 0x");
+SerialPortWriteAddress(ZeroMem);
+SerialPortWriteString("\r\n");
+//SetDebugWait(0x10);
+//while (GetDebugWait() != 0);
   ZeroMem  ((VOID *)PeiFspData, sizeof(FSP_GLOBAL_DATA));
 
+SerialPortWriteString("    Initializing PeiFspData\r\n");
   PeiFspData->Signature            = FSP_GLOBAL_DATA_SIGNATURE;
   PeiFspData->Version              = 0;
   PeiFspData->CoreStack            = BootLoaderStack;
   PeiFspData->PerfIdx              = 2;
   PeiFspData->PerfSig              = FSP_PERFORMANCE_DATA_SIGNATURE;
-  PeiFspData->PlatformData.CarBase = AsmReadMsr32 (0x200) & ~(0x6);
-  PeiFspData->PlatformData.CarSize = ~(AsmReadMsr32(0x201) & ~(0x800)) + 1;
+  PeiFspData->PlatformData.CarBase = 0x80040000;
+  PeiFspData->PlatformData.CarSize = 0x00030000;
 
+SerialPortWriteString("  Calling SetFspMeasurePoint\r\n");
   SetFspMeasurePoint (FSP_PERF_ID_API_FSP_MEMORY_INIT_ENTRY);
 
   //
@@ -150,22 +183,28 @@ FspGlobalDataInit (
   // It may have multiple FVs, so look into the last one for FSP header
   //
   PeiFspData->FspInfoHeader      = (FSP_INFO_HEADER *)AsmGetFspInfoHeader();
+SerialPortWriteString("  Calling SecGetPlatformData\r\n");
   SecGetPlatformData (PeiFspData);
 
   //
   // Set API calling mode
   //
+SerialPortWriteString("  Calling SetFspApiCallingIndex\r\n");
   SetFspApiCallingIndex (ApiIdx);
-  
+
   //
   // Set UPD pointer
   //
+SerialPortWriteString("  Calling GetFspApiParameter\r\n");
   FspmUpdDataPtr = (VOID *) GetFspApiParameter ();
   if (FspmUpdDataPtr == NULL) {
     FspmUpdDataPtr = (VOID *)(PeiFspData->FspInfoHeader->ImageBase + PeiFspData->FspInfoHeader->CfgRegionOffset);
   }
+SerialPortWriteString("  Calling SetFspUpdDataPointer\r\n");
   SetFspUpdDataPointer (FspmUpdDataPtr);
+SerialPortWriteString("  Calling SetFspMemoryInitUpdDataPointer\r\n");
   SetFspMemoryInitUpdDataPointer (FspmUpdDataPtr);
+SerialPortWriteString("  Calling SetFspSiliconInitUpdDataPointer\r\n");
   SetFspSiliconInitUpdDataPointer (NULL);
 
   //
@@ -174,18 +213,15 @@ FspGlobalDataInit (
   // the FSP global data is not initialized at that time. So do it again
   // for safe.
   //
+SerialPortWriteString("  Calling SerialPortInitialize\r\n");
   SerialPortInitialize ();
-
-  //
-  // Ensure the golbal data pointer is valid
-  //
-  ASSERT (GetFspGlobalDataPointer () == PeiFspData);
 
   for (Idx = 0; Idx < 8; Idx++) {
     ImageId[Idx] = PeiFspData->FspInfoHeader->ImageId[Idx];
   }
   ImageId[Idx] = 0;
 
+SerialPortWriteString("  Calling DEBUG\r\n");
   DEBUG ((DEBUG_INFO | DEBUG_INIT, "\n============= FSP Spec v%d.%d Header Revision v%x (%a v%x.%x.%x.%x) =============\n", \
          (PeiFspData->FspInfoHeader->SpecVersion >> 4) & 0xF, \
          PeiFspData->FspInfoHeader->SpecVersion & 0xF, \
@@ -195,6 +231,7 @@ FspGlobalDataInit (
          (PeiFspData->FspInfoHeader->ImageRevision >> 16) & 0xFF, \
          (PeiFspData->FspInfoHeader->ImageRevision >> 8) & 0xFF, \
          PeiFspData->FspInfoHeader->ImageRevision & 0xFF));
+SerialPortWriteString("FspGlobalDataInit exiting\r\n");
 }
 
 /**
@@ -213,4 +250,16 @@ FspDataPointerFixUp (
 
   NewFspData = (FSP_GLOBAL_DATA *)((UINTN)GetFspGlobalDataPointer() + (UINTN)OffsetGap);
   SetFspGlobalDataPointer (NewFspData);
+}
+
+volatile UINT32 GetDebugWait(VOID)
+{
+	FSP_GLOBAL_DATA *fgd = GetFspGlobalDataPointer();
+	return fgd->Reserved2[0];
+}
+
+VOID SetDebugWait ( UINT32 value )
+{
+	FSP_GLOBAL_DATA *fgd = GetFspGlobalDataPointer();
+	fgd->Reserved2[0] = value;
 }

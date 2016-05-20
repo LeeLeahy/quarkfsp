@@ -54,6 +54,17 @@ FSP_HEADER_IMGBASE_OFFSET    EQU   1Ch
 FSP_HEADER_CFGREG_OFFSET     EQU   24h
 
 ;----------------------------------------------------------------------------
+; TempRamExitApi API
+;
+; This API tears down temporary RAM
+;
+;----------------------------------------------------------------------------
+global ASM_PFX(TempRamExitApi)
+ASM_PFX(TempRamExitApi):
+  xor    eax, eax       ; Set EFI_SUCCESS
+  ret
+
+;----------------------------------------------------------------------------
 ; FspMemoryInit API
 ;
 ; This FSP API is called after TempRamInit and initializes the memory.
@@ -62,27 +73,7 @@ FSP_HEADER_CFGREG_OFFSET     EQU   24h
 global ASM_PFX(FspMemoryInitApi)
 ASM_PFX(FspMemoryInitApi):
   mov    eax,  3 ; FSP_API_INDEX.FspMemoryInitApiIndex
-  jmp    ASM_PFX(FspApiCommon)
 
-;----------------------------------------------------------------------------
-; TempRamExitApi API
-;
-; This API tears down temporary RAM
-;
-;----------------------------------------------------------------------------
-global ASM_PFX(TempRamExitApi)
-ASM_PFX(TempRamExitApi):
-  mov    eax,  4 ; FSP_API_INDEX.TempRamExitApiIndex
-  jmp    ASM_PFX(FspApiCommon)
-
-;----------------------------------------------------------------------------
-; FspApiCommonContinue API
-;
-; This is the FSP API common entry point to resume the FSP execution
-;
-;----------------------------------------------------------------------------
-global ASM_PFX(FspApiCommonContinue)
-ASM_PFX(FspApiCommonContinue):
   ;
   ; EAX holds the API index
   ;
@@ -115,23 +106,12 @@ ASM_PFX(FspApiCommonContinue):
   sub     esp, 8
   sidt    [esp]
 
-
-  ;  Get Stackbase and StackSize from FSPM_UPD Param 
-  mov    edx, [esp + API_PARAM1_OFFSET] 
-  cmp    edx, 0
-  jnz    FspStackSetup  
-
-  ; Get UPD default values if FspmUpdDataPtr (ApiParam1) is null
-  push   eax
-  call   ASM_PFX(AsmGetFspInfoHeader)
-  mov    edx, [eax + FSP_HEADER_IMGBASE_OFFSET]
-  add    edx, [eax + FSP_HEADER_CFGREG_OFFSET]
-  pop    eax
-  
-  FspStackSetup:
+  ;  Get Stackbase and StackSize from FSPM_UPD Param
+  mov    edx, [esp + API_PARAM1_OFFSET]
   mov    edi, [edx + FSPM_UPD_COMMON.StackBase]
   mov    ecx, [edx + FSPM_UPD_COMMON.StackSize]
   add    edi, ecx
+
   ;
   ; Setup new FSP stack
   ;
@@ -147,25 +127,6 @@ ASM_PFX(FspApiCommonContinue):
   ; Pass the BootLoader stack to SecStartup
   ;
   push    edi
-
-  ;
-  ; Pass entry point of the PEI core
-  ;
-  call    ASM_PFX(AsmGetFspBaseAddress)
-  mov     edi, eax
-  call    ASM_PFX(AsmGetPeiCoreOffset)
-  add     edi, eax
-  push    edi
-
-  ;
-  ; Pass BFV into the PEI Core
-  ; It uses relative address to calucate the actual boot FV base
-  ; For FSP implementation with single FV, PcdFspBootFirmwareVolumeBase and
-  ; PcdFspAreaBaseAddress are the same. For FSP with mulitple FVs,
-  ; they are different. The code below can handle both cases.
-  ;
-  call    ASM_PFX(AsmGetFspBaseAddress)
-  push    eax
 
   ;
   ; Pass stack base and size into the PEI Core

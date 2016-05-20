@@ -32,7 +32,6 @@
   Ia32/Stack.nasm
   Ia32/InitializeFpu.nasm
   Ia32/FspApiEntryT.nasm
-  Ia32/FspHelper.nasm
 
 [Binaries.Ia32]
   RAW|Vtf0/Bin/ResetVec.ia32.raw |GCC
@@ -41,6 +40,7 @@
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
   IntelFsp2Pkg/IntelFsp2Pkg.dec
+  QuarkFspPkg/QuarkFspPkg.dec
 
 [LibraryClasses]
   BaseMemoryLib
@@ -50,7 +50,6 @@
   SerialPortLib
   FspSwitchStackLib
   FspCommonLib
-  FspSecPlatformLib
 
 [Pcd]
   gIntelFsp2PkgTokenSpaceGuid.PcdTemporaryRamBase              ## CONSUMES
@@ -60,6 +59,7 @@
 [FixedPcd]
   gIntelFsp2PkgTokenSpaceGuid.PcdFspMaxPatchEntry              ## CONSUMES
   gIntelFsp2PkgTokenSpaceGuid.PcdFspMaxPerfEntry               ## CONSUMES
+  gQuarkFspTokenSpaceGuid.PcdFspTemporaryRamSize               ## CONSUMES
 
 [Ppis]
   gEfiTemporaryRamSupportPpiGuid                              ## PRODUCES

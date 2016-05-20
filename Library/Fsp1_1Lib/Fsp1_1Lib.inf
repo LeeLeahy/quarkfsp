@@ -1,0 +1,38 @@
+## @file
+#  FspLib instance for FSP 1.1
+#
+#  Copyright (c) 2016, Intel Corporation. All rights reserved.<BR>
+#  This program and the accompanying materials are licensed and made available
+#  under the terms and conditions of the BSD License which accompanies this
+#  distribution.  The full text of the license may be found at
+#  http://opensource.org/licenses/bsd-license.php
+#
+#  THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = Fsp1_1Lib
+  MODULE_UNI_FILE                = Fsp1_1Lib.uni
+  FILE_GUID                      = 70D1A59A-B420-4053-BE78-3D08AF66EB83
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.1
+  LIBRARY_CLASS                  = FspLib
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  IntelFspPkg/IntelFspPkg.dec
+  QuarkFspPkg/QuarkFspPkg.dec
+  QuarkSocPkg/QuarkSocPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  DebugLib
+  FspCommonLib
+  HobLib
+
+[Sources]
+  Fsp1_1Lib.c

@@ -109,77 +109,58 @@ UpdateBootMode (
   OUT EFI_BOOT_MODE        *BootModePtr
   )
 {
-  EFI_STATUS          Status;
-  FSP_INIT_RT_COMMON_BUFFER  *FspInitRtBuffer;
-  CHAR16               *BootModeDescStr;
+  EFI_STATUS Status;
+  CHAR16 *BootModeDescStr;
 
   //
-  // Detect BootMode here
+  // Get BootMode from Boot Loader
   //
-  FspInitRtBuffer = (FSP_INIT_RT_COMMON_BUFFER *)((FSP_MEMORY_INIT_PARAMS *)GetFspApiParameter())->RtBufferPtr;
+  *BootModePtr = (EFI_BOOT_MODE)GetBootMode();
 
-  if (FspInitRtBuffer != NULL) {
-    //
-    // Get BootMode from Boot Loader
-    //
-    *BootModePtr = (EFI_BOOT_MODE)FspInitRtBuffer->BootMode;
-
-    //
-    //Detect BootMode
-    //
-    switch (*BootModePtr) {
-    case BOOT_WITH_FULL_CONFIGURATION:
-	    BootModeDescStr = L"BOOT_WITH_FULL_CONFIGURATION";
-	    break;
-    case BOOT_WITH_MINIMAL_CONFIGURATION:
-	    BootModeDescStr = L"BOOT_WITH_MINIMAL_CONFIGURATION";
-	    break;
-    case BOOT_ASSUMING_NO_CONFIGURATION_CHANGES:
-	    BootModeDescStr = L"BOOT_ASSUMING_NO_CONFIGURATION_CHANGES";
-	    break;
-    case BOOT_WITH_FULL_CONFIGURATION_PLUS_DIAGNOSTICS:
-	    BootModeDescStr = L"BOOT_WITH_FULL_CONFIGURATION_PLUS_DIAGNOSTICS";
-	    break;
-    case BOOT_WITH_DEFAULT_SETTINGS:
-	    BootModeDescStr = L"BOOT_WITH_DEFAULT_SETTINGS";
-	    break;
-    case BOOT_ON_S4_RESUME:
-	    BootModeDescStr = L"BOOT_ON_S4_RESUME";
-	    break;
-    case BOOT_ON_S5_RESUME:
-	    BootModeDescStr = L"BOOT_ON_S5_RESUME";
-	    break;
-    case BOOT_WITH_MFG_MODE_SETTINGS:
-	    BootModeDescStr = L"BOOT_WITH_MFG_MODE_SETTINGS";
-	    break;
-    case BOOT_ON_S2_RESUME:
-	    BootModeDescStr = L"BOOT_ON_S2_RESUME";
-	    break;
-    case BOOT_ON_S3_RESUME:
-	    BootModeDescStr = L"BOOT_ON_S3_RESUME";
-	    break;
-    case BOOT_ON_FLASH_UPDATE:
-	    BootModeDescStr = L"BOOT_ON_FLASH_UPDATE";
-	    break;
-    case BOOT_IN_RECOVERY_MODE:
-	    BootModeDescStr = L"BOOT_IN_RECOVERY_MODE";
-	    break;
-    default:
-	    BootModeDescStr = L"UNKOWN";
-    }
-  } else {
-    //
-    // Fail to get BootMode from Boot Loader
-    //
-    DEBUG((EFI_D_ERROR, "No valid BootMode, using default!\n"));
-
-    //
-    // Set FULL CONFIGRATION
-    //
-    BootModeDescStr = L"FullCfg";
-    *BootModePtr = BOOT_WITH_FULL_CONFIGURATION;
+  //
+  //Detect BootMode
+  //
+  switch (*BootModePtr) {
+  case BOOT_WITH_FULL_CONFIGURATION:
+    BootModeDescStr = L"BOOT_WITH_FULL_CONFIGURATION";
+    break;
+  case BOOT_WITH_MINIMAL_CONFIGURATION:
+    BootModeDescStr = L"BOOT_WITH_MINIMAL_CONFIGURATION";
+    break;
+  case BOOT_ASSUMING_NO_CONFIGURATION_CHANGES:
+    BootModeDescStr = L"BOOT_ASSUMING_NO_CONFIGURATION_CHANGES";
+    break;
+  case BOOT_WITH_FULL_CONFIGURATION_PLUS_DIAGNOSTICS:
+    BootModeDescStr = L"BOOT_WITH_FULL_CONFIGURATION_PLUS_DIAGNOSTICS";
+    break;
+  case BOOT_WITH_DEFAULT_SETTINGS:
+    BootModeDescStr = L"BOOT_WITH_DEFAULT_SETTINGS";
+    break;
+  case BOOT_ON_S4_RESUME:
+    BootModeDescStr = L"BOOT_ON_S4_RESUME";
+    break;
+  case BOOT_ON_S5_RESUME:
+    BootModeDescStr = L"BOOT_ON_S5_RESUME";
+    break;
+  case BOOT_WITH_MFG_MODE_SETTINGS:
+    BootModeDescStr = L"BOOT_WITH_MFG_MODE_SETTINGS";
+    break;
+  case BOOT_ON_S2_RESUME:
+    BootModeDescStr = L"BOOT_ON_S2_RESUME";
+    break;
+  case BOOT_ON_S3_RESUME:
+    BootModeDescStr = L"BOOT_ON_S3_RESUME";
+    break;
+  case BOOT_ON_FLASH_UPDATE:
+    BootModeDescStr = L"BOOT_ON_FLASH_UPDATE";
+    break;
+  case BOOT_IN_RECOVERY_MODE:
+    BootModeDescStr = L"BOOT_IN_RECOVERY_MODE";
+    break;
+  default:
+    BootModeDescStr = L"UNKOWN";
+    break;
   }
-
   if (BootModeDescStr != NULL) {
     DEBUG ((EFI_D_INFO, "BootMode: %s\n", BootModeDescStr));
   }
@@ -311,58 +292,6 @@ ReportAndInstallNewFv (
 }
 
 /**
-  Build FSP SMBIOS memory info HOB
-
-  @param[in] VOID
-**/
-VOID
-BuildFspSmbiosMemoryInfoHob (
-  VOID
-  )
-{
-  FSP_SMBIOS_MEMORY_INFO      FspSmbiosMemoryInfo;
-  UINT8                       ChannelIndex;
-  UINT8                       ChannelCount;
-  UINT8                       DimmIndex;
-  UINT8                       DimmCount;
-
-  FspSmbiosMemoryInfo.Revision = 0x01;
-  FspSmbiosMemoryInfo.MemoryType = MemoryTypeDdr3;
-  FspSmbiosMemoryInfo.MemoryFrequencyInMHz = DDRFREQ_800MHZ;
-  FspSmbiosMemoryInfo.ErrorCorrectionType = ErrorDetectingMethodNone;
-
-  ChannelCount = 0;
-  for (ChannelIndex = 0; ChannelIndex < NUM_CHANNELS; ChannelIndex++) {
-    DimmCount = 0;
-    FspSmbiosMemoryInfo.ChannelInfo[ChannelIndex].ChannelId = ChannelIndex;
-    for (DimmIndex = 0; DimmIndex < MAX_SOCKETS; DimmIndex++) {
-      FspSmbiosMemoryInfo.ChannelInfo[ChannelIndex].DimmInfo[DimmIndex].DimmId = DimmIndex;
-      //TODO: Update SizeInMb
-      FspSmbiosMemoryInfo.ChannelInfo[ChannelIndex].DimmInfo[DimmIndex].SizeInMb = 128;
-        ///
-        /// Dimm is present in slot
-        /// Get the Memory DataWidth info
-        /// SPD Offset 8 Bits [2:0] DataWidth aka Primary Bus Width
-        ///
-        FspSmbiosMemoryInfo.DataWidth = 16;
-      DimmCount++;
-    }
-    FspSmbiosMemoryInfo.ChannelInfo[ChannelIndex].DimmCount = DimmCount;
-    ChannelCount++;
-  }
-  FspSmbiosMemoryInfo.ChannelCount = ChannelCount;
-
-  //
-  // Build HOB for FspSmbiosMemoryInfo
-  //
-  BuildGuidDataHob (
-    &gFspSmbiosMemoryInfoHobGuid,
-    &FspSmbiosMemoryInfo,
-    sizeof (FSP_SMBIOS_MEMORY_INFO)
-    );
-}
-
-/**
 This function will be called when MRC is done.
 
 @param  PeiServices General purpose services available to every PEIM.
@@ -384,18 +313,12 @@ IN VOID                       *Ppi
   EFI_STATUS             Status;
   EFI_BOOT_MODE          BootMode;
   EFI_HOB_GUID_TYPE      *GuidHob;
-  FSP_MEMORY_INIT_PARAMS   *FspMemoryInitParams;
 
   DEBUG((DEBUG_INFO, "Memory Discovered Notify invoked ...\n"));
 
   //============================================================
   //  MemoryInit
   //============================================================
-  //
-  // Get pointer of FSP_MEMORY_INIT_PARAMS(FSP_INIT_PARAMS) structure
-  //
-  FspMemoryInitParams = (FSP_MEMORY_INIT_PARAMS *)GetFspApiParameter();
-
   //
   // Migrate bootloader data before destroying CAR
   //
@@ -427,15 +350,16 @@ IN VOID                       *Ppi
 
   // Create SMBIOS Memory Info HOB
   DEBUG((DEBUG_INFO | DEBUG_INIT, "BuildFspSmbiosMemoryInfoHob\n"));
-  BuildFspSmbiosMemoryInfoHob ();
+  BuildFspSmbiosMemoryInfoHob (MemoryTypeDdr3, DDRFREQ_800MHZ, 128, 16,
+                               ErrorDetectingMethodNone, NUM_CHANNELS,
+                               MAX_SOCKETS, &gFspSmbiosMemoryInfoHobGuid);
 
   //
   // Calling use FspMemoryInit API
   // Return the control directly
   //
-  if ((FspMemoryInitParams->HobListPtr) != NULL) {
-    *(FspMemoryInitParams->HobListPtr) = (VOID *)GetHobList();
-  }
+  ReturnHobListPointer(GetHobList());
+
   //
   // This is the end of the FspMemoryInit API
   // Give control back to the boot loader
@@ -464,17 +388,7 @@ IN CONST EFI_PEI_SERVICES     **PeiServices
 )
 {
   EFI_STATUS                 Status;
-  UPD_DATA_REGION        *UpdDataRgnPtr;
-  MEMORY_INIT_UPD        *MemoryInitUpd;
   EFI_BOOT_MODE          BootMode;
-
-  //
-  // Get the UPD pointer.
-  //
-  UpdDataRgnPtr = (UPD_DATA_REGION *)GetFspUpdDataPointer();
-  MemoryInitUpd = (MEMORY_INIT_UPD *)UpdDataRgnPtr;
-  SetFspMemoryInitUpdDataPointer(MemoryInitUpd);
-  SetFspSiliconInitUpdDataPointer((void *)NULL);
 
   //
   // Now that all of the pre-permament memory activities have
@@ -483,33 +397,40 @@ IN CONST EFI_PEI_SERVICES     **PeiServices
   // PEI Core will switch stack after this PEIM exit.  After that the MTRR
   // can be set.
   //
+DEBUG((EFI_D_ERROR, "PeimFspInitPreMem entered\n"));
+DEBUG((EFI_D_ERROR, "  Calling NotifyPpi\n"));
   Status = (**PeiServices).NotifyPpi(PeiServices, &mMemoryDiscoveredNotifyList[0]);
   ASSERT_EFI_ERROR(Status);
 
   //
   // Install serivce PPIs
   //
+DEBUG((EFI_D_ERROR, "  Calling InstallPpi\n"));
   Status = (**PeiServices).InstallPpi(PeiServices, mPpiList);
   ASSERT_EFI_ERROR(Status);
 
   //
   // Get boot mode from boot loader
   //
+DEBUG((EFI_D_ERROR, "  Calling UpdateBootMode\n"));
   Status = UpdateBootMode ((EFI_PEI_SERVICES**)PeiServices, &BootMode);
   ASSERT_EFI_ERROR (Status);
 
   //
   // Do SOC Init Pre memory init.
   //
+DEBUG((EFI_D_ERROR, "  Calling PeiQNCPreMemInit\n"));
   PeiQNCPreMemInit ();
 
   //
   // Make legacy SPI READ/WRITE enabled if not a secure build
   //
+DEBUG((EFI_D_ERROR, "  Calling LpcPciCfg32And\n"));
   LpcPciCfg32And (R_QNC_LPC_BIOS_CNTL, ~B_QNC_LPC_BIOS_CNTL_BIOSWE);
 
   DEBUG((EFI_D_INFO, "MRC Entry\n"));
   MemoryInit((EFI_PEI_SERVICES**)PeiServices);
 
+DEBUG((EFI_D_ERROR, "PeimFspInitPreMem exiting, Status: %r\n", Status));
   return Status;
 }

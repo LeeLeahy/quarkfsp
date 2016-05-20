@@ -129,12 +129,15 @@
   FspSwitchStackLib|IntelFspPkg/Library/BaseFspSwitchStackLib/BaseFspSwitchStackLib.inf
   FspCommonLib|IntelFspPkg/Library/BaseFspCommonLib/BaseFspCommonLib.inf
   FspPlatformLib|IntelFspPkg/Library/BaseFspPlatformLib/BaseFspPlatformLib.inf
+  FspLib|QuarkFspPkg/Library/Fsp1_1Lib/Fsp1_1Lib.inf
+  HobLib|MdePkg/Library/PeiHobLib/PeiHobLib.inf
 
 [LibraryClasses.common.SEC]
   #
   # SEC specific phase
   #
   PcdLib|MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
+  MemoryAllocationLib|MdePkg/Library/PeiMemoryAllocationLib/PeiMemoryAllocationLib.inf
 
 [LibraryClasses.IA32.PEIM,LibraryClasses.IA32.PEI_CORE]
   #

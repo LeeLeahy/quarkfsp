@@ -42,7 +42,6 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include <Ppi/Reset.h>
 #include <Ppi/MemoryDiscovered.h>
 #include <FspApi.h>
-#include <FspUpdVpd.h>
 #include <Register/Cpuid.h>
 #include <Include/IndustryStandard/SmBios.h>
 #include <mrc.h>

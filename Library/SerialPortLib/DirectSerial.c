@@ -70,6 +70,16 @@ SerialPortWriteHex4 (
 
 VOID
 EFIAPI
+SerialPortWriteHex8 (
+  UINT64 Data
+  )
+{
+  SerialPortWriteHex4((UINTN)(Data >> 32));
+  SerialPortWriteHex4((UINTN)Data);
+}
+
+VOID
+EFIAPI
 SerialPortWriteAddress (
   VOID * Address
   )
