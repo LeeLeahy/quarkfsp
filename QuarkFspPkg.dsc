@@ -332,7 +332,6 @@
   QuarkFspPkg/FspHeader/FspHeader.inf
 
   QuarkFspPkg/FspInit/Pei/FspInitPreMem.inf
-  QuarkFspPkg/Platform/Pei/PlatformInit/BiosCodePreMrc.inf
   QuarkFspPkg/Override/QuarkSocPkg/QuarkNorthCluster/MemoryInit/Pei/MemoryInitPei.inf
 
   #

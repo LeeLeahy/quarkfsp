@@ -126,7 +126,6 @@ INF MdeModulePkg/Universal/PCD/Pei/Pcd.inf
 INF QuarkFspPkg/FspVariable/VariablePei.inf
 
 INF  QuarkFspPkg/Override/QuarkSocPkg/QuarkNorthCluster/MemoryInit/Pei/MemoryInitPei.inf
-INF  QuarkFspPkg/Platform/Pei/PlatformInit/BiosCodePreMrc.inf
 INF  QuarkFspPkg/FspInit/Pei/FspInitPreMem.inf
 
 [FV.QUARKFV2]
