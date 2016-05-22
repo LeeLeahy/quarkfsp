@@ -22,17 +22,6 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include "CommonHeader.h"
 
 //
-// Function prototypes to routines implemented in other source modules
-// within this component.
-//
-
-EFI_STATUS
-EFIAPI
-PlatformErratasPostMrc (
-  VOID
-  );
-
-//
 // The global indicator, the FvFileLoader callback will modify it to TRUE after loading PEIM into memory
 //
 BOOLEAN ImageInMemory = FALSE;
@@ -70,10 +59,6 @@ BiosAfterMemoryInit(
   //
   DEBUG ((EFI_D_INFO, "Early PCIe controller initialization\n"));
   PlatformPciExpressEarlyInit (PlatformType);
-
-
-  DEBUG ((EFI_D_INFO, "Platform Erratas After MRC\n"));
-  PlatformErratasPostMrc ();
 
   return Status;
 }
