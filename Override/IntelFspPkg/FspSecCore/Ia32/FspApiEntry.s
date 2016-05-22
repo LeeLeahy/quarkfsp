@@ -801,3 +801,36 @@ FspApiCommonL2:
 FspApiCommonExit:
   ret
 
+#----------------------------------------------------------------------------
+#
+# Procedure:    _ModuleEntryPoint
+#
+# Input:        None
+#
+# Output:       None
+#
+# Destroys:     Assume all registers
+#
+# Description:
+#
+#   Transition to non-paged flat-model protected mode from a
+#   hard-coded GDT that provides exactly two descriptors.
+#   This is a bare bones transition to protected mode only
+#   used for a while in PEI and possibly DXE.
+#
+#   After enabling protected mode, a far jump is executed to
+#   transfer to PEI using the newly loaded GDT.
+#
+# Return:       None
+#
+#----------------------------------------------------------------------------
+ASM_GLOBAL ASM_PFX(_ModuleEntryPoint)
+ASM_PFX(_ModuleEntryPoint):
+
+    jmp     .
+
+    #
+    # Reference the routines to get the linker to pull them in
+    #
+    jmp     TempRamInitApi
+    jmp     FspInitApi

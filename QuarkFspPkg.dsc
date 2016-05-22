@@ -311,10 +311,7 @@
   #
   # FSP SEC
   #
-  QuarkFspPkg/Override/IntelFspPkg/FspSecCore/FspSecCore.inf  {
-    <LibraryClasses>
-    FspSecPlatformLib|QuarkFspPkg/Library/PlatformSecLib/PlatformSecLib.inf
-  }
+  QuarkFspPkg/Override/IntelFspPkg/FspSecCore/FspSecCore.inf
 
   #
   # PEI Core
