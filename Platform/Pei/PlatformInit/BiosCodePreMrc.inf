@@ -100,7 +100,6 @@
   MtrrLib
   QNCAccessLib
   PlatformHelperLib
-  PlatformPcieHelperLib
   I2cLib
   FspCommonLib
 
