@@ -152,11 +152,6 @@
   SerialPortLib|QuarkFspPkg/Library/SerialPortLib/SerialPortLib.inf
 
   #
-  # Quark Platform
-  #
-  PlatformPcieHelperLib|QuarkFspPkg/Library/PlatformPcieHelperLib/PlatformPcieHelperLib.inf
-
-  #
   # FSP common
   #
   CacheAsRamLib|IntelFspPkg/Library/BaseCacheAsRamLibNull/BaseCacheAsRamLibNull.inf
@@ -339,7 +334,6 @@
   QuarkFspPkg/FspInit/Pei/FspInitPreMem.inf
   QuarkFspPkg/Platform/Pei/PlatformInit/BiosCodePreMrc.inf
   QuarkFspPkg/Override/QuarkSocPkg/QuarkNorthCluster/MemoryInit/Pei/MemoryInitPei.inf
-  QuarkFspPkg/Platform/Pei/PlatformInit/BiosCodePostMrc.inf
 
   #
   # FSP IPL

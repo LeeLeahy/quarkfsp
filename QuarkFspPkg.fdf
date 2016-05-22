@@ -128,7 +128,6 @@ INF QuarkFspPkg/FspVariable/VariablePei.inf
 INF  QuarkFspPkg/Override/QuarkSocPkg/QuarkNorthCluster/MemoryInit/Pei/MemoryInitPei.inf
 INF  QuarkFspPkg/Platform/Pei/PlatformInit/BiosCodePreMrc.inf
 INF  QuarkFspPkg/FspInit/Pei/FspInitPreMem.inf
-INF  QuarkFspPkg/Platform/Pei/PlatformInit/BiosCodePostMrc.inf
 
 [FV.QUARKFV2]
 BlockSize          = 0x00001000
