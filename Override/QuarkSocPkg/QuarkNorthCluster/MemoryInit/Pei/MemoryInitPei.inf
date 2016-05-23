@@ -68,6 +68,7 @@
   PeimEntryPoint
   DebugLib
   BaseMemoryLib
+  SerialPortLib
 
 [Ppis]
   gQNCMemoryInitPpiGuid                        # PPI ALWAYS_PRODUCED

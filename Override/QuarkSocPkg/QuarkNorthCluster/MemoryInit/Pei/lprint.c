@@ -14,11 +14,7 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 **/
 #include "memory_options.h"
 #include "general_definitions.h"
-
-// Resource programmed to PCI bridge, 1MB bound alignment is needed.
-// The default value is overwritten by MRC parameter, assuming code
-// relocated to eSRAM.
-uint32_t UartMmioBase = 0;
+#include <Library/SerialPortLib.h>
 
 // Serial port registers based on SerialPortLib.c
 #define R_UART_BAUD_THR       0
@@ -93,9 +89,7 @@ uint8_t mgetc(void)
 #else
   uint8_t c;
 
-  while ((*(volatile uint8_t*) (UartMmioBase + R_UART_LSR) & B_UART_LSR_RXRDY) == 0);
-  c = *(volatile uint8_t*) (UartMmioBase + R_UART_BAUD_THR);
-
+  SerialPortRead(&c, 1);
   return c;
 #endif
 }
@@ -108,9 +102,9 @@ uint8_t mgetch(void)
 #else
   uint8_t c = 0;
 
-  if((*(volatile uint8_t*) (UartMmioBase + R_UART_LSR) & B_UART_LSR_RXRDY) != 0)
+  if (SerialPortPoll())
   {
-    c = *(volatile uint8_t*) (UartMmioBase + R_UART_BAUD_THR);
+    SerialPortRead(&c, 1);
   }
 
   return c;
@@ -128,15 +122,8 @@ static void printc(
 
 #else
 
-  //
-  // Use MMIO access to serial port on PCI
-  //   while( 0 == (0x20 & inp(0x3f8 + 5)));
-  //   outp(0x3f8 + 0, c);
-  //
-  while (0
-      == (B_UART_LSR_TEMT & *((volatile uint8_t*) (UartMmioBase + R_UART_LSR))))
-    ;
-  *((volatile uint8_t*) (UartMmioBase + R_UART_BAUD_THR)) = c;
+  SerialPortWrite(&c, 1);
+
 #endif
 }
 
@@ -327,10 +314,6 @@ void dpf(
     ...)
 {
   uint32_t* arg = (uint32_t*) (&bla + 1);
-
-  // Check UART MMIO base configured
-  if (0 == UartMmioBase)
-    return;
 
   // Check event not masked
   if (0 == (mask & DPF_MASK))
