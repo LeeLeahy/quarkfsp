@@ -27,9 +27,6 @@ extern uint32_t UartMmioBase;
 //
 void Mrc( MRCParams_t *mrc_params)
 {
-  // configure uart base address assuming code relocated to eSRAM
-  UartMmioBase = mrc_params->uart_mmio_base;
-
   ENTERFN();
 
   DPF(D_INFO, "MRC Version %04X %s %s\n", MRC_VERSION, __DATE__, __TIME__);
