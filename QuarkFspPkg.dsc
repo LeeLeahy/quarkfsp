@@ -332,7 +332,7 @@
   QuarkFspPkg/FspHeader/FspHeader.inf
 
   QuarkFspPkg/FspInit/Pei/FspInitPreMem.inf
-  QuarkSocPkg/QuarkNorthCluster/MemoryInit/Pei/MemoryInitPei.inf
+  QuarkFspPkg/Override/QuarkSocPkg/QuarkNorthCluster/MemoryInit/Pei/MemoryInitPei.inf
 
   #
   # FSP IPL
