@@ -124,3 +124,113 @@ SerialPortWrite (
   }
   return NumberOfBytes;
 }
+
+/**
+  Reads data from a serial device into a buffer.
+
+  @param  Buffer           Pointer to the data buffer to store the data read from the serial device.
+  @param  NumberOfBytes    Number of bytes to read from the serial device.
+
+  @retval 0                NumberOfBytes is 0.
+  @retval >0               The number of bytes read from the serial device.
+                           If this value is less than NumberOfBytes, then the read operation failed.
+
+**/
+UINTN
+EFIAPI
+SerialPortRead (
+  OUT UINT8     *Buffer,
+  IN  UINTN     NumberOfBytes
+  )
+{
+  UINTN  SerialRegisterBase;
+  UINTN  Result;
+  UINT8  Mcr;
+
+  if (NULL == Buffer) {
+    return 0;
+  }
+
+  SerialRegisterBase = (UINTN)PcdGet64 (PcdSerialRegisterBase);
+  if (SerialRegisterBase ==0) {
+    return 0;
+  }
+
+  Mcr = MmioRead8 (SerialRegisterBase + R_UART_MCR);
+
+  for (Result = 0; NumberOfBytes-- != 0; Result++, Buffer++) {
+    //
+    // Set RTS to let the peer send some data
+    //
+    if ((MmioRead8 (SerialRegisterBase + R_UART_LSR) & B_UART_LSR_RXRDY) == 0) {
+      MmioWrite8 (SerialRegisterBase + R_UART_MCR, Mcr | B_UART_MCR_RTS);
+    }
+
+    //
+    // Wait for the serial port to have some data.
+    //
+    while ((MmioRead8 (SerialRegisterBase + R_UART_LSR) & B_UART_LSR_RXRDY)
+      == 0);
+
+    //
+    // Clear RTS to prevent peer from sending data
+    //
+    MmioWrite8 (SerialRegisterBase + R_UART_MCR, Mcr & ~B_UART_MCR_RTS);
+
+    //
+    // Read byte from the receive buffer.
+    //
+    *Buffer = MmioRead8 (SerialRegisterBase + R_UART_RXBUF);
+  }
+
+  return Result;
+}
+
+
+/**
+  Polls a serial device to see if there is any data waiting to be read.
+
+  Polls aserial device to see if there is any data waiting to be read.
+  If there is data waiting to be read from the serial device, then TRUE is returned.
+  If there is no data waiting to be read from the serial device, then FALSE is returned.
+
+  @retval TRUE             Data is waiting to be read from the serial device.
+  @retval FALSE            There is no data waiting to be read from the serial device.
+
+**/
+BOOLEAN
+EFIAPI
+SerialPortPoll (
+  VOID
+  )
+{
+  UINT8  Mcr;
+  UINTN  SerialRegisterBase;
+
+  SerialRegisterBase = (UINTN)PcdGet64 (PcdSerialRegisterBase);
+  if (SerialRegisterBase ==0) {
+    return FALSE;
+  }
+
+  //
+  // Read the serial port status
+  //
+  Mcr = MmioRead8 (SerialRegisterBase + R_UART_MCR);
+  if ((MmioRead8 (SerialRegisterBase + R_UART_LSR) & B_UART_LSR_RXRDY) != 0) {
+    //
+    // Clear RTS to prevent peer from sending data
+    //
+    if ((Mcr & B_UART_MCR_RTS) != 0) {
+      MmioWrite8 (SerialRegisterBase + R_UART_MCR, Mcr & ~B_UART_MCR_RTS);
+    }
+    return TRUE;
+  }
+
+  //
+  // Set RTS to let the peer send some data
+  //
+  if ((Mcr & B_UART_MCR_RTS) != 0) {
+    MmioWrite8 (SerialRegisterBase + R_UART_MCR, Mcr | B_UART_MCR_RTS);
+  }
+  return FALSE;
+}
