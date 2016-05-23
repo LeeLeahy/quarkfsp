@@ -56,7 +56,6 @@
   SerialPortLib
   FspSwitchStackLib
   FspCommonLib
-  FspSecPlatformLib
 
 [Pcd]
   gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress           ## UNDEFINED
@@ -73,5 +72,5 @@
   gIntelFspPkgTokenSpaceGuid.PcdFspMaxPerfEntry               ## CONSUMES
 
 [Ppis]
-  gEfiTemporaryRamSupportPpiGuid                ## PRODUCES 
+  gEfiTemporaryRamSupportPpiGuid                ## PRODUCES
 
