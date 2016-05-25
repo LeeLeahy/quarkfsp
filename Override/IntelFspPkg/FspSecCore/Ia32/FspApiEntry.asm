@@ -91,7 +91,7 @@ SecPlatformInitDefault PROC NEAR PUBLIC
    ; Register Usage:
    ;   eax is cleared and ebp is used for return address.
    ;   All others reserved.
-   
+
    ; Save return address to EBP
    movd  ebp, mm7
 
@@ -307,7 +307,7 @@ EstablishStackFsp    PROC    NEAR    PRIVATE
   ;
   ; Save API entry/exit timestamp into stack
   ;
-  push      DATA_LEN_OF_PER0     ; Size of the data region 
+  push      DATA_LEN_OF_PER0     ; Size of the data region
   push      30524550h            ; Signature of the  data region 'PER0'
   LOAD_EDX
   push      edx
@@ -319,7 +319,7 @@ EstablishStackFsp    PROC    NEAR    PRIVATE
 
   ;
   ; Terminator for the data on stack
-  ; 
+  ;
   push      0
 
   ;
@@ -370,17 +370,17 @@ TempRamInitApi   PROC    NEAR    PUBLIC
   mov ecx, esp
 
   ;
-  ; Save parameter pointer in edx  
+  ; Save parameter pointer in edx
   ;
-  mov       edx, dword ptr [esp + 4]  
+  mov       edx, dword ptr [esp + 4]
 
   ;
   ; Enable FSP STACK
   ;
   mov       esp, PcdGet32 (PcdTemporaryRamBase)
-  add       esp, PcdGet32 (PcdTemporaryRamSize) 
+  add       esp, PcdGet32 (PcdTemporaryRamSize)
 
-  push      DATA_LEN_OF_MCUD     ; Size of the data region 
+  push      DATA_LEN_OF_MCUD     ; Size of the data region
   push      4455434Dh            ; Signature of the  data region 'MCUD'
   push      dword ptr [edx + 12] ; Code size
   push      dword ptr [edx + 8]  ; Code base
@@ -390,7 +390,7 @@ TempRamInitApi   PROC    NEAR    PUBLIC
   ;
   ; Save API entry/exit timestamp into stack
   ;
-  push      DATA_LEN_OF_PER0     ; Size of the data region 
+  push      DATA_LEN_OF_PER0     ; Size of the data region
   push      30524550h            ; Signature of the  data region 'PER0'
   xor edx, edx
   push      edx
@@ -402,7 +402,7 @@ TempRamInitApi   PROC    NEAR    PUBLIC
 
   ;
   ; Terminator for the data on stack
-  ; 
+  ;
   push      0
 
   ;
@@ -490,8 +490,176 @@ TempRamInitApi   ENDP
 ;
 ;----------------------------------------------------------------------------
 FspInitApi   PROC    NEAR    PUBLIC
-  mov    eax,  1
-  jmp    FspApiCommon
+  mov    eax, [esp + 4]    ; Get FspInitParamPtr
+  mov    ebx, [eax + 4]    ; Get RtBufferPtr
+  mov    ecx, [eax + 8]    ; Get ContinuationFunc
+
+  push   0                 ; HOB list pointer address to be returned
+
+  ;
+  ; Duplicate the FSP_INIT_RT_COMMON_BUFFER structure
+  ;
+  push   [ebx + 36]        ; Reserved[5]
+  push   [ebx + 32]        ; Reserved[4]
+  push   [ebx + 28]        ; Reserved[3]
+  push   [ebx + 24]        ; Reserved[2]
+  push   [ebx + 20]        ; Reserved[1]
+  push   [ebx + 16]        ; Reserved[0]
+  push   [ebx + 12]        ; BootLoaderTolumSize
+  push   [ebx + 8]         ; UpdDataRgnPtr
+  mov    edx, esp          ; Save UpdDataRgnPtr address
+  push   [ebx + 4]         ; BootMode
+  push   [ebx]             ; StackTop
+  mov    ebx, esp          ; Update RtBufferPtr
+
+  ;
+  ; Duplicate the FSP_INIT_PARAMS structure
+  ;
+  push   ecx               ; ContinuationFunc
+  push   ebx               ; RtBufferPtr
+  push   [eax]             ; NvsBufferPtr
+  mov    eax, esp          ; Update FspInitParamPtr
+
+  ;
+  ; Save the parameters for future calls
+  ;
+  push   ecx               ; ContinuationFunc address
+
+  ;
+  ; Save the UPD pointer for SiliconInit
+  ;
+  mov    ecx, PcdGet32(PcdSiliconInitUpdOffset)
+  add    ecx, [edx]        ; Get SiliconInitUpd address
+  xchg   ecx, [esp]        ; Save SiliconInitUpd address
+  push   ecx               ; ContinuationFunc address
+
+  ;
+  ; Stack:
+  ;    HOB list pointer address to be returned
+  ;    FSP_INIT_RT_COMMON_BUFFER structure
+  ;    FSP_INIT_PARAMS structure
+  ;    SiliconInitUpd address
+  ;    ContinuationFunc address
+  ;
+  ; Registers:
+  ;     EAX: FspInitParamPtr
+  ;     EBX: RtBufferPtr
+  ;     EDX: UpdDataRtnPtr address
+  ;
+
+  ;
+  ; Update the UpdDataRgnPtr with the UPD pointer for MemoryInit
+  ;
+  mov    ecx, PcdGet32(PcdMemoryInitUpdOffset)
+  add    ecx, [edx]        ; Get MemoryInitUpd address
+  mov    [edx], ecx        ; Save MemoryInitUpd address
+
+  ;
+  ; Call MemoryInit
+  ;
+  push   eax
+  call   FspMemoryInitApi
+  add    esp, 4
+
+  ;
+  ; Stack:
+  ;    FSP_INIT_RT_COMMON_BUFFER structure
+  ;    FSP_INIT_PARAMS structure
+  ;    SiliconInitUpd address
+  ;
+  ; Registers:
+  ;     EAX: Returned status
+  ;     EBX: RtBufferPtr
+  ;
+
+  mov    edx, [ebx + 40]   ; Get the HOB list pointer
+  pop    ecx               ; Get the ContinuationFunc address
+  cmp    eax, 0
+  jnz    @F
+
+  ;
+  ; Switch stacks
+  ;
+  pop    eax               ; Get SiliconInitUpd address
+  mov    esp, [ebx]        ; Get the top of stack address
+  push   eax               ; Save SiliconInitUpd address
+  push   edx               ; Save HOB list pointer
+  push   ecx               ; Save ContinuationFunc address
+
+  ;
+  ; Stack:
+  ;    SiliconInitUpd address
+  ;    HOB list pointer
+  ;    ContinuationFunc address
+  ;
+
+  ;
+  ; Call TempRamExit
+  ;
+  push   0
+  call   TempRamExitApi
+  add    esp, 4
+
+  ;
+  ; Stack:
+  ;    SiliconInitUpd address
+  ;    HOB list pointer
+  ;    ContinuationFunc address
+  ;
+  ; Registers:
+  ;     EAX: Returned status
+  ;
+
+  pop    ecx               ; Get the ContinuationFunc address
+  pop    edx               ; Get the HOB list pointer
+  cmp    eax, 0
+  jnz    @F
+
+  xchg   edx, [esp]        ; Save HOB list pointer
+  push   ecx               ; Save ContinuationFunc address
+
+  ;
+  ; Stack:
+  ;    HOB list pointer
+  ;    ContinuationFunc address
+  ;
+
+  ;
+  ; Call SiliconInit
+  ;
+  push   edx               ; SiliconInitUpd address
+  call   FspSiliconInitApi
+  add    esp, 4
+
+  ;
+  ; Stack:
+  ;    SiliconInitUpd address
+  ;    HOB list pointer
+  ;    ContinuationFunc address
+  ;
+  ; Registers:
+  ;     EAX: Returned status
+  ;
+
+  pop    ecx               ; Get the ContinuationFunc address
+  pop    edx               ; Get the HOB list pointer
+
+@@:
+
+  ;
+  ; Registers:
+  ;     EAX: Returned status
+  ;     ECX: ContinuationFunc address
+  ;     EDX: HOB list pointer
+  ;
+
+  ;
+  ; Call the continuation function
+  ;
+  push   edx               ; Push the HOB list pointer
+  push   eax               ; Push the status
+  jmp    ecx               ; Enter the continuation function
+
   FspInitApi   ENDP
 
 ;----------------------------------------------------------------------------
@@ -555,7 +723,7 @@ FspApiCommon   PROC C PUBLIC
 
   ;
   ; Stack must be ready
-  ;  
+  ;
   push   eax
   add    esp, 4
   cmp    eax, dword ptr [esp - 4]
@@ -592,7 +760,7 @@ FspApiCommon   PROC C PUBLIC
   ;
   ; FspInit and FspMemoryInit APIs, setup the initial stack frame
   ;
-  
+
   ;
   ; Place holder to store the FspInfoHeader pointer
   ;
@@ -629,7 +797,7 @@ FspApiCommon   PROC C PUBLIC
   ; Pass the API Idx to SecStartup
   ;
   push    eax
-  
+
   ;
   ; Pass the BootLoader stack to SecStartup
   ;
@@ -640,7 +808,7 @@ FspApiCommon   PROC C PUBLIC
   ;
   call    AsmGetFspBaseAddress
   mov     edi, eax
-  add     edi, PcdGet32 (PcdFspAreaSize) 
+  add     edi, PcdGet32 (PcdFspAreaSize)
   sub     edi, 20h
   add     eax, DWORD PTR ds:[edi]
   push    eax

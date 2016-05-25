@@ -382,7 +382,6 @@ IN VOID                       *Ppi
 )
 {
   EFI_STATUS             Status;
-  UINT8                  ApiMode;
   EFI_BOOT_MODE          BootMode;
   EFI_HOB_GUID_TYPE      *GuidHob;
   FSP_MEMORY_INIT_PARAMS   *FspMemoryInitParams;
@@ -390,6 +389,9 @@ IN VOID                       *Ppi
 
   DEBUG((DEBUG_INFO, "Memory Discovered Notify invoked ...\n"));
 
+  //============================================================
+  //  MemoryInit
+  //============================================================
   // 
   // Get pointer of FSP_MEMORY_INIT_PARAMS(FSP_INIT_PARAMS) structure
   //
@@ -470,38 +472,38 @@ IN VOID                       *Ppi
   DEBUG((DEBUG_INFO | DEBUG_INIT, "BuildFspSmbiosMemoryInfoHob\n"));
   BuildFspSmbiosMemoryInfoHob ();
 
-  ApiMode = GetFspApiCallingMode();
-  if (ApiMode != 0) {
-    //
-    // Calling use FspMemoryInit API
-    // Return the control directly
-    //
-    if ((FspMemoryInitParams->HobListPtr) != NULL) {
-      *(FspMemoryInitParams->HobListPtr) = (VOID *)GetHobList();
-    }
-    //
-    // This is the end of the FspMemoryInit API
-    // Give control back to the boot loader
-    //
-    DEBUG((DEBUG_INFO | DEBUG_INIT, "FspMemoryInitApi() - End\n"));
-    SetFspApiReturnStatus(EFI_SUCCESS);
-    Pei2LoaderSwitchStack();
+  //
+  // Calling use FspMemoryInit API
+  // Return the control directly
+  //
+  if ((FspMemoryInitParams->HobListPtr) != NULL) {
+    *(FspMemoryInitParams->HobListPtr) = (VOID *)GetHobList();
   }
+  //
+  // This is the end of the FspMemoryInit API
+  // Give control back to the boot loader
+  //
+  DEBUG((DEBUG_INFO | DEBUG_INIT, "FspMemoryInitApi() - End\n"));
+  SetFspApiReturnStatus(EFI_SUCCESS);
+  Pei2LoaderSwitchStack();
 
+  //============================================================
+  //  TempRamExit
+  //============================================================
   //
   // Disable CAR and resets fixed and variable MTRR values.
   //
-  //ResetCacheAttributes(); // TODO - Porting it for Quark SoC.
-  if (ApiMode != 0) {
-    //
-    // This is the end of the TempRamExit API
-    // Give control back to the boot loader
-    //
-    DEBUG((DEBUG_INFO | DEBUG_INIT, "TempRamExitApi() - End\n"));
-    SetFspApiReturnStatus(EFI_SUCCESS);
-    Pei2LoaderSwitchStack();
-  }
+  //
+  // This is the end of the TempRamExit API
+  // Give control back to the boot loader
+  //
+  DEBUG((DEBUG_INFO | DEBUG_INIT, "TempRamExitApi() - End\n"));
+  SetFspApiReturnStatus(EFI_SUCCESS);
+  Pei2LoaderSwitchStack();
 
+  //============================================================
+  //  SiliconInit
+  //============================================================
   //
   // Install FSP silicon FV
   //
@@ -532,29 +534,15 @@ IN CONST EFI_PEI_SERVICES     **PeiServices
   EFI_STATUS                 Status;
   UPD_DATA_REGION        *UpdDataRgnPtr;
   MEMORY_INIT_UPD        *MemoryInitUpd;
-  SILICON_INIT_UPD       *SiliconInitUpd;
   EFI_BOOT_MODE          BootMode;
-  UINT8                  ApiMode;
 
   //
   // Get the UPD pointer.
   //
-  ApiMode = GetFspApiCallingMode();
   UpdDataRgnPtr = (UPD_DATA_REGION *)GetFspUpdDataPointer();
-  if (ApiMode == 0) {
-    //
-    // FSP v1.0 mode, we update the MemoryInitUpd from Upd
-    //
-    MemoryInitUpd = (MEMORY_INIT_UPD *)(&(UpdDataRgnPtr->MemoryInitUpd));
-    SiliconInitUpd = (SILICON_INIT_UPD *)(&(UpdDataRgnPtr->SiliconInitUpd));
-    SetFspMemoryInitUpdDataPointer(MemoryInitUpd);
-    SetFspSiliconInitUpdDataPointer(SiliconInitUpd);
-  }
-  else {
-    MemoryInitUpd = (MEMORY_INIT_UPD *)UpdDataRgnPtr;
-    SetFspMemoryInitUpdDataPointer(MemoryInitUpd);
-    SetFspSiliconInitUpdDataPointer((void *)NULL);
-  }
+  MemoryInitUpd = (MEMORY_INIT_UPD *)UpdDataRgnPtr;
+  SetFspMemoryInitUpdDataPointer(MemoryInitUpd);
+  SetFspSiliconInitUpdDataPointer((void *)NULL);
 
   //
   // Now that all of the pre-permament memory activities have
