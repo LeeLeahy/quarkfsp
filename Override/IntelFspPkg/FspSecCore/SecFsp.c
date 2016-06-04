@@ -153,6 +153,7 @@ FspGlobalDataInit (
   FSP_INIT_PARAMS   *FspInitParams;
   CHAR8              ImageId[9];
   UINTN              Idx;
+  FSP_INIT_RT_COMMON_BUFFER *RtBufferPtr;
 
   //
   // Init PCIE_BAR with value and set global FSP data pointer.
@@ -183,11 +184,19 @@ FspGlobalDataInit (
   // Initialize UPD pointer.
   //
   FspInitParams = (FSP_INIT_PARAMS *)GetFspApiParameter ();
-  UpdDataRgnPtr = ((FSP_INIT_RT_COMMON_BUFFER *)FspInitParams->RtBufferPtr)->UpdDataRgnPtr;
+  RtBufferPtr = FspInitParams->RtBufferPtr;
+  UpdDataRgnPtr = RtBufferPtr->UpdDataRgnPtr;
   if (UpdDataRgnPtr == NULL) {
     UpdDataRgnPtr = (VOID *)(PeiFspData->FspInfoHeader->ImageBase + GetFspUpdRegionOffset());
   }
   SetFspUpdDataPointer (UpdDataRgnPtr);
+
+  //
+  // Set the MemoryInitUpd pointer
+  //
+  if (ApiIdx == 3) {
+    SetFspMemoryInitUpdDataPointer(UpdDataRgnPtr);
+  }
 
   //
   // Initialize serial port
