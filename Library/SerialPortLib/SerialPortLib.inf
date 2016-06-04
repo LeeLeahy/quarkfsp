@@ -38,6 +38,3 @@
 [Sources]
   SerialPortLib.c
   DirectSerial.c
-
-[Pcd]
-  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase            ## CONSUMES
