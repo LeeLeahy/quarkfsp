@@ -63,7 +63,6 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include <Library/MtrrLib.h>
 #include <Library/QNCAccessLib.h>
 #include <Library/PlatformHelperLib.h>
-#include <Library/PlatformPcieHelperLib.h>
 #include <Library/I2cLib.h>
 
 #include <Register/Cpuid.h>
