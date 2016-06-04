@@ -216,34 +216,4 @@ PlatformLegacyGpioGetLevel (
   IN CONST UINT32       GpioNum
   );
 
-/**
-  Init platform LEDs into known state.
-
-  @param   PlatformType     Executing platform type.
-
-  @retval  EFI_SUCCESS      Operation success.
-
-**/
-EFI_STATUS
-EFIAPI
-PlatformLedInit (
-  IN CONST EFI_PLATFORM_TYPE              Type
-  );
-
-/**
-  Turn on or off platform flash update LED.
-
-  @param   PlatformType     Executing platform type.
-  @param   TurnOn           If TRUE turn on else turn off.
-
-  @retval  EFI_SUCCESS      Operation success.
-
-**/
-EFI_STATUS
-EFIAPI
-PlatformFlashUpdateLed (
-  IN CONST EFI_PLATFORM_TYPE              Type,
-  IN CONST BOOLEAN                        TurnOn
-  );
-
 #endif // #ifndef __PLATFORM_HELPER_LIB_H__

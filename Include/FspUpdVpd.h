@@ -94,10 +94,7 @@ typedef struct {
   UINT8                       PcdSmmTsegSize;
 /** Offset 0x0039
 **/
-  UINT8                       PcdPlatformType;
-/** Offset 0x003A
-**/
-  UINT8                       ReservedMemoryInitUpd[22];
+  UINT8                       ReservedMemoryInitUpd[23];
 } MEMORY_INIT_UPD;
 
 typedef struct {

@@ -68,15 +68,10 @@
 
   gQuarkFspTokenSpaceGuid.PcdRmuBinaryBaseAddress    | 0x0030 | 0x04 | 0xFFF10000
   gQuarkFspTokenSpaceGuid.PcdRmuBinaryLen            |0x0034| 0x04 | 0x02000
-  gQuarkFspTokenSpaceGuid.PcdSmmTsegSize            |0x0038| 0x01 | 0x02
-  
-  ######
-  # Make the following PCDs go away
-  ######
-  gQuarkFspTokenSpaceGuid.PcdPlatformType            | 0x0039 | 0x01 | 0x8
+  gQuarkFspTokenSpaceGuid.PcdSmmTsegSize             |0x0038| 0x01 | 0x02
 
   # !HDR EMBED:{MEMORY_INIT_UPD:MemoryInitUpd:END}
-  gQuarkFspTokenSpaceGuid.ReservedMemoryInitUpd      | 0x003A | 0x16 | {0x00}
+  gQuarkFspTokenSpaceGuid.ReservedMemoryInitUpd      | 0x0039 | 0x17 | {0x00}
 
   ################################################################################
   #
