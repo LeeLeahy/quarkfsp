@@ -18,7 +18,6 @@
 #include <Library/SerialPortLib.h>
 #include <Library/PcdLib.h>
 #include <Library/IoLib.h>
-#include <Library/PciLib.h>
 #include <Library/BaseLib.h>
 #include <Library/FspCommonLib.h>
 #include <FspUpdVpd.h>
@@ -57,7 +56,15 @@
 **/
 UINTN GetSerialPortRegisterBase (void)
 {
-  return (UINTN)PcdGet64(PcdSerialRegisterBase);
+  MEMORY_INIT_UPD *MemoryInitUpd;
+  UINTN SerialPortRegisterBase;
+
+  SerialPortRegisterBase = 0;
+  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
+  if (MemoryInitUpd != NULL) {
+    SerialPortRegisterBase = MemoryInitUpd->PcdSerialRegisterBase;
+  }
+  return SerialPortRegisterBase;
 }
 
 /**
@@ -111,23 +118,6 @@ SerialPortWrite (
     /* Discard all of the characters */
     return NumberOfBytes;
   }
-
-static UINT8 DisplayMemoryInit = 1;
-if(DisplayMemoryInit)
-{
-  MEMORY_INIT_UPD *MemoryInitUpd;
-  UINTN BaseAddress;
-
-  DisplayMemoryInit = 0;
-  BaseAddress = 0;
-  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
-  if (MemoryInitUpd != NULL) {
-    BaseAddress = MemoryInitUpd->PcdSerialRegisterBase;
-  }
-  DEBUG((EFI_D_ERROR, "0x%08x: MemoryInitUpd\n", MemoryInitUpd));
-  DEBUG((EFI_D_ERROR, "0x%08x: PcdSerialRegisterBase\n", BaseAddress));
-//  return MemoryInitUpd->PcdSerialRegisterBase;
-}
 
   if (NumberOfBytes == 0) {
     //
