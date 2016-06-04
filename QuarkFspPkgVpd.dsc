@@ -49,12 +49,11 @@
   #
   # MemoryInitUpdOffset must match the first UPD's offset in the structure of MemoryInitUpd
   #
-  gQuarkFspTokenSpaceGuid.MemoryInitUpdOffset         | 0x0010 | 0x04 | 0x00000020
+  gQuarkFspTokenSpaceGuid.MemoryInitUpdOffset         | 0x0010 | 0x04 | 0x00000018
   #
   # SiliconInitUpdOffset must match the first UPD's offset in the structure of SiliconInitUpd
   #
-  gQuarkFspTokenSpaceGuid.SiliconInitUpdOffset        | 0x0014 | 0x04 | 0x00000050
-  gQuarkFspTokenSpaceGuid.ReservedUpd1                | 0x0018 | 0x08 | 0
+  gQuarkFspTokenSpaceGuid.SiliconInitUpdOffset        | 0x0014 | 0x04 | 0x00000038
 
   ################################################################################
   #
@@ -63,15 +62,16 @@
   ################################################################################
   # !HDR EMBED:{MEMORY_INIT_UPD:MemoryInitUpd:START}
   # MemoryInitUpdSignature: {$MEMUPD$}
-  gQuarkFspTokenSpaceGuid.Signature                  | 0x0020 | 0x08 | 0x244450554D454D24
-  gQuarkFspTokenSpaceGuid.Revision                   | 0x0028 | 0x08 | 0x00
+  gQuarkFspTokenSpaceGuid.Signature                  | 0x0018 | 0x08 | 0x244450554D454D24
+  gQuarkFspTokenSpaceGuid.Revision                   | 0x0020 | 0x08 | 0x00
 
-  gQuarkFspTokenSpaceGuid.PcdRmuBinaryBaseAddress    | 0x0030 | 0x04 | 0xFFF10000
-  gQuarkFspTokenSpaceGuid.PcdRmuBinaryLen            |0x0034| 0x04 | 0x02000
-  gQuarkFspTokenSpaceGuid.PcdSmmTsegSize             |0x0038| 0x01 | 0x02
+  gQuarkFspTokenSpaceGuid.PcdRmuBinaryBaseAddress    | 0x0028 | 0x04 | 0xFFF10000
+  gQuarkFspTokenSpaceGuid.PcdRmuBinaryLen            | 0x002c | 0x04 | 0x02000
+  gQuarkFspTokenSpaceGuid.PcdSerialRegisterBase      | 0x0030 | 0x04 | 0
+  gQuarkFspTokenSpaceGuid.PcdSmmTsegSize             | 0x0034 | 0x01 | 0
 
   # !HDR EMBED:{MEMORY_INIT_UPD:MemoryInitUpd:END}
-  gQuarkFspTokenSpaceGuid.ReservedMemoryInitUpd      | 0x0039 | 0x17 | {0x00}
+  gQuarkFspTokenSpaceGuid.ReservedMemoryInitUpd      | 0x0035 | 0x03 | {0x00}
 
   ################################################################################
   #
@@ -80,17 +80,16 @@
   ################################################################################
   # !HDR EMBED:{SILICON_INIT_UPD:SiliconInitUpd:START}
   # SiliconInitUpdSignature: {$SI_UPD$}
-  gQuarkFspTokenSpaceGuid.Signature                  | 0x0050 | 0x08 | 0x244450555F495324
-  gQuarkFspTokenSpaceGuid.Revision                   | 0x0058 | 0x08 | 0x00
+  gQuarkFspTokenSpaceGuid.Signature                  | 0x0038 | 0x08 | 0x244450555F495324
+  gQuarkFspTokenSpaceGuid.Revision                   | 0x0040 | 0x08 | 0x00
 
   # !HDR EMBED:{SILICON_INIT_UPD:SiliconInitUpd:END}
-  gQuarkFspTokenSpaceGuid.ReservedSiliconInitUpd     | 0x0060 | 0x20 | {0x00}
 
   # Note please keep "PcdRegionTerminator" at the end of the UPD region.
   # The tool will use this field to determine the actual end of the UPD data
   # structure. Anything after this field will still be in the UPD binary block,
   # but will be excluded in the final UPD_DATA_REGION data structure.
-  gQuarkFspTokenSpaceGuid.PcdRegionTerminator        | 0x0080 | 2 | 0x55AA
+  gQuarkFspTokenSpaceGuid.PcdRegionTerminator        | 0x0048 | 2 | 0x55AA
 
 [PcdsDynamicVpd]
   #

@@ -24,6 +24,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  IntelFspPkg/IntelFspPkg.dec
   QuarkFspPkg/QuarkFspPkg.dec
 
 [LibraryClasses]
@@ -31,6 +32,8 @@
   IoLib
   PciLib
   BaseLib
+  FspCommonLib
+  DebugLib
 
 [Sources]
   SerialPortLib.c
