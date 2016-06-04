@@ -20,6 +20,9 @@
 #include <Library/IoLib.h>
 #include <Library/PciLib.h>
 #include <Library/BaseLib.h>
+#include <Library/FspCommonLib.h>
+#include <FspUpdVpd.h>
+#include <Library/DebugLib.h>
 
 //
 // 16550 UART register offsets and bitfields
@@ -45,6 +48,17 @@
 #define   B_UART_MSR_DSR      BIT5
 #define   B_UART_MSR_RI       BIT6
 #define   B_UART_MSR_DCD      BIT7
+
+/**
+  Get the serial port register base
+
+  @retval BaseRegisterAddress   The serial port register base address
+
+**/
+UINTN GetSerialPortRegisterBase (void)
+{
+  return (UINTN)PcdGet64(PcdSerialRegisterBase);
+}
 
 /**
   Initialize the serial device hardware.
@@ -92,10 +106,28 @@ SerialPortWrite (
     return 0;
   }
 
-  SerialRegisterBase = (UINTN)PcdGet64 (PcdSerialRegisterBase);
-  if (SerialRegisterBase ==0) {
-    return 0;
+  SerialRegisterBase = GetSerialPortRegisterBase ();
+  if (SerialRegisterBase == 0) {
+    /* Discard all of the characters */
+    return NumberOfBytes;
   }
+
+static UINT8 DisplayMemoryInit = 1;
+if(DisplayMemoryInit)
+{
+  MEMORY_INIT_UPD *MemoryInitUpd;
+  UINTN BaseAddress;
+
+  DisplayMemoryInit = 0;
+  BaseAddress = 0;
+  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
+  if (MemoryInitUpd != NULL) {
+    BaseAddress = MemoryInitUpd->PcdSerialRegisterBase;
+  }
+  DEBUG((EFI_D_ERROR, "0x%08x: MemoryInitUpd\n", MemoryInitUpd));
+  DEBUG((EFI_D_ERROR, "0x%08x: PcdSerialRegisterBase\n", BaseAddress));
+//  return MemoryInitUpd->PcdSerialRegisterBase;
+}
 
   if (NumberOfBytes == 0) {
     //
@@ -151,8 +183,8 @@ SerialPortRead (
     return 0;
   }
 
-  SerialRegisterBase = (UINTN)PcdGet64 (PcdSerialRegisterBase);
-  if (SerialRegisterBase ==0) {
+  SerialRegisterBase = GetSerialPortRegisterBase ();
+  if (SerialRegisterBase == 0) {
     return 0;
   }
 
@@ -207,8 +239,8 @@ SerialPortPoll (
   UINT8  Mcr;
   UINTN  SerialRegisterBase;
 
-  SerialRegisterBase = (UINTN)PcdGet64 (PcdSerialRegisterBase);
-  if (SerialRegisterBase ==0) {
+  SerialRegisterBase = GetSerialPortRegisterBase ();
+  if (SerialRegisterBase == 0) {
     return FALSE;
   }
 
