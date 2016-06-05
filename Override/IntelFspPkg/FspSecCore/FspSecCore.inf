@@ -32,15 +32,15 @@
   SecFsp.h
 
 [Sources.IA32]
+  Ia32/FspApiEntry.nasm
+
   Ia32/ResetVec.asm16 | MSFT
   Ia32/Stack.asm  | MSFT
   Ia32/InitializeFpu.asm  | MSFT
-  Ia32/FspApiEntry.asm  | MSFT
   Ia32/FspHelper.asm  | MSFT
 
   Ia32/Stacks.s | GCC
   Ia32/InitializeFpu.s | GCC
-  Ia32/FspApiEntry.s | GCC
   Ia32/FspHelper.s | GCC
   Ia32/ResetVec.nasmb | GCC
 
