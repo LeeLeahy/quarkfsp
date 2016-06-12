@@ -23,29 +23,6 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 //
 
 /**
-  Find pointer to RAW data in Firmware volume file.
-
-  @param   FvNameGuid       Firmware volume to search. If == NULL search all.
-  @param   FileNameGuid     Firmware volume file to search for.
-  @param   SectionData      Pointer to RAW data section of found file.
-  @param   SectionDataSize  Pointer to UNITN to get size of RAW data.
-
-  @retval  EFI_SUCCESS            Raw Data found.
-  @retval  EFI_INVALID_PARAMETER  FileNameGuid == NULL.
-  @retval  EFI_NOT_FOUND          Firmware volume file not found.
-  @retval  EFI_UNSUPPORTED        Unsupported in current enviroment (PEI or DXE).
-
-**/
-EFI_STATUS
-EFIAPI
-PlatformFindFvFileRawDataSection (
-  IN CONST EFI_GUID                 *FvNameGuid OPTIONAL,
-  IN CONST EFI_GUID                 *FileNameGuid,
-  OUT VOID                          **SectionData,
-  OUT UINTN                         *SectionDataSize
-  );
-
-/**
   Read 8bit character from debug stream.
 
   Block until character is read.

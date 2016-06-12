@@ -44,6 +44,74 @@ EFI_MEMORY_TYPE_INFORMATION mDefaultQncMemoryTypeInformation[] = {
 };
 
 /**
+  Find pointer to RAW data in Firmware volume file.
+
+  @param   FvNameGuid       Firmware volume to search. If == NULL search all.
+  @param   FileNameGuid     Firmware volume file to search for.
+  @param   SectionData      Pointer to RAW data section of found file.
+  @param   SectionDataSize  Pointer to UNITN to get size of RAW data.
+
+  @retval  EFI_SUCCESS            Raw Data found.
+  @retval  EFI_INVALID_PARAMETER  FileNameGuid == NULL.
+  @retval  EFI_NOT_FOUND          Firmware volume file not found.
+  @retval  EFI_UNSUPPORTED        Unsupported in current enviroment (PEI or DXE).
+
+**/
+EFI_STATUS
+EFIAPI
+FindFvFileRawDataSection (
+  IN CONST EFI_GUID                 *FvNameGuid OPTIONAL,
+  IN CONST EFI_GUID                 *FileNameGuid,
+  OUT VOID                          **SectionData,
+  OUT UINTN                         *SectionDataSize
+  )
+{
+  EFI_STATUS                        Status;
+  UINTN                             Instance;
+  EFI_PEI_FV_HANDLE                 VolumeHandle;
+  EFI_PEI_FILE_HANDLE               FileHandle;
+  EFI_SECTION_TYPE                  SearchType;
+  EFI_FV_INFO                       VolumeInfo;
+  EFI_FV_FILE_INFO                  FileInfo;
+
+  if (FileNameGuid == NULL || SectionData == NULL || SectionDataSize == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+  *SectionData = NULL;
+  *SectionDataSize = 0;
+
+  SearchType = EFI_SECTION_RAW;
+  for (Instance = 0; !EFI_ERROR((PeiServicesFfsFindNextVolume (Instance, &VolumeHandle))); Instance++) {
+    if (FvNameGuid != NULL) {
+      Status = PeiServicesFfsGetVolumeInfo (VolumeHandle, &VolumeInfo);
+      if (EFI_ERROR (Status)) {
+        continue;
+      }
+      if (!CompareGuid (FvNameGuid, &VolumeInfo.FvName)) {
+        continue;
+      }
+    }
+    Status = PeiServicesFfsFindFileByName (FileNameGuid, VolumeHandle, &FileHandle);
+    if (!EFI_ERROR (Status)) {
+      Status = PeiServicesFfsGetFileInfo (FileHandle, &FileInfo);
+      if (EFI_ERROR (Status)) {
+        continue;
+      }
+      if (IS_SECTION2(FileInfo.Buffer)) {
+        *SectionDataSize = SECTION2_SIZE(FileInfo.Buffer) - sizeof(EFI_COMMON_SECTION_HEADER2);
+      } else {
+        *SectionDataSize = SECTION_SIZE(FileInfo.Buffer) - sizeof(EFI_COMMON_SECTION_HEADER);
+      }
+      Status = PeiServicesFfsFindSectionData (SearchType, FileHandle, SectionData);
+      if (!EFI_ERROR (Status)) {
+        return Status;
+      }
+    }
+  }
+  return EFI_NOT_FOUND;
+}
+
+/**
   Configure Uart mmio base for MRC serial log purpose
 
   @param  MrcData  - MRC configuration data updated
@@ -226,7 +294,7 @@ PostInstallMemory (
   if (IsS3) {
     QNCSendOpcodeDramReady (RmuMainDestBaseAddress);
   } else {
-    Status = PlatformFindFvFileRawDataSection (NULL, PcdGetPtr(PcdQuarkMicrocodeFile), (VOID **) &RmuMainSrcBaseAddress, &RmuMainSize);
+    Status = FindFvFileRawDataSection (NULL, PcdGetPtr(PcdQuarkMicrocodeFile), (VOID **) &RmuMainSrcBaseAddress, &RmuMainSize);
     ASSERT_EFI_ERROR (Status);
     if (!EFI_ERROR (Status)) {
       DEBUG ((EFI_D_INFO, "Found Microcode ADDR:SIZE 0x%08x:0x%04x\n", (UINTN) RmuMainSrcBaseAddress, RmuMainSize));
