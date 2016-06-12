@@ -21,22 +21,22 @@
   VERSION_STRING                 = 1.0
   ENTRY_POINT                    = PeimFspInitPreMem
 
-[Sources]    
+[Sources]
   FspInitPreMem.c
   FspInitPreMem.h
   MrcWrapper.c
   MrcWrapper.h
   CommonHeader.h
-    
-[Packages]  
-  MdePkg/MdePkg.dec  
+
+[Packages]
+  MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
   IntelFrameworkPkg/IntelFrameworkPkg.dec
   UefiCpuPkg/UefiCpuPkg.dec
   IntelFspPkg/IntelFspPkg.dec
   QuarkSocPkg/QuarkSocPkg.dec
   QuarkFspPkg/QuarkFspPkg.dec
- 
+
 [Ppis]
   gEfiPeiMemoryDiscoveredPpiGuid            # PPI ALWAYS_CONSUMED
   gEfiPeiStallPpiGuid                       # PPI ALWAYS_PRODUCED
@@ -56,7 +56,7 @@
   gEfiSmmPeiSmramMemoryReserveGuid              # ALWAYS_PRODUCED  Hob: GUID_EXTENSION
   gEfiMemoryOverwriteControlDataGuid            # SOMETIMES_CONSUMED
 
-[Pcd]  
+[Pcd]
   gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress
   gIntelFspPkgTokenSpaceGuid.PcdFspReservedMemoryLength
   gQuarkFspTokenSpaceGuid.PcdEccScrubBlkSize
@@ -68,15 +68,15 @@
   gEfiQuarkNcSocIdTokenSpaceGuid.PcdQuarkMicrocodeFile
   gEfiQuarkNcSocIdTokenSpaceGuid.PcdTSegSize
   gEfiQuarkNcSocIdTokenSpaceGuid.PcdRcbaMmioBaseAddress
-  
+
 [LibraryClasses]
-  #       
+  #
   # Generic library class
   #
   PeimEntryPoint
   BaseLib
   BaseMemoryLib
-  IoLib  
+  IoLib
   PcdLib
   PciLib
   HobLib
@@ -87,7 +87,6 @@
   FspSwitchStackLib
   ResetSystemLib
   IntelQNCLib
-  PlatformHelperLib
   ReportStatusCodeLib
 
 [Depex]
