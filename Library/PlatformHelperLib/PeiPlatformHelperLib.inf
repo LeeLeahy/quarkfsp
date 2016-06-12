@@ -45,6 +45,5 @@
   PeiServicesLib
   SerialPortLib
   QNCAccessLib
-  I2cLib
 
 [Pcd]

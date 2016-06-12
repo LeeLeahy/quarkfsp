@@ -17,7 +17,6 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 
 #include <Library/PeiServicesTablePointerLib.h>
 #include <Library/PeiServicesLib.h>
-#include <Library/I2cLib.h>
 
 #include "CommonHeader.h"
 

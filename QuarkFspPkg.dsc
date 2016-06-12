@@ -148,7 +148,6 @@
   # Quark South Cluster
   #
   IohLib|QuarkSocPkg/QuarkSouthCluster/Library/IohLib/IohLib.inf
-  I2cLib|QuarkSocPkg/QuarkSouthCluster/Library/I2cLib/I2cLib.inf
   SerialPortLib|QuarkFspPkg/Library/SerialPortLib/SerialPortLib.inf
 
   #
