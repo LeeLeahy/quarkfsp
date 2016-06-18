@@ -112,30 +112,6 @@ FindFvFileRawDataSection (
 }
 
 /**
-  Configure Uart mmio base for MRC serial log purpose
-
-  @param  MrcData  - MRC configuration data updated
-
-**/
-VOID
-MrcUartConfig(
-  MRC_PARAMS *MrcData
-  )
-{
-  UINT8    UartIdx;
-  UINT32   RegData32;
-  UINT8    IohUartBus;
-  UINT8    IohUartDev;
-
-  UartIdx    = PcdGet8(PcdIohUartFunctionNumber);
-  IohUartBus = PcdGet8(PcdIohUartBusNumber);
-  IohUartDev = PcdGet8(PcdIohUartDevNumber);
-
-  RegData32 = PciRead32 (PCI_LIB_ADDRESS(IohUartBus,  IohUartDev, UartIdx, PCI_BASE_ADDRESSREG_OFFSET));
-  MrcData->uart_mmio_base = RegData32 & 0xFFFFFFF0;
-}
-
-/**
   Configure MRC from memory controller fuse settings.
 
   @param  MrcData      - MRC configuration data to be updated.
@@ -397,7 +373,6 @@ MemoryInit (
   ASSERT_EFI_ERROR (Status);
   Status = MrcConfigureFromInfoHob (&MrcData);
   ASSERT_EFI_ERROR (Status);
-  MrcUartConfig(&MrcData);
 
   if (BootMode == BOOT_IN_RECOVERY_MODE) {
     //

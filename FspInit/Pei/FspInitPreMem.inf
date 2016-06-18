@@ -61,9 +61,6 @@
   gIntelFspPkgTokenSpaceGuid.PcdFspReservedMemoryLength
   gQuarkFspTokenSpaceGuid.PcdEccScrubBlkSize
   gQuarkFspTokenSpaceGuid.PcdEccScrubInterval
-  gEfiQuarkSCSocIdTokenSpaceGuid.PcdIohUartFunctionNumber
-  gEfiQuarkSCSocIdTokenSpaceGuid.PcdIohUartBusNumber
-  gEfiQuarkSCSocIdTokenSpaceGuid.PcdIohUartDevNumber
   gEfiQuarkNcSocIdTokenSpaceGuid.PcdMrcParameters
   gEfiQuarkNcSocIdTokenSpaceGuid.PcdQuarkMicrocodeFile
   gEfiQuarkNcSocIdTokenSpaceGuid.PcdTSegSize

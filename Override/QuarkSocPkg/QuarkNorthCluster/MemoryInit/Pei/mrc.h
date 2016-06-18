@@ -111,7 +111,7 @@ typedef struct MRCParams_s
   //
 
   uint32_t boot_mode;           // bmCold, bmFast, bmWarm, bmS3
-  uint32_t uart_mmio_base;      // pcie serial port base address (force 0 to disable debug)
+  uint32_t reserved_1;
 
   uint8_t  dram_width;          // x8, x16
   uint8_t  ddr_speed;           // DDRFREQ_800, DDRFREQ_1066
