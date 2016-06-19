@@ -53,7 +53,6 @@
   FspSecPlatformLib
 
 [Pcd]
-  gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress           ## UNDEFINED
   gIntelFsp2PkgTokenSpaceGuid.PcdTemporaryRamBase              ## CONSUMES
   gIntelFsp2PkgTokenSpaceGuid.PcdTemporaryRamSize              ## CONSUMES
   gIntelFsp2PkgTokenSpaceGuid.PcdFspReservedBufferSize         ## CONSUMES

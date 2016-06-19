@@ -62,6 +62,8 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include <Library/CacheMaintenanceLib.h>
 #include <Library/MtrrLib.h>
 #include <Library/QNCAccessLib.h>
+#include <Library/FspCommonLib.h>
+#include <FspUpdVpd.h>
 
 #include <Register/Cpuid.h>
 

@@ -155,32 +155,35 @@ MrcConfigureFromInfoHob (
   OUT MRC_PARAMS  *MrcData
   )
 {
-  PDAT_MRC_ITEM  *ItemData;
+  MEMORY_INIT_UPD *MemoryInitUpd;
 
-  ItemData = (PDAT_MRC_ITEM *)PcdGetPtr (PcdMrcParameters);
+  //
+  // Get the UPD pointer.
+  //
+  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
 
-  MrcData->channel_enables     = ItemData->ChanMask;
-  MrcData->channel_width       = ItemData->ChanWidth;
-  MrcData->address_mode        = ItemData->AddrMode;
+  MrcData->channel_enables     = MemoryInitUpd->ChanMask;
+  MrcData->channel_width       = MemoryInitUpd->ChanWidth;
+  MrcData->address_mode        = MemoryInitUpd->AddrMode;
   // Enable scrambling if requested.
-  MrcData->scrambling_enables  = (ItemData->Flags & PDAT_MRC_FLAG_SCRAMBLE_EN) != 0;
-  MrcData->ddr_type            = ItemData->DramType;
-  MrcData->dram_width          = ItemData->DramWidth;
-  MrcData->ddr_speed           = ItemData->DramSpeed;
+  MrcData->scrambling_enables  = (MemoryInitUpd->Flags & MRC_FLAG_SCRAMBLE_EN) != 0;
+  MrcData->ddr_type            = MemoryInitUpd->DramType;
+  MrcData->dram_width          = MemoryInitUpd->DramWidth;
+  MrcData->ddr_speed           = MemoryInitUpd->DramSpeed;
   // Enable ECC if requested.
-  MrcData->rank_enables        = ItemData->RankMask;
-  MrcData->params.DENSITY      = ItemData->DramDensity;
-  MrcData->params.tCL          = ItemData->tCL;
-  MrcData->params.tRAS         = ItemData->tRAS;
-  MrcData->params.tWTR         = ItemData->tWTR;
-  MrcData->params.tRRD         = ItemData->tRRD;
-  MrcData->params.tFAW         = ItemData->tFAW;
+  MrcData->rank_enables        = MemoryInitUpd->RankMask;
+  MrcData->params.DENSITY      = MemoryInitUpd->DramDensity;
+  MrcData->params.tCL          = MemoryInitUpd->tCL;
+  MrcData->params.tRAS         = MemoryInitUpd->tRAS;
+  MrcData->params.tWTR         = MemoryInitUpd->tWTR;
+  MrcData->params.tRRD         = MemoryInitUpd->tRRD;
+  MrcData->params.tFAW         = MemoryInitUpd->tFAW;
 
-  MrcData->refresh_rate        = ItemData->SrInt;
-  MrcData->sr_temp_range       = ItemData->SrTemp;
-  MrcData->ron_value           = ItemData->DramRonVal;
-  MrcData->rtt_nom_value       = ItemData->DramRttNomVal;
-  MrcData->rd_odt_value        = ItemData->SocRdOdtVal;
+  MrcData->refresh_rate        = MemoryInitUpd->SrInt;
+  MrcData->sr_temp_range       = MemoryInitUpd->SrTemp;
+  MrcData->ron_value           = MemoryInitUpd->DramRonVal;
+  MrcData->rtt_nom_value       = MemoryInitUpd->DramRttNomVal;
+  MrcData->rd_odt_value        = MemoryInitUpd->SocRdOdtVal;
 
   DEBUG ((EFI_D_INFO, "MRC dram_width %d\n",  MrcData->dram_width));
   DEBUG ((EFI_D_INFO, "MRC rank_enables %d\n",MrcData->rank_enables));
@@ -215,8 +218,9 @@ EccScrubSetup(
 {
   UINT32 BgnAdr = 0;
   UINT32 EndAdr = MrcData->mem_size;
-  UINT32 BlkSize = PcdGet8(PcdEccScrubBlkSize) & SCRUB_CFG_BLOCKSIZE_MASK;
-  UINT32 Interval = PcdGet8(PcdEccScrubInterval) & SCRUB_CFG_INTERVAL_MASK;
+  MEMORY_INIT_UPD *MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
+  UINT32 BlkSize = MemoryInitUpd->EccScrubBlkSize & SCRUB_CFG_BLOCKSIZE_MASK;
+  UINT32 Interval = MemoryInitUpd->EccScrubInterval & SCRUB_CFG_INTERVAL_MASK;
 
   if( MrcData->ecc_enables == 0 || MrcData->boot_mode == bmS3 || Interval == 0) {
     // No scrub configuration needed if ECC not enabled
@@ -249,9 +253,7 @@ PostInstallMemory (
   )
 {
   UINT32                            RmuMainDestBaseAddress;
-  UINT32                            *RmuMainSrcBaseAddress;
-  UINTN                             RmuMainSize;
-  EFI_STATUS                        Status;
+  MEMORY_INIT_UPD                   *MemoryInitUpd;
 
   //
   // Setup ECC policy (All boot modes).
@@ -270,13 +272,8 @@ PostInstallMemory (
   if (IsS3) {
     QNCSendOpcodeDramReady (RmuMainDestBaseAddress);
   } else {
-    Status = FindFvFileRawDataSection (NULL, PcdGetPtr(PcdQuarkMicrocodeFile), (VOID **) &RmuMainSrcBaseAddress, &RmuMainSize);
-    ASSERT_EFI_ERROR (Status);
-    if (!EFI_ERROR (Status)) {
-      DEBUG ((EFI_D_INFO, "Found Microcode ADDR:SIZE 0x%08x:0x%04x\n", (UINTN) RmuMainSrcBaseAddress, RmuMainSize));
-    }
-
-    RmuMainRelocation (RmuMainDestBaseAddress, (UINT32) RmuMainSrcBaseAddress, RmuMainSize);
+    MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
+    RmuMainRelocation (RmuMainDestBaseAddress, MemoryInitUpd->RmuBaseAddress, MemoryInitUpd->RmuLength);
     QNCSendOpcodeDramReady (RmuMainDestBaseAddress);
     EccScrubSetup (MrcData);
   }
@@ -305,6 +302,7 @@ MemoryInit (
   EFI_STATUS_CODE_VALUE                       ErrorCodeValue;
   PEI_QNC_MEMORY_INIT_PPI                     *QncMemoryInitPpi;
   UINT16                                      PmswAdr;
+  MEMORY_INIT_UPD                             *MemoryInitUpd;
 
   ErrorCodeValue  = 0;
 
@@ -383,19 +381,17 @@ MemoryInit (
   } else {
 
     //
-    // Load Memory configuration data saved in previous boot from variable
+    // Get the saved memory data if possible
     //
-    Status = LoadConfig (
-               PeiServices,
-               VariableServices,
-               &MrcData
-               );
-
-    if (EFI_ERROR (Status)) {
-
+    MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
+    if ((MemoryInitUpd->MrcDataPtr != 0) && (MemoryInitUpd->MrcDataLength != 0)) {
+      ASSERT(MemoryInitUpd->MrcDataLength == sizeof(MrcData.timings));
+      CopyMem (&MrcData.timings, (void *)MemoryInitUpd->MrcDataPtr, MemoryInitUpd->MrcDataLength);
+    } else {
       switch (BootMode) {
       case BOOT_ON_S3_RESUME:
       case BOOT_ON_FLASH_UPDATE:
+        DEBUG ((DEBUG_ERROR, "ERROR: MRC data missing - reboot\n"));
         REPORT_STATUS_CODE (
           EFI_ERROR_CODE + EFI_ERROR_UNRECOVERED,
           ErrorCodeValue
@@ -516,47 +512,7 @@ SaveConfig (
     );
 
   DEBUG ((EFI_D_INFO, "IIO IoApicBase  = %x IoApicLimit=%x\n", IOAPIC_BASE, (IOAPIC_BASE + IOAPIC_SIZE - 1)));
-  DEBUG ((EFI_D_INFO, "IIO RcbaAddress = %x\n", (UINT32)PcdGet64 (PcdRcbaMmioBaseAddress)));
-
   return EFI_SUCCESS;
-}
-
-/**
-
-  Load a configuration stored in a variable.
-
-  @param  TimingData          Timing data to be loaded from NVRAM.
-  @param  RowConfArray        Row configuration information for each row in the system.
-
-  @return EFI_SUCCESS         The function completed successfully.
-          Other               Could not read variable.
-
-**/
-EFI_STATUS
-LoadConfig (
-  IN      EFI_PEI_SERVICES                        **PeiServices,
-  IN      EFI_PEI_READ_ONLY_VARIABLE2_PPI         *VariableServices,
-  IN OUT  MRC_PARAMS                              *MrcData
-  )
-{
-  EFI_STATUS                            Status;
-  UINTN                                 BufferSize;
-  PLATFORM_VARIABLE_MEMORY_CONFIG_DATA  VarData;
-
-  BufferSize = ((sizeof (VarData.timings) + 0x7) & (~0x7));  // HOB data size (stored in variable) is required to be multiple of 8bytes
-
-  Status = VariableServices->GetVariable (
-                               VariableServices,
-                               EFI_MEMORY_CONFIG_DATA_NAME,
-                               &gEfiMemoryConfigDataGuid,
-                               NULL,
-                               &BufferSize,
-                               &VarData.timings
-                               );
-  if (!EFI_ERROR (Status)) {
-    CopyMem (&MrcData->timings, &VarData.timings, sizeof(MrcData->timings));
-  }
-  return Status;
 }
 
 /**
@@ -1275,6 +1231,7 @@ ChooseRanges (
   IN OUT   PEI_MEMORY_RANGE_PCI_MEMORY           *PciMemoryMask
   )
 {
+  MEMORY_INIT_UPD *MemoryInitUpd;
 
   //
   // Choose regions to reserve for Option ROM use
@@ -1284,8 +1241,9 @@ ChooseRanges (
   //
   // Choose regions to reserve for SMM use (AB/H SEG and TSEG). Size is in 128K blocks
   //
-  *SmramMask = PEI_MR_SMRAM_CACHEABLE_MASK | PEI_MR_SMRAM_TSEG_MASK | ((PcdGet32(PcdTSegSize)) >> 17);
-
+  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
+  *SmramMask = PEI_MR_SMRAM_CACHEABLE_MASK | PEI_MR_SMRAM_TSEG_MASK
+             | (UINT32)MemoryInitUpd->SmmTsegSize;
   *PciMemoryMask = 0;
 
   return EFI_SUCCESS;

@@ -80,11 +80,6 @@
 
 [PcdsFixedAtBuild]
 
-  # ECC scrub interval in miliseconds 1..255 (0 works as feature disable)
-  gQuarkFspTokenSpaceGuid.PcdEccScrubInterval|0x00|UINT8|0x20000037
-  # Number of 32B blocks read for ECC scrub 2..16
-  gQuarkFspTokenSpaceGuid.PcdEccScrubBlkSize|0x02|UINT8|0x20000038
-
   gQuarkFspTokenSpaceGuid.PcdFspImageAttributes     | 0x00       | UINT32 | 0x0000000D
   gQuarkFspTokenSpaceGuid.PcdFspHeaderRevision      | 0x00       | UINT32 | 0x0000000E
   gQuarkFspTokenSpaceGuid.PcdFspImageRevision       | 0x00       | UINT32 | 0x0000000F

@@ -58,7 +58,6 @@
   FspCommonLib
 
 [Pcd]
-  gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress           ## UNDEFINED
   gIntelFspPkgTokenSpaceGuid.PcdGlobalDataPointerAddress      ## CONSUMES
   gIntelFspPkgTokenSpaceGuid.PcdTemporaryRamBase              ## CONSUMES
   gIntelFspPkgTokenSpaceGuid.PcdTemporaryRamSize              ## CONSUMES

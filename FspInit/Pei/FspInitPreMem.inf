@@ -56,16 +56,6 @@
   gEfiSmmPeiSmramMemoryReserveGuid              # ALWAYS_PRODUCED  Hob: GUID_EXTENSION
   gEfiMemoryOverwriteControlDataGuid            # SOMETIMES_CONSUMED
 
-[Pcd]
-  gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress
-  gIntelFspPkgTokenSpaceGuid.PcdFspReservedMemoryLength
-  gQuarkFspTokenSpaceGuid.PcdEccScrubBlkSize
-  gQuarkFspTokenSpaceGuid.PcdEccScrubInterval
-  gEfiQuarkNcSocIdTokenSpaceGuid.PcdMrcParameters
-  gEfiQuarkNcSocIdTokenSpaceGuid.PcdQuarkMicrocodeFile
-  gEfiQuarkNcSocIdTokenSpaceGuid.PcdTSegSize
-  gEfiQuarkNcSocIdTokenSpaceGuid.PcdRcbaMmioBaseAddress
-
 [LibraryClasses]
   #
   # Generic library class

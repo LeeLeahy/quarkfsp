@@ -22,16 +22,15 @@
 
 [Sources]
   FspHeader.aslc
-  
+
 [Packages]
   MdePkg/MdePkg.dec
   IntelFspPkg/IntelFspPkg.dec
   QuarkFspPkg/QuarkFspPkg.dec
 
-[Pcd]    
+[Pcd]
   gIntelFspPkgTokenSpaceGuid.PcdFspAreaBaseAddress
   gIntelFspPkgTokenSpaceGuid.PcdFspAreaSize
-  gIntelFspPkgTokenSpaceGuid.PcdFspReservedMemoryLength
   gQuarkFspTokenSpaceGuid.PcdVpdRegionSign
   gQuarkFspTokenSpaceGuid.PcdFspImageAttributes
   gQuarkFspTokenSpaceGuid.PcdFspHeaderRevision
@@ -43,7 +42,7 @@
   gQuarkFspTokenSpaceGuid.PcdFspFv1Size
   gQuarkFspTokenSpaceGuid.PcdFspFv2Base
   gQuarkFspTokenSpaceGuid.PcdFspFv2Size
-  
+
 [FixedPcd]
   gIntelFspPkgTokenSpaceGuid.PcdFspMaxPatchEntry
   gIntelFspPkgTokenSpaceGuid.PcdFspMaxPerfEntry

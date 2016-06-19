@@ -166,7 +166,6 @@
   gEfiMdePkgTokenSpaceGuid.PcdReportStatusCodePropertyMask|0x3
 !endif
   gEfiMdePkgTokenSpaceGuid.PcdPostCodePropertyMask|0x18
-  gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress|0xE0000000
   gEfiMdePkgTokenSpaceGuid.PcdDefaultTerminalType|0
   gEfiMdePkgTokenSpaceGuid.PcdPerformanceLibraryPropertyMask|0x00
   gEfiMdeModulePkgTokenSpaceGuid.PcdLoadModuleAtFixAddressEnable|0
