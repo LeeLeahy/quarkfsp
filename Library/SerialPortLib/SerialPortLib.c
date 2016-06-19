@@ -62,7 +62,7 @@ UINTN GetSerialPortRegisterBase (void)
   SerialPortRegisterBase = 0;
   MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
   if (MemoryInitUpd != NULL) {
-    SerialPortRegisterBase = MemoryInitUpd->PcdSerialRegisterBase;
+    SerialPortRegisterBase = MemoryInitUpd->SerialPortBaseAddress;
   }
   return SerialPortRegisterBase;
 }

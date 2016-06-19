@@ -53,7 +53,7 @@
   #
   # SiliconInitUpdOffset must match the first UPD's offset in the structure of SiliconInitUpd
   #
-  gQuarkFspTokenSpaceGuid.SiliconInitUpdOffset        | 0x0014 | 0x04 | 0x00000038
+  gQuarkFspTokenSpaceGuid.SiliconInitUpdOffset        | 0x0014 | 0x04 | 0x00000068
 
   ################################################################################
   #
@@ -62,16 +62,128 @@
   ################################################################################
   # !HDR EMBED:{MEMORY_INIT_UPD:MemoryInitUpd:START}
   # MemoryInitUpdSignature: {$MEMUPD$}
-  gQuarkFspTokenSpaceGuid.Signature                  | 0x0018 | 0x08 | 0x244450554D454D24
-  gQuarkFspTokenSpaceGuid.Revision                   | 0x0020 | 0x08 | 0x00
+  gQuarkFspTokenSpaceGuid.Signature                   | 0x0018 | 0x08 | 0x244450554D454D24
+  gQuarkFspTokenSpaceGuid.Revision                    | 0x0020 | 0x08 | 0x00
 
-  gQuarkFspTokenSpaceGuid.PcdRmuBinaryBaseAddress    | 0x0028 | 0x04 | 0xFFF10000
-  gQuarkFspTokenSpaceGuid.PcdRmuBinaryLen            | 0x002c | 0x04 | 0x02000
-  gQuarkFspTokenSpaceGuid.PcdSerialRegisterBase      | 0x0030 | 0x04 | 0
-  gQuarkFspTokenSpaceGuid.PcdSmmTsegSize             | 0x0034 | 0x01 | 0
+  gQuarkFspTokenSpaceGuid.RmuBaseAddress              | 0x0028 | 0x04 | 0xFFF00000
+  gQuarkFspTokenSpaceGuid.RmuLength                   | 0x002C | 0x04 | 0x02000
+  gQuarkFspTokenSpaceGuid.SerialPortBaseAddress       | 0x0030 | 0x04 | 0
+
+  #
+  # ACT to PRE command period in picoseconds.
+  #
+  gQuarkFspTokenSpaceGuid.tRAS                        | 0x0034 | 0x04 | 37500
+  #
+  # Delay from start of internal write transaction to internal read command in picoseconds.
+  #
+  gQuarkFspTokenSpaceGuid.tWTR                        | 0x0038 | 0x04 | 10000
+  #
+  # ACT to ACT command period (JESD79 specific to page size 1K/2K) in picoseconds.
+  #
+  gQuarkFspTokenSpaceGuid.tRRD                        | 0x003C | 0x04 | 10000
+  #
+  # Four activate window (JESD79 specific to page size 1K/2K) in picoseconds.
+  #
+  gQuarkFspTokenSpaceGuid.tFAW                        | 0x0040 | 0x04 | 40000
+  #
+  # Bitmap of MRC_FLAG_XXX:
+  #
+  # ECC_EN            BIT0
+  # SCRAMBLE_EN       BIT1
+  # MEMTEST_EN        BIT2
+  # TOP_TREE_EN       BIT3  0b DDR "fly-by" topology else 1b DDR "tree" topology.
+  # WR_ODT_EN         BIT4  If set ODR signal is asserted to DRAM devices on writes.
+  #
+  gQuarkFspTokenSpaceGuid.Flags                       | 0x0044 | 0x04 | 0x00000002
+  #
+  # 0=x8, 1=x16, others=RESERVED.
+  #
+  gQuarkFspTokenSpaceGuid.DramWidth                   | 0x0048 | 0x01 | 0
+  #
+  # 0=DDRFREQ_800, 1=DDRFREQ_1066, others=RESERVED. Only 533MHz SKU support 1066 memory.
+  #
+  gQuarkFspTokenSpaceGuid.DramSpeed                   | 0x0049 | 0x01 | 0
+  #
+  # 0=DDR3, 1=DDR3L, others=RESERVED.
+  #
+  gQuarkFspTokenSpaceGuid.DramType                    | 0x004A | 0x01 | 0
+  #
+  # bit[0] RANK0_EN, bit[1] RANK1_EN, others=RESERVED.
+  #
+  gQuarkFspTokenSpaceGuid.RankMask                    | 0x004B | 0x01 | 1
+  #
+  # bit[0] CHAN0_EN, others=RESERVED.
+  #
+  gQuarkFspTokenSpaceGuid.ChanMask                    | 0x004C | 0x01 | 1
+  #
+  # 1=x16, others=RESERVED.
+  #
+  gQuarkFspTokenSpaceGuid.ChanWidth                   | 0x004D | 0x01 | 1
+  #
+  # 0, 1, 2 (mode 2 forced if ecc enabled), others=RESERVED.
+  #
+  gQuarkFspTokenSpaceGuid.AddrMode                    | 0x004E | 0x01 | 0
+  #
+  # 1=1.95us, 2=3.9us, 3=7.8us, others=RESERVED. REFRESH_RATE.
+  #
+  gQuarkFspTokenSpaceGuid.SrInt                       | 0x004F | 0x01 | 3
+  #
+  # 0=normal, 1=extended, others=RESERVED.
+  #
+  gQuarkFspTokenSpaceGuid.SrTemp                      | 0x0050 | 0x01 | 0
+  #
+  # 0=34ohm, 1=40ohm, others=RESERVED. RON_VALUE Select MRS1.DIC driver impedance control.
+  #
+  gQuarkFspTokenSpaceGuid.DramRonVal                  | 0x0051 | 0x01 | 0
+  #
+  # 0=40ohm, 1=60ohm, 2=120ohm, others=RESERVED.
+  #
+  gQuarkFspTokenSpaceGuid.DramRttNomVal               | 0x0052 | 0x01 | 2
+  #
+  # 0=off others=RESERVED.
+  #
+  gQuarkFspTokenSpaceGuid.DramRttWrVal                | 0x0053 | 0x01 | 0
+  #
+  # 0=off, 1=60ohm, 2=120ohm, 3=180ohm, others=RESERVED.
+  #
+  gQuarkFspTokenSpaceGuid.SocRdOdtVal                 | 0x0054 | 0x01 | 0
+  #
+  # 0=27ohm, 1=32ohm, 2=40ohm, others=RESERVED.
+  #
+  gQuarkFspTokenSpaceGuid.SocWrRonVal                 | 0x0055 | 0x01 | 1
+  #
+  # 0=2.5V/ns, 1=4V/ns, others=RESERVED.
+  #
+  gQuarkFspTokenSpaceGuid.SocWrSlewRate               | 0x0056 | 0x01 | 1
+  #
+  # 0=512Mb, 1=1Gb, 2=2Gb, 3=4Gb, others=RESERVED.
+  #
+  gQuarkFspTokenSpaceGuid.DramDensity                 | 0x0057 | 0x01 | 1
+  #
+  # DRAM CAS Latency in clocks.
+  #
+  gQuarkFspTokenSpaceGuid.tCL                         | 0x0058 | 0x01 | 6
+
+  # ECC scrub interval in miliseconds 1..255 (0 works as feature disable)
+  gQuarkFspTokenSpaceGuid.EccScrubInterval            | 0x0059 | 0x01 | 0
+
+  # Number of 32B blocks read for ECC scrub 2..16
+  gQuarkFspTokenSpaceGuid.EccScrubBlkSize             | 0x005A | 0x01 | 2
+
+
+  #
+  # Size of the SMM region in 128 KiB chunks
+  #
+  gQuarkFspTokenSpaceGuid.SmmTsegSize                 | 0x005B | 0x01 | 16
+
+  #
+  # FSP reserved memory length in bytes
+  #
+  gQuarkFspTokenSpaceGuid.FspReservedMemoryLength     | 0x005C | 0x04 | 0x00100000
 
   # !HDR EMBED:{MEMORY_INIT_UPD:MemoryInitUpd:END}
-  gQuarkFspTokenSpaceGuid.ReservedMemoryInitUpd      | 0x0035 | 0x03 | {0x00}
+
+  gQuarkFspTokenSpaceGuid.ReservedMemoryInitUpd       | 0x0060 | 0x08 | {0x00}
 
   ################################################################################
   #
@@ -80,8 +192,8 @@
   ################################################################################
   # !HDR EMBED:{SILICON_INIT_UPD:SiliconInitUpd:START}
   # SiliconInitUpdSignature: {$SI_UPD$}
-  gQuarkFspTokenSpaceGuid.Signature                  | 0x0038 | 0x08 | 0x244450555F495324
-  gQuarkFspTokenSpaceGuid.Revision                   | 0x0040 | 0x08 | 0x00
+  gQuarkFspTokenSpaceGuid.Signature                   | 0x0068 | 0x08 | 0x244450555F495324
+  gQuarkFspTokenSpaceGuid.Revision                    | 0x0070 | 0x08 | 0x00
 
   # !HDR EMBED:{SILICON_INIT_UPD:SiliconInitUpd:END}
 
@@ -89,7 +201,7 @@
   # The tool will use this field to determine the actual end of the UPD data
   # structure. Anything after this field will still be in the UPD binary block,
   # but will be excluded in the final UPD_DATA_REGION data structure.
-  gQuarkFspTokenSpaceGuid.PcdRegionTerminator        | 0x0048 | 2 | 0x55AA
+  gQuarkFspTokenSpaceGuid.PcdRegionTerminator         | 0x0078 | 2 | 0x55AA
 
 [PcdsDynamicVpd]
   #
@@ -97,15 +209,15 @@
   #
 
   # !BSF FIND:{QUK-FSP0}
-  gQuarkFspTokenSpaceGuid.PcdVpdRegionSign           | 0x0000 | 0x305053462D4B5551
+  gQuarkFspTokenSpaceGuid.PcdVpdRegionSign            | 0x0000 | 0x305053462D4B5551
 
   #
   # VPD Region Revision
   #
   # !BSF NAME:{PcdImageRevision}  TYPE:{None}
-  gQuarkFspTokenSpaceGuid.PcdImageRevision           | 0x0008 | 0x00000000
+  gQuarkFspTokenSpaceGuid.PcdImageRevision            | 0x0008 | 0x00000000
 
   # This is a offset pointer to the UCD regions used by FSP
   # The offset will be patched to point to the actual region during the build process
   #
-  gQuarkFspTokenSpaceGuid.PcdUpdRegionOffset         | 0x000C | 0x12345678
+  gQuarkFspTokenSpaceGuid.PcdUpdRegionOffset          | 0x000C | 0x12345678

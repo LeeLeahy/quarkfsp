@@ -96,11 +96,11 @@ Stall (
     1. If it's first time to boot, it's boot with full config .
     2. If the ChassisIntrution is selected, force to be a boot with full config
     3. Otherwise it's boot with no change.
-  
-  @param  PeiServices General purpose services available to every PEIM.   
-  
+
+  @param  PeiServices General purpose services available to every PEIM.
+
   @param  BootMode The detected boot mode.
-  
+
   @retval EFI_SUCCESS if the boot mode could be set
 **/
 EFI_STATUS
@@ -117,7 +117,7 @@ UpdateBootMode (
   // Detect BootMode here
   //
   FspInitRtBuffer = (FSP_INIT_RT_COMMON_BUFFER *)((FSP_MEMORY_INIT_PARAMS *)GetFspApiParameter())->RtBufferPtr;
-  
+
   if (FspInitRtBuffer != NULL) {
     //
     // Get BootMode from Boot Loader
@@ -187,7 +187,7 @@ UpdateBootMode (
   Status = PeiServicesSetBootMode (*BootModePtr);
   ASSERT_EFI_ERROR (Status);
 
-  return EFI_SUCCESS;  
+  return EFI_SUCCESS;
 }
 
 /**
@@ -386,29 +386,30 @@ IN VOID                       *Ppi
   EFI_HOB_GUID_TYPE      *GuidHob;
   FSP_MEMORY_INIT_PARAMS   *FspMemoryInitParams;
   UINT32                 BootLoaderTolumSize;
+  MEMORY_INIT_UPD        *MemoryInitUpd;
 
   DEBUG((DEBUG_INFO, "Memory Discovered Notify invoked ...\n"));
 
   //============================================================
   //  MemoryInit
   //============================================================
-  // 
+  //
   // Get pointer of FSP_MEMORY_INIT_PARAMS(FSP_INIT_PARAMS) structure
   //
   FspMemoryInitParams = (FSP_MEMORY_INIT_PARAMS *)GetFspApiParameter();
 
-  // 
+  //
   // Migrate bootloader data before destroying CAR
   //
   FspMigrateTemporaryMemory();
 
-  // 
+  //
   // Get Boot Mode
   //
   Status = PeiServicesGetBootMode(&BootMode);
   ASSERT_EFI_ERROR(Status);
 
-  // 
+  //
   // FSP specific hook
   //
   FspSpecificMemoryDiscoveredHook(PeiServices, BootMode);
@@ -416,6 +417,7 @@ IN VOID                       *Ppi
   //
   // FSP Reserved Memory - TODO: Porting it for Quark SoC, cbmem_top is forced to 0xAFD0000.
   //
+  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
   BuildResourceDescriptorWithOwnerHob(
 	EFI_RESOURCE_MEMORY_RESERVED,
 	(
@@ -428,7 +430,7 @@ IN VOID                       *Ppi
 	EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE
 	),
 	0xAECE000,
-	PcdGet32(PcdFspReservedMemoryLength),
+	MemoryInitUpd->FspReservedMemoryLength,
 	&gFspReservedMemoryResourceHobGuid
   );
 
