@@ -134,7 +134,6 @@ InstallEfiMemory (
 EFI_STATUS
 InstallS3Memory (
   IN      EFI_PEI_SERVICES                      **PeiServices,
-  IN      EFI_PEI_READ_ONLY_VARIABLE2_PPI       *VariableServices,
   IN      UINT32                                TotalMemorySize
   );
 

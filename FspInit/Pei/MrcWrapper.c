@@ -443,7 +443,7 @@ MemoryInit (
 
     DEBUG ((EFI_D_INFO, "Following BOOT_ON_S3_RESUME boot path.\n"));
 
-    Status = InstallS3Memory (PeiServices, VariableServices, MrcData.mem_size);
+    Status = InstallS3Memory (PeiServices, MrcData.mem_size);
     if (EFI_ERROR (Status)) {
       REPORT_STATUS_CODE (
         EFI_ERROR_CODE + EFI_ERROR_UNRECOVERED,
@@ -814,14 +814,6 @@ InstallEfiMemory (
     sizeof (EFI_SMRAM_DESCRIPTOR)
     );
 
-  //
-  // If we found the capsule PPI (and we didn't have errors), then
-  // call the capsule PEIM to allocate memory for the capsule.
-  //
-  //if (Capsule != NULL) {
-  //  Status = Capsule->CreateState (PeiServices, CapsuleBuffer, CapsuleBufferLength);
-  //}
-
   return EFI_SUCCESS;
 }
 
@@ -830,17 +822,14 @@ InstallEfiMemory (
   Find memory that is reserved so PEI has some to use.
 
   @param  PeiServices      PEI Services table.
-  @param  VariableSevices  Variable PPI instance.
 
   @return EFI_SUCCESS  The function completed successfully.
                        Error value from LocatePpi()
-                       Error Value from VariableServices->GetVariable()
 
 **/
 EFI_STATUS
 InstallS3Memory (
   IN      EFI_PEI_SERVICES                      **PeiServices,
-  IN      EFI_PEI_READ_ONLY_VARIABLE2_PPI       *VariableServices,
   IN      UINT32                                TotalMemorySize
   )
 {
