@@ -1088,6 +1088,7 @@ GetMemoryMap (
   UINT32                            BlockNum;
   UINT8                             ExtendedMemoryIndex;
   UINT32                            Register;
+  MEMORY_INIT_UPD                   *MemoryInitUpd;
 
   if ((*NumRanges) < MAX_RANGES) {
     return EFI_BUFFER_TOO_SMALL;
@@ -1184,7 +1185,9 @@ GetMemoryMap (
   //
   // trim 64K memory from highest memory range for Rmu Main binary shadow
   //
+  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
   MemoryMap[*NumRanges].RangeLength           = 0x10000;
+  ASSERT(MemoryMap[*NumRanges].RangeLength >= MemoryInitUpd->RmuLength);
   MemorySize                                 -= MemoryMap[*NumRanges].RangeLength;
   MemoryMap[*NumRanges].PhysicalAddress       = MemorySize;
   MemoryMap[*NumRanges].CpuAddress            = MemorySize;
