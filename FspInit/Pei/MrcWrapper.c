@@ -458,7 +458,7 @@ MemoryInit (
   //
   // Assign physical memory to PEI and DXE
   //
-  DEBUG ((EFI_D_INFO, "InstallEfiMemory.\n"));
+  DEBUG ((EFI_D_INFO, "InstallEfiMemory, TotalSize = 0x%08x\n", MrcData.mem_size));
 
   Status = InstallEfiMemory (
              PeiServices,
