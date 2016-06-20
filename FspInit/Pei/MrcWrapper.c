@@ -765,11 +765,14 @@ InstallEfiMemory (
     }
   }
 
+  if (SmramRanges == 0) {
+    return EFI_SUCCESS;
+  }
+
   //
   // Allocate one extra EFI_SMRAM_DESCRIPTOR to describe a page of SMRAM memory that contains a pointer
   // to the SMM Services Table that is required on the S3 resume path
   //
-  ASSERT (SmramRanges > 0);
   BufferSize = sizeof (EFI_SMRAM_HOB_DESCRIPTOR_BLOCK);
   BufferSize += ((SmramRanges - 1) * sizeof (EFI_SMRAM_DESCRIPTOR));
 
@@ -1167,6 +1170,8 @@ GetMemoryMap (
       MemoryMap[*NumRanges].PhysicalAddress       = MemorySize;
       MemoryMap[*NumRanges].CpuAddress            = MemorySize;
       MemoryMap[ExtendedMemoryIndex].RangeLength -= MemoryMap[*NumRanges].RangeLength;
+      MemoryMap[*NumRanges].Type = DualChannelDdrSmramCacheable;
+      (*NumRanges)++;
 
       //
       // Update QuarkNcSoc HSMMCTL register
@@ -1174,13 +1179,6 @@ GetMemoryMap (
       Register |= (UINT32)(((RShiftU64(MemorySize, 16)) & SMM_START_MASK) + (SMM_WRITE_OPEN | SMM_READ_OPEN | SMM_CODE_RD_OPEN));
       QncHsmmcWrite (Register);
     }
-
-    //
-    // Chipset only supports cacheable SMRAM
-    //
-    MemoryMap[*NumRanges].Type = DualChannelDdrSmramCacheable;
-
-    (*NumRanges)++;
   }
 
   //
