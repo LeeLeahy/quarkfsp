@@ -155,7 +155,6 @@
 [PcdsFeatureFlag]
 
 [PcdsFixedAtBuild]
-  gEfiIntelFrameworkModulePkgTokenSpaceGuid.PcdS3AcpiReservedMemorySize|0x20000
   gEfiMdeModulePkgTokenSpaceGuid.PcdResetOnMemoryTypeInformationChange|FALSE
 !if $(LOGGING)
     gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x27
@@ -294,8 +293,3 @@
 
   QuarkFspPkg/FspInit/Pei/FspInitPreMem.inf
   QuarkFspPkg/Override/QuarkSocPkg/QuarkNorthCluster/MemoryInit/Pei/MemoryInitPei.inf
-
-  #
-  # FSP IPL
-  #
-  IntelFspPkg/FspDxeIpl/FspDxeIpl.inf

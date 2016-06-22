@@ -91,18 +91,6 @@ FspInitApi:
   jmp     FspApiCommon
 
 ;----------------------------------------------------------------------------
-; NotifyPhase API
-;
-; This FSP API will notify the FSP about the different phases in the boot
-; process
-;
-;----------------------------------------------------------------------------
-          global        NotifyPhaseApi
-NotifyPhaseApi:
-  mov     eax, 2
-  jmp     FspApiCommon
-
-;----------------------------------------------------------------------------
 ; FspMemoryInit API
 ;
 ; This FSP API is called after TempRamInit and initializes the memory.
@@ -167,8 +155,8 @@ FspMemoryInitApi:
 ;----------------------------------------------------------------------------
           global        TempRamExitApi
 TempRamExitApi:
-  mov     eax, 4
-  jmp     FspApiCommon
+  xor     eax, eax
+  ret
 
 ;----------------------------------------------------------------------------
 ; FspSiliconInit API
@@ -179,8 +167,20 @@ TempRamExitApi:
 ;----------------------------------------------------------------------------
           global        FspSiliconInitApi
 FspSiliconInitApi:
-  mov     eax, 5
-  jmp     FspApiCommon
+  xor     eax, eax
+  ret
+
+;----------------------------------------------------------------------------
+; NotifyPhase API
+;
+; This FSP API will notify the FSP about the different phases in the boot
+; process
+;
+;----------------------------------------------------------------------------
+          global        NotifyPhaseApi
+NotifyPhaseApi:
+  xor     eax, eax
+  ret
 
 ;----------------------------------------------------------------------------
 ; FspApiCommon API

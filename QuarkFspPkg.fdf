@@ -146,11 +146,6 @@ FvNameGuid         = 1B5C27FE-F01C-4fbc-AEAE-341B2E992A17
 #
 INF RuleOverride = FSPHEADER QuarkFspPkg/FspHeader/FspHeader.inf
 
-#
-# FSP drivers
-#
-INF IntelFspPkg/FspDxeIpl/FspDxeIpl.inf
-
 ################################################################################
 #
 # Rules are use with the [FV] section's module INF type to define

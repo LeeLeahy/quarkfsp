@@ -488,31 +488,6 @@ IN VOID                       *Ppi
   DEBUG((DEBUG_INFO | DEBUG_INIT, "FspMemoryInitApi() - End\n"));
   SetFspApiReturnStatus(EFI_SUCCESS);
   Pei2LoaderSwitchStack();
-
-  //============================================================
-  //  TempRamExit
-  //============================================================
-  //
-  // Disable CAR and resets fixed and variable MTRR values.
-  //
-  //
-  // This is the end of the TempRamExit API
-  // Give control back to the boot loader
-  //
-  DEBUG((DEBUG_INFO | DEBUG_INIT, "TempRamExitApi() - End\n"));
-  SetFspApiReturnStatus(EFI_SUCCESS);
-  Pei2LoaderSwitchStack();
-
-  //============================================================
-  //  SiliconInit
-  //============================================================
-  //
-  // Install FSP silicon FV
-  //
-  ReportAndInstallNewFv();
-
-  DEBUG((DEBUG_INFO, "Memory Discovered Notify completed ...\n"));
-
   return EFI_SUCCESS;
 }
 
