@@ -31,6 +31,9 @@ extern    _gPcd_FixedAtBuild_PcdFspAreaSize
 ;
 extern    SecStartup
 extern    FspApiCallingCheck
+extern    TempRamExitApi
+extern    FspSiliconInitApi
+extern    NotifyPhaseApi
 
 ;
 ; Following functions will be provided in PlatformSecLib
@@ -146,41 +149,6 @@ FspMemoryInitApi:
   ;
   mov     eax, 3
   jmp     FspApiCommon
-
-;----------------------------------------------------------------------------
-; TempRamExitApi API
-;
-; This API tears down temporary RAM
-;
-;----------------------------------------------------------------------------
-          global        TempRamExitApi
-TempRamExitApi:
-  xor     eax, eax
-  ret
-
-;----------------------------------------------------------------------------
-; FspSiliconInit API
-;
-; This FSP API initializes the CPU and the chipset including the IO
-; controllers in the chipset to enable normal operation of these devices.
-;
-;----------------------------------------------------------------------------
-          global        FspSiliconInitApi
-FspSiliconInitApi:
-  xor     eax, eax
-  ret
-
-;----------------------------------------------------------------------------
-; NotifyPhase API
-;
-; This FSP API will notify the FSP about the different phases in the boot
-; process
-;
-;----------------------------------------------------------------------------
-          global        NotifyPhaseApi
-NotifyPhaseApi:
-  xor     eax, eax
-  ret
 
 ;----------------------------------------------------------------------------
 ; FspApiCommon API
@@ -350,3 +318,6 @@ _ModuleEntryPoint:
   ;
   jmp     TempRamInitApi
   jmp     FspInitApi
+  jmp     TempRamExitApi
+  jmp     FspSiliconInitApi
+  jmp     NotifyPhaseApi

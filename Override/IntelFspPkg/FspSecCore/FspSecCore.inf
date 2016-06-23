@@ -30,6 +30,9 @@
   SecMain.h
   SecFsp.c
   SecFsp.h
+  SiliconInit.c
+  TempRamExit.c
+  FspNotify.c
 
 [Sources.IA32]
   Ia32/FspApiEntry.nasm
