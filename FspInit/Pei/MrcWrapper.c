@@ -16,15 +16,6 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include "CommonHeader.h"
 #include "MrcWrapper.h"
 
-//
-// ------------------------ TSEG Base
-//
-// ------------------------ RESERVED_CPU_S3_SAVE_OFFSET
-// CPU S3 data
-// ------------------------ RESERVED_ACPI_S3_RANGE_OFFSET
-// S3 Memory base structure
-// ------------------------ TSEG + 1 page
-
 #define RESERVED_CPU_S3_SAVE_OFFSET (RESERVED_ACPI_S3_RANGE_OFFSET - sizeof (SMM_S3_RESUME_STATE))
 
 // Strap configuration register specifying DDR setup
@@ -1146,6 +1137,26 @@ GetMemoryMap (
   MemorySize += RowLength;
 
   ExtendedMemoryIndex = (UINT8) (*NumRanges - 1);
+
+  // ------------------------ Top of physical memory
+  // S3 Memory base structure
+  // ------------------------ RESERVED_ACPI_S3_RANGE_OFFSET
+  // CPU S3 data
+  // ------------------------ RESERVED_CPU_S3_SAVE_OFFSET
+  //
+  // ------------------------ TSEG Base
+  // Copy of RMU binary
+  // ------------------------ RmuBaseAddress
+  // BIOS reserved area
+  // ------------------------
+  // FSP reserved area
+  // ------------------------
+  // DRAM
+  // ------------------------ 0x00100000
+  // DRAM
+  // ------------------------ 0x000A0000
+  // DRAM
+  // ------------------------ 0
 
   // See if we need to trim TSEG out of the highest memory range
   //
