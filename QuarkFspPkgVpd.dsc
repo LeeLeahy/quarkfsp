@@ -172,9 +172,9 @@
 
 
   #
-  # Size of the SMM region in 128 KiB chunks
+  # Size of the SMM region in 1 MiB chunks
   #
-  gQuarkFspTokenSpaceGuid.SmmTsegSize                 | 0x005B | 0x01 | 16
+  gQuarkFspTokenSpaceGuid.SmmTsegSize                 | 0x005B | 0x01 | 2
 
   #
   # FSP reserved memory length in bytes
