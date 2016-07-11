@@ -126,7 +126,6 @@ typedef struct {
 EFI_STATUS
 InstallEfiMemory (
   IN      EFI_PEI_SERVICES                           **PeiServices,
-  IN      EFI_PEI_READ_ONLY_VARIABLE2_PPI            *VariableServices,
   IN      EFI_BOOT_MODE                              BootMode,
   IN      UINT32                                     TotalMemorySize
   );
@@ -171,8 +170,6 @@ ChooseRanges (
 
 EFI_STATUS
 GetPlatformMemorySize (
-  IN      EFI_PEI_SERVICES                       **PeiServices,
-  IN      EFI_BOOT_MODE                          BootMode,
   IN OUT  UINT64                                 *MemorySize
   );
 

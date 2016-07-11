@@ -272,11 +272,6 @@
   }
 
   #
-  # Variable
-  #
-  QuarkFspPkg/FspVariable/VariablePei.inf
-
-  #
   # FSP INFO Header
   #
   QuarkFspPkg/FspHeader/FspHeader.inf

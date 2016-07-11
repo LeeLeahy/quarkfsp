@@ -289,7 +289,6 @@ MemoryInit (
   MRC_PARAMS                                 MrcData;
   EFI_BOOT_MODE                               BootMode;
   EFI_STATUS                                  Status;
-  EFI_PEI_READ_ONLY_VARIABLE2_PPI             *VariableServices;
   EFI_STATUS_CODE_VALUE                       ErrorCodeValue;
   PEI_QNC_MEMORY_INIT_PPI                     *QncMemoryInitPpi;
   UINT16                                      PmswAdr;
@@ -306,17 +305,6 @@ MemoryInit (
   // that the SPD is present or the row should be configured are set to false.
   //
   ZeroMem (&MrcData, sizeof(MrcData));
-
-  //
-  // Get necessary PPI
-  //
-  Status = PeiServicesLocatePpi (
-             &gEfiPeiReadOnlyVariable2PpiGuid,           // GUID
-             0,                                          // INSTANCE
-             NULL,                                       // EFI_PEI_PPI_DESCRIPTOR
-             (VOID **)&VariableServices                  // PPI
-             );
-  ASSERT_EFI_ERROR (Status);
 
   //
   // Determine boot mode
@@ -453,7 +441,6 @@ MemoryInit (
 
   Status = InstallEfiMemory (
              PeiServices,
-             VariableServices,
              BootMode,
              MrcData.mem_size
              );
@@ -523,7 +510,6 @@ SaveConfig (
 EFI_STATUS
 InstallEfiMemory (
   IN      EFI_PEI_SERVICES                           **PeiServices,
-  IN      EFI_PEI_READ_ONLY_VARIABLE2_PPI            *VariableServices,
   IN      EFI_BOOT_MODE                              BootMode,
   IN      UINT32                                     TotalMemorySize
   )
@@ -544,8 +530,6 @@ InstallEfiMemory (
   EFI_RESOURCE_ATTRIBUTE_TYPE           Attribute;
   EFI_PHYSICAL_ADDRESS                  BadMemoryAddress;
   EFI_SMRAM_DESCRIPTOR                  DescriptorAcpiVariable;
-  UINT8                                 MorControl;
-  UINTN                                 DataSize;
 
   //
   // Test the memory from 1M->TOM
@@ -588,8 +572,6 @@ InstallEfiMemory (
   //
 
   Status = GetPlatformMemorySize (
-             PeiServices,
-             BootMode,
              &PeiMemoryLength
              );
   ASSERT_EFI_ERROR (Status);
@@ -599,61 +581,6 @@ InstallEfiMemory (
   //
   RequiredMemSize = 0;
   RetriveRequiredMemorySize (PeiServices, &RequiredMemSize);
-
-  //
-  // Detect MOR request by the OS.
-  //
-  MorControl = 0;
-  DataSize = sizeof (MorControl);
-  Status = VariableServices->GetVariable (
-                               VariableServices,
-                               MEMORY_OVERWRITE_REQUEST_VARIABLE_NAME,
-                               &gEfiMemoryOverwriteControlDataGuid,
-                               NULL,
-                               &DataSize,
-                               &MorControl
-                               );
-
-  PeiMemoryIndex = 0;
-
-  for (Index = 0; Index < NumRanges; Index++)
-  {
-    DEBUG ((EFI_D_INFO, "Found 0x%x bytes at ", MemoryMap[Index].RangeLength));
-    DEBUG ((EFI_D_INFO, "0x%x.\n", MemoryMap[Index].PhysicalAddress));
-
-    //
-    // If OS requested a memory overwrite perform it now.  Only do it for memory
-    // used by the OS.
-    //
-    if (MOR_CLEAR_MEMORY_VALUE (MorControl) && MemoryMap[Index].Type == DualChannelDdrMainMemory) {
-      DEBUG ((EFI_D_INFO, "Clear memory per MOR request.\n"));
-      if ((UINTN)MemoryMap[Index].RangeLength > 0) {
-        if ((UINTN)MemoryMap[Index].PhysicalAddress == 0) {
-          //
-          // ZeroMem() generates an ASSERT() if Buffer parameter is NULL.
-          // Clear byte at 0 and start clear operation at address 1.
-          //
-          *(UINT8 *)(0) = 0;
-          ZeroMem ((VOID *)1, (UINTN)MemoryMap[Index].RangeLength - 1);
-        } else {
-          ZeroMem (
-            (VOID *)(UINTN)MemoryMap[Index].PhysicalAddress,
-            (UINTN)MemoryMap[Index].RangeLength
-            );
-        }
-      }
-    }
-
-    if ((MemoryMap[Index].Type == DualChannelDdrMainMemory) &&
-        (MemoryMap[Index].PhysicalAddress + MemoryMap[Index].RangeLength < MAX_ADDRESS) &&
-        (MemoryMap[Index].PhysicalAddress >= PeiMemoryBaseAddress) &&
-        (MemoryMap[Index].RangeLength >= PeiMemoryLength)) {
-      PeiMemoryBaseAddress = MemoryMap[Index].PhysicalAddress +
-                             MemoryMap[Index].RangeLength -
-                             PeiMemoryLength;
-      PeiMemoryIndex = Index;
-    }
-  }
 
   //
   // Carve out the top memory reserved for ACPI
@@ -679,6 +606,7 @@ InstallEfiMemory (
   //
   // Install physical memory descriptor hobs for each memory range.
   //
+  PeiMemoryIndex = 0;
   SmramRanges = 0;
   for (Index = 0; Index < NumRanges; Index++) {
     Attribute = 0;
@@ -1252,89 +1180,30 @@ ChooseRanges (
 
 EFI_STATUS
 GetPlatformMemorySize (
-  IN       EFI_PEI_SERVICES                       **PeiServices,
-  IN       EFI_BOOT_MODE                          BootMode,
   IN OUT   UINT64                                 *MemorySize
   )
 {
-  EFI_STATUS                            Status;
-  EFI_PEI_READ_ONLY_VARIABLE2_PPI       *Variable;
-  UINTN                                 DataSize;
-  EFI_MEMORY_TYPE_INFORMATION           MemoryData [EfiMaxMemoryType + 1];
   UINTN                                 Index;
-
-  DataSize = sizeof (MemoryData);
-
-  if (BootMode == BOOT_IN_RECOVERY_MODE) {
-
-    //
-    // // Treat recovery as if variable not found (eg 1st boot).
-    //
-    Status = EFI_NOT_FOUND;
-
-  } else {
-    Status = PeiServicesLocatePpi (
-               &gEfiPeiReadOnlyVariable2PpiGuid,
-               0,
-               NULL,
-               (VOID **)&Variable
-               );
-
-    ASSERT_EFI_ERROR (Status);
-
-    DataSize = sizeof (MemoryData);
-    Status = Variable->GetVariable (
-                         Variable,
-                         EFI_MEMORY_TYPE_INFORMATION_VARIABLE_NAME,
-                         &gEfiMemoryTypeInformationGuid,
-                         NULL,
-                         &DataSize,
-                         &MemoryData
-                         );
-  }
 
   //
   // Accumulate maximum amount of memory needed
   //
-  if (EFI_ERROR (Status)) {
-    //
-    // Start with minimum memory
-    //
-    *MemorySize = PEI_MIN_MEMORY_SIZE;
-
-    for (Index = 0; Index < sizeof(mDefaultQncMemoryTypeInformation) / sizeof (EFI_MEMORY_TYPE_INFORMATION); Index++) {
-        *MemorySize += mDefaultQncMemoryTypeInformation[Index].NumberOfPages * EFI_PAGE_SIZE;
-    }
-
-    //
-    // Build the GUID'd HOB for DXE
-    //
-    BuildGuidDataHob (
-                 &gEfiMemoryTypeInformationGuid,
-                 mDefaultQncMemoryTypeInformation,
-                 sizeof(mDefaultQncMemoryTypeInformation)
-                 );
-  } else {
-    //
-    // Start with at least PEI_MIN_MEMORY_SIZE pages of memory for the DXE Core and the DXE Stack
-    //
-
-    *MemorySize = PEI_MIN_MEMORY_SIZE;
-    for (Index = 0; Index < DataSize / sizeof (EFI_MEMORY_TYPE_INFORMATION); Index++) {
-      DEBUG ((EFI_D_INFO, "Index %d, Page: %d\n", Index, MemoryData[Index].NumberOfPages));
-      *MemorySize += MemoryData[Index].NumberOfPages * EFI_PAGE_SIZE;
-    }
-
-    //
-    // Build the GUID'd HOB for DXE
-    //
-    BuildGuidDataHob (
-                 &gEfiMemoryTypeInformationGuid,
-                 MemoryData,
-                 DataSize
-                 );
-
+  //
+  // Start with minimum memory
+  //
+  *MemorySize = PEI_MIN_MEMORY_SIZE;
+  for (Index = 0; Index < sizeof(mDefaultQncMemoryTypeInformation) / sizeof (EFI_MEMORY_TYPE_INFORMATION); Index++) {
+      *MemorySize += mDefaultQncMemoryTypeInformation[Index].NumberOfPages * EFI_PAGE_SIZE;
   }
+
+  //
+  // Build the GUID'd HOB for DXE
+  //
+  BuildGuidDataHob (
+               &gEfiMemoryTypeInformationGuid,
+               mDefaultQncMemoryTypeInformation,
+               sizeof(mDefaultQncMemoryTypeInformation)
+               );
 
   return EFI_SUCCESS;
 }

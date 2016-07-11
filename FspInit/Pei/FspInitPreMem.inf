@@ -42,7 +42,6 @@
   gEfiPeiStallPpiGuid                       # PPI ALWAYS_PRODUCED
   gEfiPeiResetPpiGuid                       # PPI ALWAYS_PRODUCED
   gQNCMemoryInitPpiGuid                         # PPI ALWAYS_CONSUMED
-  gEfiPeiReadOnlyVariable2PpiGuid               # PPI ALWAYS_CONSUMED
 
 [Guids]
   gEfiMemoryConfigDataGuid                  # PPI ALWAYS_CONSUMED
