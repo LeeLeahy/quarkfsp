@@ -162,13 +162,6 @@ GetMemoryMap (
   );
 
 EFI_STATUS
-ChooseRanges (
-  IN OUT   PEI_MEMORY_RANGE_OPTION_ROM      *OptionRomMask,
-  IN OUT   PEI_MEMORY_RANGE_SMRAM           *SmramMask,
-  IN OUT   PEI_MEMORY_RANGE_PCI_MEMORY      *PciMemoryMask
-  );
-
-EFI_STATUS
 BaseMemoryTest (
   IN  EFI_PEI_SERVICES                   **PeiServices,
   IN  EFI_PHYSICAL_ADDRESS               BeginAddress,

@@ -1028,9 +1028,6 @@ GetMemoryMap (
 {
   EFI_PHYSICAL_ADDRESS              MemorySize;
   EFI_PHYSICAL_ADDRESS              RowLength;
-  EFI_STATUS                        Status;
-  PEI_MEMORY_RANGE_PCI_MEMORY       PciMemoryMask;
-  PEI_MEMORY_RANGE_OPTION_ROM       OptionRomMask;
   PEI_MEMORY_RANGE_SMRAM            SmramMask;
   PEI_MEMORY_RANGE_SMRAM            TsegMask;
   UINT32                            BlockNum;
@@ -1047,12 +1044,9 @@ GetMemoryMap (
   //
   // Find out which memory ranges to reserve on this platform
   //
-  Status = ChooseRanges (
-             &OptionRomMask,
-             &SmramMask,
-             &PciMemoryMask
-             );
-  ASSERT_EFI_ERROR (Status);
+  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
+  SmramMask = PEI_MR_SMRAM_CACHEABLE_MASK | PEI_MR_SMRAM_TSEG_MASK
+             | (UINT32)MemoryInitUpd->SmmTsegSize;
 
   //
   // Generate Memory ranges for the memory map.
@@ -1162,47 +1156,6 @@ GetMemoryMap (
   MemoryMap[ExtendedMemoryIndex].RangeLength -= MemoryMap[*NumRanges].RangeLength;
   MemoryMap[*NumRanges].Type = DualChannelDdrReservedMemory;
   (*NumRanges)++;
-
-  return EFI_SUCCESS;
-}
-
-/**
-
-Routine Description:
-
-  Fill in bit masks to specify reserved memory ranges on the Lakeport platform
-
-Arguments:
-
-Returns:
-
-  OptionRomMask - Bit mask specifying memory regions reserved for Legacy option
-                  ROM use (if any)
-
-  SmramMask - Bit mask specifying memory regions reserved for SMM use (if any)
-
-**/
-EFI_STATUS
-ChooseRanges (
-  IN OUT   PEI_MEMORY_RANGE_OPTION_ROM           *OptionRomMask,
-  IN OUT   PEI_MEMORY_RANGE_SMRAM                *SmramMask,
-  IN OUT   PEI_MEMORY_RANGE_PCI_MEMORY           *PciMemoryMask
-  )
-{
-  MEMORY_INIT_UPD *MemoryInitUpd;
-
-  //
-  // Choose regions to reserve for Option ROM use
-  //
-  *OptionRomMask = PEI_MR_OPTION_ROM_NONE;
-
-  //
-  // Choose regions to reserve for SMM use (AB/H SEG and TSEG). Size is in 128K blocks
-  //
-  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
-  *SmramMask = PEI_MR_SMRAM_CACHEABLE_MASK | PEI_MR_SMRAM_TSEG_MASK
-             | (UINT32)MemoryInitUpd->SmmTsegSize;
-  *PciMemoryMask = 0;
 
   return EFI_SUCCESS;
 }
