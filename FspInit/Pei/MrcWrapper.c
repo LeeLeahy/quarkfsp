@@ -287,7 +287,7 @@ PostInstallMemory (
   // Find the 64KB of memory for Rmu Main at the top of available memory.
   //
   InfoPostInstallMemory (&RmuMainDestBaseAddress, NULL, NULL);
-  DEBUG ((EFI_D_INFO, "RmuMain Base Address : 0x%x\n", RmuMainDestBaseAddress));
+  DEBUG ((EFI_D_INFO, "RmuMain Base Address : 0x%08x\n", RmuMainDestBaseAddress));
 
   //
   // Relocate RmuMain.
@@ -557,7 +557,6 @@ InstallEfiMemory (
   UINT8                                 SmramRanges;
   UINT64                                PeiMemoryLength;
   UINTN                                 BufferSize;
-  UINTN                                 PeiMemoryIndex;
   UINTN                                 RequiredMemSize;
   EFI_RESOURCE_ATTRIBUTE_TYPE           Attribute;
   EFI_PHYSICAL_ADDRESS                  BadMemoryAddress;
@@ -592,18 +591,23 @@ InstallEfiMemory (
              &NumRanges
              );
   ASSERT_EFI_ERROR (Status);
+  ASSERT(NumRanges <= MAX_RANGES);
 
   //
   // Find the highest memory range in processor native address space to give to
   // PEI. Then take the top.
   //
-  PeiMemoryBaseAddress = 0;
+  PeiMemoryBaseAddress = MemoryMap[NumRanges - 1].PhysicalAddress;
+  PeiMemoryLength = MemoryMap[NumRanges - 1].RangeLength;
 
   //
-  // Query the platform for the minimum memory size
+  // Build the GUID'd HOB for DXE
   //
-
-  PeiMemoryLength = GetFspReservedMemorySize ();
+  BuildGuidDataHob (
+               &gEfiMemoryTypeInformationGuid,
+               mDefaultQncMemoryTypeInformation,
+               sizeof(mDefaultQncMemoryTypeInformation)
+               );
 
   //
   // Get required memory size for ACPI use. This helps to put ACPI memory on the topest
@@ -614,7 +618,7 @@ InstallEfiMemory (
   //
   // Carve out the top memory reserved for ACPI
   //
-  Status        = PeiServicesInstallPeiMemory (PeiMemoryBaseAddress, (PeiMemoryLength - RequiredMemSize));
+  Status = PeiServicesInstallPeiMemory (PeiMemoryBaseAddress, (PeiMemoryLength - RequiredMemSize));
   ASSERT_EFI_ERROR (Status);
 
   BuildResourceDescriptorHob (
@@ -635,54 +639,44 @@ InstallEfiMemory (
   //
   // Install physical memory descriptor hobs for each memory range.
   //
-  PeiMemoryIndex = 0;
   SmramRanges = 0;
   for (Index = 0; Index < NumRanges; Index++) {
     Attribute = 0;
     if (MemoryMap[Index].Type == DualChannelDdrMainMemory)
     {
-      if (Index == PeiMemoryIndex) {
-        //
-        // This is a partially tested Main Memory range, give it to EFI
-        //
-        BuildResourceDescriptorHob (
-          EFI_RESOURCE_SYSTEM_MEMORY,
-          (
-          EFI_RESOURCE_ATTRIBUTE_PRESENT |
-          EFI_RESOURCE_ATTRIBUTE_INITIALIZED |
-          EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE |
-          EFI_RESOURCE_ATTRIBUTE_WRITE_COMBINEABLE |
-          EFI_RESOURCE_ATTRIBUTE_WRITE_THROUGH_CACHEABLE |
-          EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE
-          ),
-          MemoryMap[Index].PhysicalAddress,
-          MemoryMap[Index].RangeLength - PeiMemoryLength
-          );
-      } else {
-        //
-        // This is an untested Main Memory range, give it to EFI
-        //
-        BuildResourceDescriptorHob (
-          EFI_RESOURCE_SYSTEM_MEMORY,       // MemoryType,
-          (
-          EFI_RESOURCE_ATTRIBUTE_PRESENT |
-          EFI_RESOURCE_ATTRIBUTE_INITIALIZED |
-          EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE |
-          EFI_RESOURCE_ATTRIBUTE_WRITE_COMBINEABLE |
-          EFI_RESOURCE_ATTRIBUTE_WRITE_THROUGH_CACHEABLE |
-          EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE
-          ),
-          MemoryMap[Index].PhysicalAddress, // MemoryBegin
-          MemoryMap[Index].RangeLength      // MemoryLength
-          );
-      }
+      //
+      // This is Main Memory range, give it to EFI
+      //
+      DEBUG((EFI_D_INFO, "0x%08lx - 0x%08lx: %atested memory\n",
+        MemoryMap[Index].PhysicalAddress,
+        MemoryMap[Index].PhysicalAddress + MemoryMap[Index].RangeLength,
+        (Index == 0) ? "Partially " : "Un"));
+      BuildResourceDescriptorHob (
+        EFI_RESOURCE_SYSTEM_MEMORY,       // MemoryType,
+        (
+        EFI_RESOURCE_ATTRIBUTE_PRESENT |
+        EFI_RESOURCE_ATTRIBUTE_INITIALIZED |
+        EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE |
+        EFI_RESOURCE_ATTRIBUTE_WRITE_COMBINEABLE |
+        EFI_RESOURCE_ATTRIBUTE_WRITE_THROUGH_CACHEABLE |
+        EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE
+        ),
+        MemoryMap[Index].PhysicalAddress, // MemoryBegin
+        MemoryMap[Index].RangeLength      // MemoryLength
+        );
     } else {
       if ((MemoryMap[Index].Type == DualChannelDdrSmramCacheable) ||
           (MemoryMap[Index].Type == DualChannelDdrSmramNonCacheable)) {
         SmramRanges++;
+        DEBUG((EFI_D_ERROR, "0x%08lx - 0x%08lx: SMM\n",
+          MemoryMap[Index].PhysicalAddress,
+          MemoryMap[Index].PhysicalAddress + MemoryMap[Index].RangeLength));
       }
       if ((MemoryMap[Index].Type == DualChannelDdrSmramNonCacheable) ||
           (MemoryMap[Index].Type == DualChannelDdrGraphicsMemoryNonCacheable)) {
+        DEBUG((EFI_D_ERROR, "0x%08lx - 0x%08lx: uncached\n",
+          MemoryMap[Index].PhysicalAddress,
+          MemoryMap[Index].PhysicalAddress + MemoryMap[Index].RangeLength));
         Attribute |= EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE;
       }
       if ((MemoryMap[Index].Type == DualChannelDdrSmramCacheable)         ||
@@ -695,12 +689,22 @@ InstallEfiMemory (
         // SMM or before existing SMM therefore any MTRR defined for the active TSEG
         // or HSEG must be set to un-cacheable(UC) outside of SMM.
         //
+        DEBUG((EFI_D_ERROR, "0x%08lx - 0x%08lx: Reserved, cached with write-back\n",
+          MemoryMap[Index].PhysicalAddress,
+          MemoryMap[Index].PhysicalAddress + MemoryMap[Index].RangeLength));
         Attribute |= EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE | EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE;
       }
-      if (MemoryMap[Index].Type == DualChannelDdrReservedMemory) {
+      if ((MemoryMap[Index].Type == DualChannelDdrBiosReservedMemory)
+        || (MemoryMap[Index].Type == DualChannelDdrFspReservedMemory)
+        || (MemoryMap[Index].Type == DualChannelDdrGraphicsReservedMemory)
+        || (MemoryMap[Index].Type == DualChannelDdrRmuReservedMemory)) {
+        DEBUG((EFI_D_ERROR, "0x%08lx - 0x%08lx: Reserved, cached with write-back\n",
+          MemoryMap[Index].PhysicalAddress,
+          MemoryMap[Index].PhysicalAddress + MemoryMap[Index].RangeLength));
         Attribute |= EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE |
                      EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE;
       }
+
       //
       // Make sure non-system memory is marked as reserved
       //
@@ -1026,14 +1030,13 @@ GetMemoryMap (
   IN OUT UINT8                                               *NumRanges
   )
 {
+  EFI_PHYSICAL_ADDRESS              MemoryAddress;
   EFI_PHYSICAL_ADDRESS              MemorySize;
-  EFI_PHYSICAL_ADDRESS              RowLength;
-  PEI_MEMORY_RANGE_SMRAM            SmramMask;
-  PEI_MEMORY_RANGE_SMRAM            TsegMask;
-  UINT32                            BlockNum;
   UINT8                             ExtendedMemoryIndex;
   UINT32                            Register;
   MEMORY_INIT_UPD                   *MemoryInitUpd;
+  FSP_INIT_RT_COMMON_BUFFER         *FspInitRtBuffer;
+  UINT32                            TsegSize;
 
   if ((*NumRanges) < MAX_RANGES) {
     return EFI_BUFFER_TOO_SMALL;
@@ -1042,25 +1045,15 @@ GetMemoryMap (
   *NumRanges = 0;
 
   //
-  // Find out which memory ranges to reserve on this platform
-  //
-  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
-  SmramMask = PEI_MR_SMRAM_CACHEABLE_MASK | PEI_MR_SMRAM_TSEG_MASK
-             | (UINT32)MemoryInitUpd->SmmTsegSize;
-
-  //
   // Generate Memory ranges for the memory map.
   //
-  MemorySize = 0;
-
-  RowLength = TotalMemorySize;
 
   //
   // Add memory below 640KB to the memory map. Make sure memory between
   // 640KB and 1MB are reserved, even if not used for SMRAM
   //
-  MemoryMap[*NumRanges].PhysicalAddress = MemorySize;
-  MemoryMap[*NumRanges].CpuAddress      = MemorySize;
+  MemoryMap[*NumRanges].PhysicalAddress = 0;
+  MemoryMap[*NumRanges].CpuAddress      = 0;
   MemoryMap[*NumRanges].RangeLength     = 0xA0000;
   MemoryMap[*NumRanges].Type            = DualChannelDdrMainMemory;
   (*NumRanges)++;
@@ -1071,33 +1064,35 @@ GetMemoryMap (
   MemoryMap[*NumRanges].PhysicalAddress = 0xA0000;
   MemoryMap[*NumRanges].CpuAddress      = 0xA0000;
   MemoryMap[*NumRanges].RangeLength     = 0x60000;
-  MemoryMap[*NumRanges].Type            = DualChannelDdrReservedMemory;
+  MemoryMap[*NumRanges].Type            = DualChannelDdrGraphicsReservedMemory;
   (*NumRanges)++;
-
-  RowLength -= (0x100000 - MemorySize);
-  MemorySize = 0x100000;
 
   //
   // Add remaining memory to the memory map
   //
-  MemoryMap[*NumRanges].PhysicalAddress = MemorySize;
-  MemoryMap[*NumRanges].CpuAddress      = MemorySize;
-  MemoryMap[*NumRanges].RangeLength     = RowLength;
+  MemoryAddress = 0x100000;
+  MemorySize = TotalMemorySize - MemoryAddress;
+
+  MemoryMap[*NumRanges].PhysicalAddress = MemoryAddress;
+  MemoryMap[*NumRanges].CpuAddress      = MemoryAddress;
+  MemoryMap[*NumRanges].RangeLength     = MemorySize;
   MemoryMap[*NumRanges].Type            = DualChannelDdrMainMemory;
   (*NumRanges)++;
-  MemorySize += RowLength;
+  MemoryAddress += MemorySize;
 
   ExtendedMemoryIndex = (UINT8) (*NumRanges - 1);
 
   // ------------------------ Top of physical memory
+  //
+  //      --------------      TSEG + 1 page
   // S3 Memory base structure
-  // ------------------------ RESERVED_ACPI_S3_RANGE_OFFSET
+  //      --------------      RESERVED_ACPI_S3_RANGE_OFFSET
   // CPU S3 data
-  // ------------------------ RESERVED_CPU_S3_SAVE_OFFSET
+  //      --------------      RESERVED_CPU_S3_SAVE_OFFSET
   //
   // ------------------------ TSEG Base
   // Copy of RMU binary
-  // ------------------------ RmuBaseAddress
+  // ------------------------ TOLUM: RmuBaseAddress
   // BIOS reserved area
   // ------------------------
   // FSP reserved area
@@ -1109,54 +1104,126 @@ GetMemoryMap (
   // DRAM
   // ------------------------ 0
 
+  //
   // See if we need to trim TSEG out of the highest memory range
   //
-  if (SmramMask & PEI_MR_SMRAM_TSEG_MASK) {//pcd
-    //
-    // Create the new range for TSEG and remove that range from the previous SdrDdrMainMemory range
-    //
-    TsegMask  = (SmramMask & PEI_MR_SMRAM_SIZE_MASK);
-
-    BlockNum  = 1;
-    while (TsegMask) {
-      TsegMask >>= 1;
-      BlockNum <<= 1;
-    }
-
-    BlockNum >>= 1;
-
-    if (BlockNum) {
-
-      MemoryMap[*NumRanges].RangeLength           = (BlockNum * 128 * 1024);
-      Register = (UINT32)((MemorySize - 1) & SMM_END_MASK);
-      MemorySize                                 -= MemoryMap[*NumRanges].RangeLength;
-      MemoryMap[*NumRanges].PhysicalAddress       = MemorySize;
-      MemoryMap[*NumRanges].CpuAddress            = MemorySize;
-      MemoryMap[ExtendedMemoryIndex].RangeLength -= MemoryMap[*NumRanges].RangeLength;
-      MemoryMap[*NumRanges].Type = DualChannelDdrSmramCacheable;
-      (*NumRanges)++;
-
-      //
-      // Update QuarkNcSoc HSMMCTL register
-      //
-      Register |= (UINT32)(((RShiftU64(MemorySize, 16)) & SMM_START_MASK) + (SMM_WRITE_OPEN | SMM_READ_OPEN | SMM_CODE_RD_OPEN));
-      QncHsmmcWrite (Register);
-    }
+  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
+  TsegSize = MemoryInitUpd->SmmTsegSize;
+  Register = (UINT32)((MemoryAddress - 1) & SMM_END_MASK);
+  if (TsegSize > 0) {
+    MemoryMap[*NumRanges].RangeLength           = (TsegSize * 1024 * 1024);
+    MemoryAddress                              -= MemoryMap[*NumRanges].RangeLength;
+    MemoryMap[*NumRanges].PhysicalAddress       = MemoryAddress;
+    MemoryMap[*NumRanges].CpuAddress            = MemoryAddress;
+    MemoryMap[ExtendedMemoryIndex].RangeLength -= MemoryMap[*NumRanges].RangeLength;
+    MemoryMap[*NumRanges].Type = DualChannelDdrSmramCacheable;
+    (*NumRanges)++;
   }
 
   //
-  // trim 64K memory from highest memory range for Rmu Main binary shadow
+  // Set the TSEG base address
   //
-  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
+  Register |= (UINT32)(((RShiftU64(MemoryAddress, 16)) & SMM_START_MASK)
+            | SMM_WRITE_OPEN | SMM_READ_OPEN | SMM_CODE_RD_OPEN);
+  QncHsmmcWrite (Register);
+
+  //
+  // Trim off 64K memory for RMU Main binary shadow
+  //
   MemoryMap[*NumRanges].RangeLength           = 0x10000;
   ASSERT(MemoryMap[*NumRanges].RangeLength >= MemoryInitUpd->RmuLength);
-  MemorySize                                 -= MemoryMap[*NumRanges].RangeLength;
-  MemoryMap[*NumRanges].PhysicalAddress       = MemorySize;
-  MemoryMap[*NumRanges].CpuAddress            = MemorySize;
+  MemoryAddress                              -= MemoryMap[*NumRanges].RangeLength;
+  MemoryMap[*NumRanges].PhysicalAddress       = MemoryAddress;
+  MemoryMap[*NumRanges].CpuAddress            = MemoryAddress;
   MemoryMap[ExtendedMemoryIndex].RangeLength -= MemoryMap[*NumRanges].RangeLength;
-  MemoryMap[*NumRanges].Type = DualChannelDdrReservedMemory;
+  MemoryMap[*NumRanges].Type = DualChannelDdrRmuReservedMemory;
   (*NumRanges)++;
 
+  //
+  // Trim off the BIOS reserved area
+  //
+  FspInitRtBuffer = (FSP_INIT_RT_COMMON_BUFFER *)((FSP_MEMORY_INIT_PARAMS *)GetFspApiParameter())->RtBufferPtr;
+  ASSERT (FspInitRtBuffer != NULL);
+  if (FspInitRtBuffer->BootLoaderTolumSize > 0) {
+    MemoryMap[*NumRanges].RangeLength           = FspInitRtBuffer->BootLoaderTolumSize;
+    MemoryAddress                              -= MemoryMap[*NumRanges].RangeLength;
+    MemoryMap[*NumRanges].PhysicalAddress       = MemoryAddress;
+    MemoryMap[*NumRanges].CpuAddress            = MemoryAddress;
+    MemoryMap[ExtendedMemoryIndex].RangeLength -= MemoryMap[*NumRanges].RangeLength;
+    MemoryMap[*NumRanges].Type = DualChannelDdrBiosReservedMemory;
+    (*NumRanges)++;
+  }
+
+  //
+  // Trim off the FSP reserved area
+  //
+  MemoryMap[*NumRanges].RangeLength           = GetFspReservedMemorySize();
+  MemoryAddress                              -= MemoryMap[*NumRanges].RangeLength;
+  MemoryMap[*NumRanges].PhysicalAddress       = MemoryAddress;
+  MemoryMap[*NumRanges].CpuAddress            = MemoryAddress;
+  MemoryMap[ExtendedMemoryIndex].RangeLength -= MemoryMap[*NumRanges].RangeLength;
+  MemoryMap[*NumRanges].Type = DualChannelDdrFspReservedMemory;
+  (*NumRanges)++;
+
+  //
+  // Display the memory segments
+  //
+  DEBUG_CODE_BEGIN();
+  {
+    UINT32 Index;
+
+    MemoryAddress = TotalMemorySize;
+    DEBUG ((EFI_D_ERROR, "+------------------------- 0x%08x: Top of physical memory\n", MemoryAddress));
+    Index = *NumRanges - 1;
+
+    // Display SMM area if enabled
+    Index = ExtendedMemoryIndex + 1;
+    if (TsegSize > 0) {
+      MemoryAddress -= MemoryMap[Index].RangeLength;
+      ASSERT(MemoryAddress == MemoryMap[Index].PhysicalAddress);
+      DEBUG ((EFI_D_ERROR, "|\n"));
+      DEBUG ((EFI_D_ERROR, "|      --------------      0x%08x: TSEG + 1 page\n", MemoryAddress + EFI_PAGE_SIZE));
+      DEBUG ((EFI_D_ERROR, "| S3 Memory base structure\n"));
+      DEBUG ((EFI_D_ERROR, "|      --------------      0x%08x: RESERVED_ACPI_S3_RANGE_OFFSET\n", MemoryAddress + RESERVED_ACPI_S3_RANGE_OFFSET));
+      DEBUG ((EFI_D_ERROR, "| CPU S3 data\n"));
+      DEBUG ((EFI_D_ERROR, "|      --------------      0x%08x: RESERVED_CPU_S3_SAVE_OFFSET\n", MemoryAddress + RESERVED_CPU_S3_SAVE_OFFSET));
+      DEBUG ((EFI_D_ERROR, "|\n"));
+      DEBUG ((EFI_D_ERROR, "+------------------------- 0x%08x: TSEG Base\n", MemoryAddress));
+      Index++;
+    }
+
+    // Display RMU area
+    MemoryAddress -= MemoryMap[Index].RangeLength;
+    ASSERT(MemoryAddress == MemoryMap[Index].PhysicalAddress);
+    DEBUG ((EFI_D_ERROR, "| Copy of RMU binary\n"));
+    DEBUG ((EFI_D_ERROR, "+------------------------- 0x%08x: RmuBaseAddress (TOLUM)\n", MemoryAddress));
+    Index++;
+
+    // Display BIOS reserved area if requested
+    if (FspInitRtBuffer->BootLoaderTolumSize > 0) {
+      MemoryAddress -= MemoryMap[Index].RangeLength;
+      ASSERT(MemoryAddress == MemoryMap[Index].PhysicalAddress);
+      DEBUG ((EFI_D_ERROR, "| BIOS reserved area\n"));
+      DEBUG ((EFI_D_ERROR, "+------------------------- 0x%08x\n", MemoryAddress));
+      Index++;
+    }
+
+    // Display FSP reserved area
+    MemoryAddress -= MemoryMap[Index].RangeLength;
+    ASSERT(MemoryAddress == MemoryMap[Index].PhysicalAddress);
+    DEBUG ((EFI_D_ERROR, "| FSP reserved area\n"));
+    DEBUG ((EFI_D_ERROR, "+------------------------- 0x%08x\n", MemoryAddress));
+
+    // Display DRAM areas
+    Index = ExtendedMemoryIndex;
+    do {
+      MemoryAddress -= MemoryMap[Index].RangeLength;
+      ASSERT(MemoryAddress == MemoryMap[Index].PhysicalAddress);
+      DEBUG ((EFI_D_ERROR, "| DRAM\n"));
+      DEBUG ((EFI_D_ERROR, "+------------------------- 0x%08x\n", MemoryAddress));
+    } while (Index-- != 0);
+  }
+  DEBUG_CODE_END ();
   return EFI_SUCCESS;
 }
 
@@ -1241,8 +1308,10 @@ InfoPostInstallMemory (
 {
   EFI_STATUS                            Status;
   EFI_PEI_HOB_POINTERS                  Hob;
-  UINT64                                CalcLength;
+  UINT64                                RmuBaseAddress;
   EFI_SMRAM_HOB_DESCRIPTOR_BLOCK        *SmramHobDescriptorBlock;
+  MEMORY_INIT_UPD                       *MemoryInitUpd;
+  UINT32                                RmuIndex;
 
   if ((RmuMainBaseAddressPtr == NULL) && (SmramDescriptorPtr == NULL) && (NumSmramRegionsPtr == NULL)) {
     return;
@@ -1257,22 +1326,28 @@ InfoPostInstallMemory (
   }
 
   //
+  // Determine the location of the RMU reserved memory area
+  //
+  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
+  RmuIndex = (MemoryInitUpd->SmmTsegSize > 0) ? 2 : 1;
+
+  //
   // Calculate RMU shadow region base address.
   // Set to 1 MB. Since 1MB cacheability will always be set
   // until override by CSM.
   //
-  CalcLength = 0x100000;
+  RmuBaseAddress = 0;
 
   Status = PeiServicesGetHobList ((VOID **) &Hob.Raw);
   ASSERT_EFI_ERROR (Status);
   while (!END_OF_HOB_LIST (Hob)) {
     if (Hob.Header->HobType == EFI_HOB_TYPE_RESOURCE_DESCRIPTOR) {
-      if (Hob.ResourceDescriptor->ResourceType == EFI_RESOURCE_SYSTEM_MEMORY) {
+      if (Hob.ResourceDescriptor->ResourceType == EFI_RESOURCE_MEMORY_RESERVED) {
         //
         // Skip the memory region below 1MB
         //
-        if (Hob.ResourceDescriptor->PhysicalStart >= 0x100000) {
-          CalcLength += (UINT64) (Hob.ResourceDescriptor->ResourceLength);
+        if (RmuIndex-- == 0) {
+          RmuBaseAddress = (UINT64) (Hob.ResourceDescriptor->PhysicalStart);
         }
       }
     } else if (Hob.Header->HobType == EFI_HOB_TYPE_GUID_EXTENSION) {
@@ -1290,6 +1365,6 @@ InfoPostInstallMemory (
   }
 
   if (RmuMainBaseAddressPtr != NULL) {
-    *RmuMainBaseAddressPtr = (UINT32) CalcLength;
+    *RmuMainBaseAddressPtr = (UINT32) RmuBaseAddress;
   }
 }

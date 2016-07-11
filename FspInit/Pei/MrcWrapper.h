@@ -105,7 +105,10 @@ typedef enum {
   DualChannelDdrSmramNonCacheable,
   DualChannelDdrGraphicsMemoryCacheable,
   DualChannelDdrGraphicsMemoryNonCacheable,
-  DualChannelDdrReservedMemory,
+  DualChannelDdrBiosReservedMemory,
+  DualChannelDdrFspReservedMemory,
+  DualChannelDdrGraphicsReservedMemory,
+  DualChannelDdrRmuReservedMemory,
   DualChannelDdrMaxMemoryRangeType
 } PEI_DUAL_CHANNEL_DDR_MEMORY_RANGE_TYPE;
 
