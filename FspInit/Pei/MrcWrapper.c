@@ -26,11 +26,6 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 
 
 EFI_MEMORY_TYPE_INFORMATION mDefaultQncMemoryTypeInformation[] = {
-  { EfiReservedMemoryType,  EDKII_RESERVED_SIZE_PAGES },       // BIOS Reserved
-  { EfiACPIMemoryNVS,       ACPI_NVS_SIZE_PAGES },             // S3, SMM, etc
-  { EfiRuntimeServicesData, RUNTIME_SERVICES_DATA_SIZE_PAGES },
-  { EfiRuntimeServicesCode, RUNTIME_SERVICES_CODE_SIZE_PAGES },
-  { EfiACPIReclaimMemory,   ACPI_RECLAIM_SIZE_PAGES },         // ACPI ASL
   { EfiMaxMemoryType,       0 }
 };
 
@@ -44,7 +39,8 @@ GetFspReservedMemorySize (VOID)
   //
   // Start with minimum memory
   //
-  MemorySize = PEI_MIN_MEMORY_SIZE;
+  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
+  MemorySize = MemoryInitUpd->FspReservedMemoryLength;
 
   //
   // Account for other memory areas
@@ -57,10 +53,7 @@ GetFspReservedMemorySize (VOID)
   // Validate the memory length
   //
   MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
-  if (MemoryInitUpd->FspReservedMemoryLength > MemorySize) {
-    DEBUG((EFI_D_INFO, "FSP required memory size can be reduced to 0x%08lx\n", MemorySize));
-    MemorySize = MemoryInitUpd->FspReservedMemoryLength;
-  } else if (MemoryInitUpd->FspReservedMemoryLength < MemorySize) {
+  if (MemoryInitUpd->FspReservedMemoryLength < MemorySize) {
     DEBUG((EFI_D_INFO, "FSP required memory size must be >= 0x%08lx\n", MemorySize));
   }
   return MemorySize;
