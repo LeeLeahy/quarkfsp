@@ -26,13 +26,45 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 
 
 EFI_MEMORY_TYPE_INFORMATION mDefaultQncMemoryTypeInformation[] = {
-  { EfiReservedMemoryType,  EDKII_RESERVED_SIZE_PAGES },     // BIOS Reserved
-  { EfiACPIMemoryNVS,       ACPI_NVS_SIZE_PAGES },    // S3, SMM, etc
+  { EfiReservedMemoryType,  EDKII_RESERVED_SIZE_PAGES },       // BIOS Reserved
+  { EfiACPIMemoryNVS,       ACPI_NVS_SIZE_PAGES },             // S3, SMM, etc
   { EfiRuntimeServicesData, RUNTIME_SERVICES_DATA_SIZE_PAGES },
   { EfiRuntimeServicesCode, RUNTIME_SERVICES_CODE_SIZE_PAGES },
-  { EfiACPIReclaimMemory,   ACPI_RECLAIM_SIZE_PAGES },     // ACPI ASL
+  { EfiACPIReclaimMemory,   ACPI_RECLAIM_SIZE_PAGES },         // ACPI ASL
   { EfiMaxMemoryType,       0 }
 };
+
+UINT64
+GetFspReservedMemorySize (VOID)
+{
+  UINTN  Index;
+  UINT64 MemorySize;
+  MEMORY_INIT_UPD *MemoryInitUpd;
+
+  //
+  // Start with minimum memory
+  //
+  MemorySize = PEI_MIN_MEMORY_SIZE;
+
+  //
+  // Account for other memory areas
+  //
+  for (Index = 0; Index < sizeof(mDefaultQncMemoryTypeInformation) / sizeof (EFI_MEMORY_TYPE_INFORMATION); Index++) {
+    MemorySize += mDefaultQncMemoryTypeInformation[Index].NumberOfPages * EFI_PAGE_SIZE;
+  }
+
+  //
+  // Validate the memory length
+  //
+  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
+  if (MemoryInitUpd->FspReservedMemoryLength > MemorySize) {
+    DEBUG((EFI_D_INFO, "FSP required memory size can be reduced to 0x%08lx\n", MemorySize));
+    MemorySize = MemoryInitUpd->FspReservedMemoryLength;
+  } else if (MemoryInitUpd->FspReservedMemoryLength < MemorySize) {
+    DEBUG((EFI_D_INFO, "FSP required memory size must be >= 0x%08lx\n", MemorySize));
+  }
+  return MemorySize;
+}
 
 /**
   Find pointer to RAW data in Firmware volume file.
@@ -571,10 +603,7 @@ InstallEfiMemory (
   // Query the platform for the minimum memory size
   //
 
-  Status = GetPlatformMemorySize (
-             &PeiMemoryLength
-             );
-  ASSERT_EFI_ERROR (Status);
+  PeiMemoryLength = GetFspReservedMemorySize ();
 
   //
   // Get required memory size for ACPI use. This helps to put ACPI memory on the topest
@@ -1177,37 +1206,6 @@ ChooseRanges (
 
   return EFI_SUCCESS;
 }
-
-EFI_STATUS
-GetPlatformMemorySize (
-  IN OUT   UINT64                                 *MemorySize
-  )
-{
-  UINTN                                 Index;
-
-  //
-  // Accumulate maximum amount of memory needed
-  //
-  //
-  // Start with minimum memory
-  //
-  *MemorySize = PEI_MIN_MEMORY_SIZE;
-  for (Index = 0; Index < sizeof(mDefaultQncMemoryTypeInformation) / sizeof (EFI_MEMORY_TYPE_INFORMATION); Index++) {
-      *MemorySize += mDefaultQncMemoryTypeInformation[Index].NumberOfPages * EFI_PAGE_SIZE;
-  }
-
-  //
-  // Build the GUID'd HOB for DXE
-  //
-  BuildGuidDataHob (
-               &gEfiMemoryTypeInformationGuid,
-               mDefaultQncMemoryTypeInformation,
-               sizeof(mDefaultQncMemoryTypeInformation)
-               );
-
-  return EFI_SUCCESS;
-}
-
 
 EFI_STATUS
 BaseMemoryTest (

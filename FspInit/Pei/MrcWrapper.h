@@ -169,11 +169,6 @@ ChooseRanges (
   );
 
 EFI_STATUS
-GetPlatformMemorySize (
-  IN OUT  UINT64                                 *MemorySize
-  );
-
-EFI_STATUS
 BaseMemoryTest (
   IN  EFI_PEI_SERVICES                   **PeiServices,
   IN  EFI_PHYSICAL_ADDRESS               BeginAddress,
