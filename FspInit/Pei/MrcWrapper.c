@@ -717,6 +717,52 @@ InstallEfiMemory (
     }
   }
 
+  //
+  // FSP BOOTLOADER TOLUM HOB
+  //
+  for (Index = 0; Index < NumRanges; Index++) {
+    if (MemoryMap[Index].Type == DualChannelDdrBiosReservedMemory) {
+      BuildResourceDescriptorWithOwnerHob (
+        EFI_RESOURCE_MEMORY_RESERVED,            // MemoryType,
+        (
+          EFI_RESOURCE_ATTRIBUTE_PRESENT |
+          EFI_RESOURCE_ATTRIBUTE_INITIALIZED |
+          EFI_RESOURCE_ATTRIBUTE_TESTED |
+          EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE |
+          EFI_RESOURCE_ATTRIBUTE_WRITE_COMBINEABLE |
+          EFI_RESOURCE_ATTRIBUTE_WRITE_THROUGH_CACHEABLE |
+          EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE
+        ),
+        MemoryMap[Index].PhysicalAddress,
+        MemoryMap[Index].RangeLength,
+        &gFspBootLoaderTolumHobGuid
+        );
+    }
+  }
+
+  //
+  // FSP Reserved Memory
+  //
+  for (Index = 0; Index < NumRanges; Index++) {
+    if (MemoryMap[Index].Type == DualChannelDdrFspReservedMemory) {
+      BuildResourceDescriptorWithOwnerHob(
+        EFI_RESOURCE_MEMORY_RESERVED,
+        (
+          EFI_RESOURCE_ATTRIBUTE_PRESENT |
+          EFI_RESOURCE_ATTRIBUTE_INITIALIZED |
+          EFI_RESOURCE_ATTRIBUTE_TESTED |
+          EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE |
+          EFI_RESOURCE_ATTRIBUTE_WRITE_COMBINEABLE |
+          EFI_RESOURCE_ATTRIBUTE_WRITE_THROUGH_CACHEABLE |
+          EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE
+        ),
+        MemoryMap[Index].PhysicalAddress,
+        MemoryMap[Index].RangeLength,
+        &gFspReservedMemoryResourceHobGuid
+      );
+    }
+  }
+
   if (SmramRanges == 0) {
     return EFI_SUCCESS;
   }
