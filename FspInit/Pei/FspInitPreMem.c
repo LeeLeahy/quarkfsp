@@ -385,8 +385,6 @@ IN VOID                       *Ppi
   EFI_BOOT_MODE          BootMode;
   EFI_HOB_GUID_TYPE      *GuidHob;
   FSP_MEMORY_INIT_PARAMS   *FspMemoryInitParams;
-  UINT32                 BootLoaderTolumSize;
-  MEMORY_INIT_UPD        *MemoryInitUpd;
 
   DEBUG((DEBUG_INFO, "Memory Discovered Notify invoked ...\n"));
 
@@ -413,49 +411,6 @@ IN VOID                       *Ppi
   // FSP specific hook
   //
   FspSpecificMemoryDiscoveredHook(PeiServices, BootMode);
-
-  //
-  // FSP Reserved Memory - TODO: Porting it for Quark SoC, cbmem_top is forced to 0xAFD0000.
-  //
-  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
-  BuildResourceDescriptorWithOwnerHob(
-	EFI_RESOURCE_MEMORY_RESERVED,
-	(
-	EFI_RESOURCE_ATTRIBUTE_PRESENT |
-	EFI_RESOURCE_ATTRIBUTE_INITIALIZED |
-	EFI_RESOURCE_ATTRIBUTE_TESTED |
-	EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE |
-	EFI_RESOURCE_ATTRIBUTE_WRITE_COMBINEABLE |
-	EFI_RESOURCE_ATTRIBUTE_WRITE_THROUGH_CACHEABLE |
-	EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE
-	),
-	0xAECE000,
-	MemoryInitUpd->FspReservedMemoryLength,
-	&gFspReservedMemoryResourceHobGuid
-  );
-
-  //
-  // FSP BOOTLOADER TOLUM HOB - TODO: Porting it for Quark SoC.
-  //
-  BootLoaderTolumSize = ((FSP_INIT_RT_COMMON_BUFFER *)FspMemoryInitParams->RtBufferPtr)->BootLoaderTolumSize;
-
-  if (BootLoaderTolumSize > 0) {
-    BuildResourceDescriptorWithOwnerHob (
-      EFI_RESOURCE_MEMORY_RESERVED,            // MemoryType,
-      (
-      EFI_RESOURCE_ATTRIBUTE_PRESENT |
-      EFI_RESOURCE_ATTRIBUTE_INITIALIZED |
-      EFI_RESOURCE_ATTRIBUTE_TESTED |
-      EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE |
-      EFI_RESOURCE_ATTRIBUTE_WRITE_COMBINEABLE |
-      EFI_RESOURCE_ATTRIBUTE_WRITE_THROUGH_CACHEABLE |
-      EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE
-      ),
-      0xAFCE000,
-      BootLoaderTolumSize,
-      &gFspBootLoaderTolumHobGuid
-      );
-  }
 
   //
   // Build FSP Non-Volatile Storage Hob
