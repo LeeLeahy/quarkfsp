@@ -80,17 +80,39 @@
 
 [PcdsFixedAtBuild]
 
-  gQuarkFspTokenSpaceGuid.PcdFspImageAttributes     | 0x00       | UINT32 | 0x0000000D
-  gQuarkFspTokenSpaceGuid.PcdFspHeaderRevision      | 0x00       | UINT32 | 0x0000000E
-  gQuarkFspTokenSpaceGuid.PcdFspImageRevision       | 0x00       | UINT32 | 0x0000000F
-  ##@note PcdFspImageIdString and PcdVpdRegionSign must be identical. Don't change one without the other.
-  gQuarkFspTokenSpaceGuid.PcdFspImageIdString       | 0x00       | UINT64 | 0x00000010
-  gQuarkFspTokenSpaceGuid.PcdFspFv1Base    |0x00000000|UINT32|0x00000011
-  gQuarkFspTokenSpaceGuid.PcdFspFv1Size    |0x00000000|UINT32|0x00000012
-  gQuarkFspTokenSpaceGuid.PcdFspFv2Base    |0x00000000|UINT32|0x00000013
-  gQuarkFspTokenSpaceGuid.PcdFspFv2Size    |0x00000000|UINT32|0x00000014
+  # ECC scrub interval in miliseconds 1..255 (0 works as feature disable)
+  gQuarkFspTokenSpaceGuid.PcdEccScrubInterval       |0x00                | UINT8 | 0x20000037
 
-[PcdsFixedAtBuild, PcdsPatchableInModule]
+  # Number of 32B blocks read for ECC scrub 2..16
+  gQuarkFspTokenSpaceGuid.PcdEccScrubBlkSize|0x02|UINT8|0x20000038
+
+  gQuarkFspTokenSpaceGuid.PcdFspImageAttributes     | 0x00               | UINT16 | 0x0000000D
+  gQuarkFspTokenSpaceGuid.PcdFspHeaderRevision      | 0x03               | UINT32 | 0x0000000E
+  gQuarkFspTokenSpaceGuid.PcdFspImageRevision       | 0x00               | UINT32 | 0x0000000F
+  ##@note PcdFspImageIdString and PcdVpdRegionSign must be identical. Don't change one without the other.
+  gQuarkFspTokenSpaceGuid.PcdFspImageIdString       | 0x245053464b555124 | UINT64 | 0x00000010
+  gQuarkFspTokenSpaceGuid.PcdFspFv1Base             | 0x00000000         | UINT32 | 0x00000011
+  gQuarkFspTokenSpaceGuid.PcdFspFv1Size             | 0x00000000         | UINT32 | 0x00000012
+  gQuarkFspTokenSpaceGuid.PcdFspFv2Base             | 0x00000000         | UINT32 | 0x00000013
+  gQuarkFspTokenSpaceGuid.PcdFspFv2Size             | 0x00000000         | UINT32 | 0x00000014
+
+  #Bits[15:12] - 0001b: FSP-T, 0010b: FSP-M, 0011b: FSP-S
+  gQuarkFspTokenSpaceGuid.PcdFspComponentAttributes | 0x0000             | UINT16 | 0x00000015
+
+  gQuarkFspTokenSpaceGuid.PcdFlashFvFsptBase        | 0xFFF80000         | UINT32 | 0x00000201
+  gQuarkFspTokenSpaceGuid.PcdFlashFvFsptSize        | 0x00040000         | UINT32 | 0x00000202
+  gQuarkFspTokenSpaceGuid.PcdFlashFvFspmBase        | 0xFFF80000         | UINT32 | 0x00000203
+  gQuarkFspTokenSpaceGuid.PcdFlashFvFspmSize        | 0x00040000         | UINT32 | 0x00000204
+  gQuarkFspTokenSpaceGuid.PcdFlashFvFspsBase        | 0xFFF80000         | UINT32 | 0x00000205
+  gQuarkFspTokenSpaceGuid.PcdFlashFvFspsSize        | 0x00040000         | UINT32 | 0x00000206
+  gQuarkFspTokenSpaceGuid.PcdFlashFvFspBase         | 0x00000000         | UINT32 | 0x00000207
+
+  gQuarkFspTokenSpaceGuid.PcdFspTemporaryRamSize    | 0x1000             | UINT32 | 0x00000400
+
+  ##
+  ## Silicon Reference Code versions
+  ##
+  gQuarkFspTokenSpaceGuid.PcdSiliconRefCodeVersion  | 0x01010000         | UINT32 | 0x00000600  # 1.1.0.0
 
 [PcdsDynamic, PcdsDynamicEx]
   ## Provides the ability to enable the Fast Boot feature of the BIOS.  This
@@ -102,6 +124,6 @@
   gQuarkFspTokenSpaceGuid.PcdEnableFastBoot|FALSE|BOOLEAN|0xB000004
 
   ##@note PcdFspImageIdString and PcdVpdRegionSign must be identical. Don't change one without the other.
-  gQuarkFspTokenSpaceGuid.PcdVpdRegionSign          | 0x00       | UINT64 | 0xA00002A7
-  gQuarkFspTokenSpaceGuid.PcdImageRevision          | 0x00000000 | UINT32 | 0xA00002A8
-  gQuarkFspTokenSpaceGuid.PcdUpdRegionOffset        | 0x00000000 | UINT32 | 0xA00002A9
+  gQuarkFspTokenSpaceGuid.PcdVpdRegionSign          | 0x245053464b555124 | UINT64 | 0x10000000  # $QRKFSP$
+  gQuarkFspTokenSpaceGuid.PcdImageRevision          | 0x00000000         | UINT32 | 0x10001001
+  gQuarkFspTokenSpaceGuid.PcdUpdRegionOffset        | 0x00000000         | UINT32 | 0x10001002
