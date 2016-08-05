@@ -65,42 +65,25 @@ SecStartup (
   IN VOID                    *BootFirmwareVolume;
   IN PEI_CORE_ENTRY           PeiCore;
 
-SerialPortWriteString("SecStartup entered\r\n");
-SerialPortWriteString("  Parameters:\r\n    ");
-SerialPortWriteHex4(SizeOfRam);
-SerialPortWriteString(": SizeOfRam\r\n    ");
-SerialPortWriteHex4(TempRamBase);
-SerialPortWriteString(": TempRamBase\r\n    ");
-SerialPortWriteHex4(BootLoaderStack);
-SerialPortWriteString(": BootLoaderStack\r\n    ");
-SerialPortWriteHex1(ApiIdx);
-SerialPortWriteString(": ApiIdx\r\n");
-
   //
   // Get the firmware volume base address
   //
   BootFirmwareVolume = (VOID *)AsmGetFspBaseAddress();
-SerialPortWriteAddress(BootFirmwareVolume);
-SerialPortWriteString(": BootFirmwareVolume\r\n");
 
   //
   // Locate the PEI core
   //
   PeiCore = (PEI_CORE_ENTRY)(AsmGetFspBaseAddress() + AsmGetPeiCoreOffset());
-SerialPortWriteAddress(PeiCore);
-SerialPortWriteString(": PeiCore\r\n");
 
   //
   // Process all libraries constructor function linked to SecCore.
   //
-SerialPortWriteString("  Calling ProcessLibraryConstructorList\r\n");
   ProcessLibraryConstructorList ();
 
   //
   // Initialize floating point operating environment
   // to be compliant with UEFI spec.
   //
-SerialPortWriteString("  Calling InitializeFloatingPointUnits\r\n");
   InitializeFloatingPointUnits ();
 
 
@@ -119,41 +102,24 @@ SerialPortWriteString("  Calling InitializeFloatingPointUnits\r\n");
   // |                   |
   // |-------------------|---->  TempRamBase
   IdtTableInStack.PeiService  = NULL;
-SerialPortWriteString("  Calling FspGetExceptionHandler( 0x");
-SerialPortWriteHex8(mIdtEntryTemplate);
-SerialPortWriteString(" )\r\n");
   ExceptionHandler = FspGetExceptionHandler(mIdtEntryTemplate);
   for (Index = 0; Index < SEC_IDT_ENTRY_COUNT; Index ++) {
-SerialPortWriteString("  Calling CopyMem( 0x");
-SerialPortWriteAddress(&IdtTableInStack.IdtTable[Index]);
-SerialPortWriteString(", 0x");
-SerialPortWriteAddress(&ExceptionHandler);
-SerialPortWriteString(", 0x");
-SerialPortWriteHex4(sizeof (UINT64));
-SerialPortWriteString(" )\r\n");
     CopyMem ((VOID*)&IdtTableInStack.IdtTable[Index], (VOID*)&ExceptionHandler, sizeof (UINT64));
   }
 
-SerialPortWriteAddress(&IdtTableInStack.IdtTable);
-SerialPortWriteString(": IdtDescriptor.Base\r\n");
   IdtDescriptor.Base  = (UINTN) &IdtTableInStack.IdtTable;
   IdtDescriptor.Limit = (UINT16)(sizeof (IdtTableInStack.IdtTable) - 1);
 
-SerialPortWriteString("  Calling AsmWriteIdtr( 0x");
-SerialPortWriteAddress(&IdtDescriptor);
-SerialPortWriteString(" )\r\n");
   AsmWriteIdtr (&IdtDescriptor);
 
   //
   // Initialize the global FSP data region
   //
-SerialPortWriteString("  Calling FspGlobalDataInit\r\n");
   FspGlobalDataInit (&PeiFspData, BootLoaderStack, (UINT8)ApiIdx);
 
   //
   // Update the base address and length of Pei temporary memory
   //
-SerialPortWriteString("  Initializing SecCoreData\r\n");
   SecCoreData.DataSize               = sizeof (EFI_SEC_PEI_HAND_OFF);
   SecCoreData.BootFirmwareVolumeBase = BootFirmwareVolume;
   SecCoreData.BootFirmwareVolumeSize = (UINT32)((EFI_FIRMWARE_VOLUME_HEADER *)BootFirmwareVolume)->FvLength;
@@ -177,13 +143,11 @@ SerialPortWriteString("  Initializing SecCoreData\r\n");
   //
   // Call PeiCore Entry
   //
-SerialPortWriteString("  Calling PeiCore\r\n");
   PeiCore (&SecCoreData, mPeiSecPlatformInformationPpi);
 
   //
   // Should never be here
   //
-SerialPortWriteString("  Calling CpuDeadLoop\r\n");
   CpuDeadLoop ();
 }
 

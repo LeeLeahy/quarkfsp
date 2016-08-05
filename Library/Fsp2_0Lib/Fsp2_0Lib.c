@@ -194,14 +194,11 @@ UINT32 GetRmuLength(VOID)
 
 UINTN GetSerialPortRegisterBase (VOID)
 {
-return 0xa0019000;
-#if 0
   FSPM_UPD *FspmUpd;
 
   FspmUpd = GetFspMemoryInitUpdDataPointer();
   ASSERT (FspmUpd != NULL);
   return FspmUpd->FspmConfig.SerialPortBaseAddress;
-#endif
 }
 
 UINT8 GetSmmTsegSize(VOID)
@@ -218,7 +215,7 @@ VOID ReturnHobListPointer(VOID *HobList)
   VOID **HobListPtr;
 
   /* Return the address of the HOB list */
-  HobListPtr = GetFspApiParameter2();
+  HobListPtr = (VOID *)GetFspApiParameter2();
   if (HobListPtr != NULL) {
     *HobListPtr = HobList;
   }
