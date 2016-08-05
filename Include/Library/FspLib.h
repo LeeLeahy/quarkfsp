@@ -28,6 +28,7 @@ UINT32 GetRmuLength(VOID);
 UINTN GetSerialPortRegisterBase(VOID);
 UINT8 GetSmmTsegSize(VOID);
 VOID ReturnHobListPointer(VOID *HobList);
+VOID FspMigrateTemporaryMemory(VOID);
 
 #endif // __FSP_LIB_H__
 

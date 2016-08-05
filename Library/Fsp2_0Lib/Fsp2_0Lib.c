@@ -220,3 +220,7 @@ VOID ReturnHobListPointer(VOID *HobList)
     *HobListPtr = HobList;
   }
 }
+
+VOID FspMigrateTemporaryMemory(VOID)
+{
+}
