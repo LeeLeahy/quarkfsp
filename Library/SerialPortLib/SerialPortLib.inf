@@ -33,6 +33,7 @@
   PciLib
   BaseLib
   FspCommonLib
+  FspLib
   DebugLib
 
 [Sources]

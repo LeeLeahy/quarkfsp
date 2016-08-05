@@ -74,6 +74,7 @@
   ResetSystemLib
   IntelQNCLib
   ReportStatusCodeLib
+  FspLib
 
 [Depex]
   TRUE

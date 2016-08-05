@@ -20,7 +20,7 @@
 #include <Library/IoLib.h>
 #include <Library/BaseLib.h>
 #include <Library/FspCommonLib.h>
-#include <FspUpdVpd.h>
+#include <Library/FspLib.h>
 #include <Library/DebugLib.h>
 
 //
@@ -47,25 +47,6 @@
 #define   B_UART_MSR_DSR      BIT5
 #define   B_UART_MSR_RI       BIT6
 #define   B_UART_MSR_DCD      BIT7
-
-/**
-  Get the serial port register base
-
-  @retval BaseRegisterAddress   The serial port register base address
-
-**/
-UINTN GetSerialPortRegisterBase (void)
-{
-  MEMORY_INIT_UPD *MemoryInitUpd;
-  UINTN SerialPortRegisterBase;
-
-  SerialPortRegisterBase = 0;
-  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
-  if (MemoryInitUpd != NULL) {
-    SerialPortRegisterBase = MemoryInitUpd->SerialPortBaseAddress;
-  }
-  return SerialPortRegisterBase;
-}
 
 /**
   Initialize the serial device hardware.

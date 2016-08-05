@@ -34,27 +34,19 @@ GetFspReservedMemorySize (VOID)
 {
   UINTN  Index;
   UINT64 MemorySize;
-  MEMORY_INIT_UPD *MemoryInitUpd;
+  UINT32 FspReservedMemoryLength;
 
   //
   // Start with minimum memory
   //
-  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
-  MemorySize = MemoryInitUpd->FspReservedMemoryLength;
+  FspReservedMemoryLength = GetFspReservedMemoryLength();
+  MemorySize = FspReservedMemoryLength;
 
   //
   // Account for other memory areas
   //
   for (Index = 0; Index < sizeof(mDefaultQncMemoryTypeInformation) / sizeof (EFI_MEMORY_TYPE_INFORMATION); Index++) {
     MemorySize += mDefaultQncMemoryTypeInformation[Index].NumberOfPages * EFI_PAGE_SIZE;
-  }
-
-  //
-  // Validate the memory length
-  //
-  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
-  if (MemoryInitUpd->FspReservedMemoryLength < MemorySize) {
-    DEBUG((EFI_D_INFO, "FSP required memory size must be >= 0x%08lx\n", MemorySize));
   }
   return MemorySize;
 }
@@ -171,35 +163,9 @@ MrcConfigureFromInfoHob (
   OUT MRC_PARAMS  *MrcData
   )
 {
-  MEMORY_INIT_UPD *MemoryInitUpd;
-
-  //
-  // Get the UPD pointer.
-  //
-  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
-
-  MrcData->channel_enables     = MemoryInitUpd->ChanMask;
-  MrcData->channel_width       = MemoryInitUpd->ChanWidth;
-  MrcData->address_mode        = MemoryInitUpd->AddrMode;
-  // Enable scrambling if requested.
-  MrcData->scrambling_enables  = (MemoryInitUpd->Flags & MRC_FLAG_SCRAMBLE_EN) != 0;
-  MrcData->ddr_type            = MemoryInitUpd->DramType;
-  MrcData->dram_width          = MemoryInitUpd->DramWidth;
-  MrcData->ddr_speed           = MemoryInitUpd->DramSpeed;
-  // Enable ECC if requested.
-  MrcData->rank_enables        = MemoryInitUpd->RankMask;
-  MrcData->params.DENSITY      = MemoryInitUpd->DramDensity;
-  MrcData->params.tCL          = MemoryInitUpd->tCL;
-  MrcData->params.tRAS         = MemoryInitUpd->tRAS;
-  MrcData->params.tWTR         = MemoryInitUpd->tWTR;
-  MrcData->params.tRRD         = MemoryInitUpd->tRRD;
-  MrcData->params.tFAW         = MemoryInitUpd->tFAW;
-
-  MrcData->refresh_rate        = MemoryInitUpd->SrInt;
-  MrcData->sr_temp_range       = MemoryInitUpd->SrTemp;
-  MrcData->ron_value           = MemoryInitUpd->DramRonVal;
-  MrcData->rtt_nom_value       = MemoryInitUpd->DramRttNomVal;
-  MrcData->rd_odt_value        = MemoryInitUpd->SocRdOdtVal;
+  // Get the memory parameters passed into FSP
+  GetMemoryParameters(MrcData);
+  MrcData->scrambling_enables  = (MrcData->scrambling_enables & MRC_FLAG_SCRAMBLE_EN) != 0;
 
   DEBUG ((EFI_D_INFO, "MRC dram_width %d\n",  MrcData->dram_width));
   DEBUG ((EFI_D_INFO, "MRC rank_enables %d\n",MrcData->rank_enables));
@@ -234,9 +200,8 @@ EccScrubSetup(
 {
   UINT32 BgnAdr = 0;
   UINT32 EndAdr = MrcData->mem_size;
-  MEMORY_INIT_UPD *MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
-  UINT32 BlkSize = MemoryInitUpd->EccScrubBlkSize & SCRUB_CFG_BLOCKSIZE_MASK;
-  UINT32 Interval = MemoryInitUpd->EccScrubInterval & SCRUB_CFG_INTERVAL_MASK;
+  UINT32 BlkSize = GetEccScrubBlkSize() & SCRUB_CFG_BLOCKSIZE_MASK;
+  UINT32 Interval = GetEccScrubInterval() & SCRUB_CFG_INTERVAL_MASK;
 
   if( MrcData->ecc_enables == 0 || MrcData->boot_mode == bmS3 || Interval == 0) {
     // No scrub configuration needed if ECC not enabled
@@ -269,7 +234,6 @@ PostInstallMemory (
   )
 {
   UINT32                            RmuMainDestBaseAddress;
-  MEMORY_INIT_UPD                   *MemoryInitUpd;
 
   //
   // Setup ECC policy (All boot modes).
@@ -288,8 +252,7 @@ PostInstallMemory (
   if (IsS3) {
     QNCSendOpcodeDramReady (RmuMainDestBaseAddress);
   } else {
-    MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
-    RmuMainRelocation (RmuMainDestBaseAddress, MemoryInitUpd->RmuBaseAddress, MemoryInitUpd->RmuLength);
+    RmuMainRelocation (RmuMainDestBaseAddress, GetRmuBaseAddress(), GetRmuLength());
     QNCSendOpcodeDramReady (RmuMainDestBaseAddress);
     EccScrubSetup (MrcData);
   }
@@ -317,7 +280,6 @@ MemoryInit (
   EFI_STATUS_CODE_VALUE                       ErrorCodeValue;
   PEI_QNC_MEMORY_INIT_PPI                     *QncMemoryInitPpi;
   UINT16                                      PmswAdr;
-  MEMORY_INIT_UPD                             *MemoryInitUpd;
 
   ErrorCodeValue  = 0;
 
@@ -387,10 +349,9 @@ MemoryInit (
     //
     // Get the saved memory data if possible
     //
-    MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
-    if ((MemoryInitUpd->MrcDataPtr != 0) && (MemoryInitUpd->MrcDataLength != 0)) {
-      ASSERT(MemoryInitUpd->MrcDataLength == sizeof(MrcData.timings));
-      CopyMem (&MrcData.timings, (void *)MemoryInitUpd->MrcDataPtr, MemoryInitUpd->MrcDataLength);
+    if ((GetMrcDataPtr() != 0) && (GetMrcDataLength() != 0)) {
+      ASSERT(GetMrcDataLength() == sizeof(MrcData.timings));
+      CopyMem (&MrcData.timings, (void *)GetMrcDataPtr(), GetMrcDataLength());
     } else {
       switch (BootMode) {
       case BOOT_ON_S3_RESUME:
@@ -1073,8 +1034,6 @@ GetMemoryMap (
   EFI_PHYSICAL_ADDRESS              MemorySize;
   UINT8                             ExtendedMemoryIndex;
   UINT32                            Register;
-  MEMORY_INIT_UPD                   *MemoryInitUpd;
-  FSP_INIT_RT_COMMON_BUFFER         *FspInitRtBuffer;
   UINT32                            TsegSize;
 
   if ((*NumRanges) < MAX_RANGES) {
@@ -1146,8 +1105,7 @@ GetMemoryMap (
   //
   // See if we need to trim TSEG out of the highest memory range
   //
-  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
-  TsegSize = MemoryInitUpd->SmmTsegSize;
+  TsegSize = GetSmmTsegSize();
   Register = (UINT32)((MemoryAddress - 1) & SMM_END_MASK);
   if (TsegSize > 0) {
     MemoryMap[*NumRanges].RangeLength           = (TsegSize * 1024 * 1024);
@@ -1170,7 +1128,7 @@ GetMemoryMap (
   // Trim off 64K memory for RMU Main binary shadow
   //
   MemoryMap[*NumRanges].RangeLength           = 0x10000;
-  ASSERT(MemoryMap[*NumRanges].RangeLength >= MemoryInitUpd->RmuLength);
+  ASSERT(MemoryMap[*NumRanges].RangeLength >= GetRmuLength());
   MemoryAddress                              -= MemoryMap[*NumRanges].RangeLength;
   MemoryMap[*NumRanges].PhysicalAddress       = MemoryAddress;
   MemoryMap[*NumRanges].CpuAddress            = MemoryAddress;
@@ -1181,10 +1139,8 @@ GetMemoryMap (
   //
   // Trim off the BIOS reserved area
   //
-  FspInitRtBuffer = (FSP_INIT_RT_COMMON_BUFFER *)((FSP_MEMORY_INIT_PARAMS *)GetFspApiParameter())->RtBufferPtr;
-  ASSERT (FspInitRtBuffer != NULL);
-  if (FspInitRtBuffer->BootLoaderTolumSize > 0) {
-    MemoryMap[*NumRanges].RangeLength           = FspInitRtBuffer->BootLoaderTolumSize;
+  if (GetBootLoaderTolumSize() > 0) {
+    MemoryMap[*NumRanges].RangeLength           = GetBootLoaderTolumSize();
     MemoryAddress                              -= MemoryMap[*NumRanges].RangeLength;
     MemoryMap[*NumRanges].PhysicalAddress       = MemoryAddress;
     MemoryMap[*NumRanges].CpuAddress            = MemoryAddress;
@@ -1239,7 +1195,7 @@ GetMemoryMap (
     Index++;
 
     // Display BIOS reserved area if requested
-    if (FspInitRtBuffer->BootLoaderTolumSize > 0) {
+    if (GetBootLoaderTolumSize() > 0) {
       MemoryAddress -= MemoryMap[Index].RangeLength;
       ASSERT(MemoryAddress == MemoryMap[Index].PhysicalAddress);
       DEBUG ((EFI_D_ERROR, "| BIOS reserved area\n"));
@@ -1349,7 +1305,6 @@ InfoPostInstallMemory (
   EFI_PEI_HOB_POINTERS                  Hob;
   UINT64                                RmuBaseAddress;
   EFI_SMRAM_HOB_DESCRIPTOR_BLOCK        *SmramHobDescriptorBlock;
-  MEMORY_INIT_UPD                       *MemoryInitUpd;
   UINT32                                RmuIndex;
 
   if ((RmuMainBaseAddressPtr == NULL) && (SmramDescriptorPtr == NULL) && (NumSmramRegionsPtr == NULL)) {
@@ -1367,8 +1322,7 @@ InfoPostInstallMemory (
   //
   // Determine the location of the RMU reserved memory area
   //
-  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
-  RmuIndex = (MemoryInitUpd->SmmTsegSize > 0) ? 2 : 1;
+  RmuIndex = (GetSmmTsegSize() > 0) ? 2 : 1;
 
   //
   // Calculate RMU shadow region base address.
