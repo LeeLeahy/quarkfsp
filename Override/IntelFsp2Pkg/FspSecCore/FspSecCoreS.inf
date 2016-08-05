@@ -26,7 +26,9 @@
 #
 
 [Sources]
+  FspNotify.c
   SecFspApiChk.c
+  SiliconInit.c
 
 [Sources.IA32]
   Ia32/Stack.nasm
@@ -51,7 +53,6 @@
   SerialPortLib
   FspSwitchStackLib
   FspCommonLib
-  FspSecPlatformLib
 
 [Pcd]
   gIntelFsp2PkgTokenSpaceGuid.PcdGlobalDataPointerAddress      ## CONSUMES
