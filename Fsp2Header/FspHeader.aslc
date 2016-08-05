@@ -1,0 +1,101 @@
+/** @file
+This is the FSP header structure
+
+Copyright (c) 2015 - 2016 Intel Corporation.
+
+This program and the accompanying materials
+are licensed and made available under the terms and conditions of the BSD License
+which accompanies this distribution.  The full text of the license may be found at
+http://opensource.org/licenses/bsd-license.php
+
+THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
+WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+
+**/
+
+#include <PiPei.h>
+#include <Library/PcdLib.h>
+#include <FspEas.h>
+#include <FspDataTable.h>
+
+#define  UINT64_TO_BYTE_ARRAY(x)  {(UINT8)(x),(UINT8)((x)>>8),(UINT8)((x)>>16),\
+                                   (UINT8)((x)>>24),(UINT8)((x)>>32), \
+                                   (UINT8)((x)>>40),(UINT8)((x)>>48), \
+                                   (UINT8)((x)>>56)}
+
+typedef struct{
+  FSP_INFO_HEADER          FspInfoHeader;
+  FSP_INFO_EXTENDED_HEADER FspInfoExtendedHeader;
+  FSP_DATA_TABLE           FspDataTable;
+  FSP_PATCH_TABLE          FspPatchTable;
+  UINT32                   FspPatchData0;
+}TABLES;
+
+#define FSP_PRODUCER_ID  "INTELC"
+
+TABLES mTable =
+{
+  {
+    FSP_INFO_HEADER_SIGNATURE,                    // UINT32  Signature  (FSPH)
+    sizeof(FSP_INFO_HEADER),                      // UINT32  HeaderLength;
+    {0x00, 0x00},                                 // UINT8   Reserved1[2];
+    FixedPcdGet8(PcdFspHeaderSpecVersion),        // UINT8   SpecVersion;
+    FixedPcdGet8(PcdFspHeaderRevision),           // UINT8   HeaderRevision;
+    FixedPcdGet32(PcdSiliconRefCodeVersion),      // UINT32  ImageRevision;
+
+    UINT64_TO_BYTE_ARRAY(
+    FixedPcdGet64(PcdFspImageIdString)),          // CHAR8   ImageId[8];
+
+    0x12345678,                                   // UINT32  ImageSize;
+    0x12345678,                                   // UINT32  ImageBase;
+
+    FixedPcdGet16(PcdFspImageAttributes),         // UINT16  ImageAttribute;
+    FixedPcdGet16(PcdFspComponentAttributes),     // UINT16  ComponentAttribute; Bits[15:12] - 0001b: FSP-T, 0010b: FSP-M, 0011b: FSP-S
+    0x12345678,                                   // UINT32  CfgRegionOffset;
+    0x12345678,                                   // UINT32  CfgRegionSize;
+    0x00000000,                                   // UINT32  Reserved2;
+
+    0x00000000,                                   // UINT32  TempRamInitEntry;
+    0x00000000,                                   // UINT32  Reserved3;
+    0x00000000,                                   // UINT32  NotifyPhaseEntry;
+    0x00000000,                                   // UINT32  FspMemoryInitEntry;
+    0x00000000,                                   // UINT32  TempRamExitEntry;
+    0x00000000,                                   // UINT32  FspSiliconInitEntry;
+  },
+  {
+    FSP_INFO_EXTENDED_HEADER_SIGNATURE,           // UINT32  Signature  (FSPE)
+    sizeof(FSP_INFO_EXTENDED_HEADER),             // UINT32  Length;
+    FSPE_HEADER_REVISION_1,                       // UINT8   Revision;
+    0x00,                                         // UINT8   Reserved;
+    {FSP_PRODUCER_ID},                            // CHAR8   FspProducerId[6];
+    0x00000001,                                   // UINT32  FspProducerRevision;
+    0x00000000,                                   // UINT32  FspProducerDataSize;
+  },
+  {
+    FSP_DATA_SIGNATURE,                           // UINT32  Signature  (FSPD)
+    sizeof(FSP_DATA_TABLE),                       // UINT32  Length;
+    FixedPcdGet32(PcdFlashFvFsptBase),            // UINT32  FsptBase;
+    FixedPcdGet32(PcdFlashFvFspmBase),            // UINT32  FspmBase;
+    FixedPcdGet32(PcdFlashFvFspsBase),            // UINT32  FspsBase;
+  },
+  {
+    FSP_FSPP_SIGNATURE,                           // UINT32  Signature  (FSPP)
+    sizeof(FSP_PATCH_TABLE),                      // UINT16  Length;
+    FSPP_HEADER_REVISION_1,                       // UINT8   Revision;
+    0x00,                                         // UINT8   Reserved;
+    1                                             // UINT32  PatchEntryNum;
+  },
+    0xFFFFFFFC                                    // UINT32  Patch FVBASE at end of FV
+};
+
+VOID*
+ReferenceAcpiTable (
+  VOID
+  )
+{
+  //
+  // Reference the table being generated to prevent the optimizer from
+  // removing the data structure from the executable
+  //
+  return (VOID*)&mTable;
+}
