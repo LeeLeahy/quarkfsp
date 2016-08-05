@@ -56,7 +56,6 @@
   SerialPortLib
   FspSwitchStackLib
   FspCommonLib
-  FspSecPlatformLib
 
 [Pcd]
   gIntelFsp2PkgTokenSpaceGuid.PcdGlobalDataPointerAddress      ## CONSUMES
