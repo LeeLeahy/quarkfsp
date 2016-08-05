@@ -95,3 +95,30 @@ FspApiCallingCheck (
   
   return Status;
 }
+
+/**
+This function check the signture of UPD.
+
+@param[in]  ApiIdx           Internal index of the FSP API.
+@param[in]  ApiParam         Parameter of the FSP API.
+
+**/
+EFI_STATUS
+EFIAPI
+FspUpdSignatureCheck(
+IN UINT32   ApiIdx,
+IN VOID     *ApiParam
+)
+{
+  FSP_UPD_HEADER *FspUpdHeader;
+
+  FspUpdHeader = ApiParam;
+  if ((ApiIdx == 3) && (FspUpdHeader->Signature == FSPM_UPD_SIGNATURE)) {
+    return EFI_SUCCESS;
+  }
+  if ((ApiIdx == 5) && (FspUpdHeader->Signature == FSPS_UPD_SIGNATURE)) {
+    return EFI_SUCCESS;
+  }
+
+  return EFI_INVALID_PARAMETER;
+}

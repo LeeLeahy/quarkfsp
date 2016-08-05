@@ -40,8 +40,6 @@ UINT64  mIdtEntryTemplate = 0xffff8e000008ffe4ULL;
 
   @param[in] SizeOfRam          Size of the temporary memory available for use.
   @param[in] TempRamBase        Base address of tempory ram
-  @param[in] BootFirmwareVolume Base address of the Boot Firmware Volume.
-  @param[in] PeiCore            PeiCore entry point.
   @param[in] BootLoaderStack    BootLoader stack.
   @param[in] ApiIdx             the index of API.
 
@@ -53,8 +51,6 @@ EFIAPI
 SecStartup (
   IN UINT32                   SizeOfRam,
   IN UINT32                   TempRamBase,
-  IN VOID                    *BootFirmwareVolume,
-  IN PEI_CORE_ENTRY           PeiCore,
   IN UINT32                   BootLoaderStack,
   IN UINT32                   ApiIdx
   )
@@ -65,6 +61,18 @@ SecStartup (
   UINT32                      Index;
   FSP_GLOBAL_DATA             PeiFspData;
   UINT64                      ExceptionHandler;
+  IN VOID                    *BootFirmwareVolume;
+  IN PEI_CORE_ENTRY           PeiCore;
+
+  //
+  // Get the firmware volume base address
+  //
+  BootFirmwareVolume = (VOID *)AsmGetFspBaseAddress();
+
+  //
+  // Locate the PEI core
+  //
+  PeiCore = (PEI_CORE_ENTRY)(AsmGetFspBaseAddress() + AsmGetPeiCoreOffset());
 
   //
   // Process all libraries constructor function linked to SecCore.
@@ -133,7 +141,7 @@ SecStartup (
 
   //
   // Call PeiCore Entry
-  //  
+  //
   PeiCore (&SecCoreData, mPeiSecPlatformInformationPpi);
 
   //
@@ -177,7 +185,7 @@ SecTemporaryRamSupport (
 
   HeapSize   = CopySize * PcdGet8 (PcdFspHeapSizePercentage) / 100 ;
   StackSize  = CopySize - HeapSize;
-    
+
   OldHeap = (VOID*)(UINTN)TemporaryMemoryBase;
   NewHeap = (VOID*)((UINTN)PermanentMemoryBase + StackSize);
 

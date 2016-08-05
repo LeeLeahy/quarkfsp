@@ -12,6 +12,7 @@
 **/
 
 #include "SecFsp.h"
+#include "SecMain.h"
 
 /**
 
@@ -76,7 +77,7 @@ SecGetPlatformData (
   //
   // Pointer to the size field
   //
-  TopOfCar = FspPlatformData->CarBase + FspPlatformData->CarSize;
+  TopOfCar = PcdGet32(PcdTemporaryRamBase) + PcdGet32(PcdTemporaryRamSize);
   StackPtr = (UINT32 *)(TopOfCar - sizeof (UINT32));
 
   if (*(StackPtr - 1) == FSP_MCUD_SIGNATURE) {
@@ -133,6 +134,12 @@ FspGlobalDataInit (
   // Set FSP Global Data pointer
   //
   SetFspGlobalDataPointer    (PeiFspData);
+
+  //
+  // Ensure the golbal data pointer is valid
+  //
+  ASSERT (GetFspGlobalDataPointer () == PeiFspData);
+
   ZeroMem  ((VOID *)PeiFspData, sizeof(FSP_GLOBAL_DATA));
 
   PeiFspData->Signature            = FSP_GLOBAL_DATA_SIGNATURE;
@@ -140,8 +147,6 @@ FspGlobalDataInit (
   PeiFspData->CoreStack            = BootLoaderStack;
   PeiFspData->PerfIdx              = 2;
   PeiFspData->PerfSig              = FSP_PERFORMANCE_DATA_SIGNATURE;
-  PeiFspData->PlatformData.CarBase = AsmReadMsr32 (0x200) & ~(0x6);
-  PeiFspData->PlatformData.CarSize = ~(AsmReadMsr32(0x201) & ~(0x800)) + 1;
 
   SetFspMeasurePoint (FSP_PERF_ID_API_FSP_MEMORY_INIT_ENTRY);
 
@@ -156,7 +161,7 @@ FspGlobalDataInit (
   // Set API calling mode
   //
   SetFspApiCallingIndex (ApiIdx);
-  
+
   //
   // Set UPD pointer
   //
@@ -175,11 +180,6 @@ FspGlobalDataInit (
   // for safe.
   //
   SerialPortInitialize ();
-
-  //
-  // Ensure the golbal data pointer is valid
-  //
-  ASSERT (GetFspGlobalDataPointer () == PeiFspData);
 
   for (Idx = 0; Idx < 8; Idx++) {
     ImageId[Idx] = PeiFspData->FspInfoHeader->ImageId[Idx];
