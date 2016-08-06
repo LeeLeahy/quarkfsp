@@ -3,9 +3,9 @@
 
   (C) Copyright 2014 Hewlett-Packard Development Company, L.P.<BR>
   Copyright (c) 2006 - 2016, Intel Corporation. All rights reserved.<BR>
-  This program and the accompanying materials
-  are licensed and made available under the terms and conditions of the BSD License
-  which accompanies this distribution.  The full text of the license may be found at
+  This program and the accompanying materials are licensed and made available
+  under the terms and conditions of the BSD License which accompanies this
+  distribution.  The full text of the license may be found at
   http://opensource.org/licenses/bsd-license.php
 
   THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
@@ -198,13 +198,31 @@ UINT32 GetRmuLength(VOID)
   return MemoryInitUpd->RmuLength;
 }
 
-UINTN GetSerialPortRegisterBase (VOID)
+FN_SERIAL_PORT_POLL_FOR_CHAR GetSerialPortPollForChar(VOID)
 {
   MEMORY_INIT_UPD *MemoryInitUpd;
 
   MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
   ASSERT (MemoryInitUpd != NULL);
-  return MemoryInitUpd->SerialPortBaseAddress;
+  return (FN_SERIAL_PORT_POLL_FOR_CHAR)MemoryInitUpd->SerialPortPollForChar;
+}
+
+FN_SERIAL_PORT_READ_CHAR GetSerialPortReadChar(VOID)
+{
+  MEMORY_INIT_UPD *MemoryInitUpd;
+
+  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
+  ASSERT (MemoryInitUpd != NULL);
+  return (FN_SERIAL_PORT_READ_CHAR)MemoryInitUpd->SerialPortReadChar;
+}
+
+FN_SERIAL_PORT_WRITE_CHAR GetSerialPortWriteChar(VOID)
+{
+  MEMORY_INIT_UPD *MemoryInitUpd;
+
+  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
+  ASSERT (MemoryInitUpd != NULL);
+  return (FN_SERIAL_PORT_WRITE_CHAR)MemoryInitUpd->SerialPortWriteChar;
 }
 
 UINT8 GetSmmTsegSize(VOID)
