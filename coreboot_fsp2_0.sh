@@ -5,11 +5,15 @@ EDK2_DIR=$1
 COREBOOT_DIR=$2
 BUILD_TYPE=$3
 
+pushd $EDK2_DIR
+EDK2_DIR=$PWD
+popd
+
 #
 # Create the necessary directories
 #
-if [ ! -e src/soc/intel/quark/include/soc/fsp ]
-  then mkdir src/soc/intel/quark/include/soc/fsp
+if [ ! -e $COREBOOT_DIR/src/soc/intel/quark/include/soc/fsp ]
+  then mkdir $COREBOOT_DIR/src/soc/intel/quark/include/soc/fsp
 fi
 
 if [ ! -e $COREBOOT_DIR/3rdparty/ ]
