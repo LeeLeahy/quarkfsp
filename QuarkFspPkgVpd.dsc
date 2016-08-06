@@ -4,9 +4,9 @@
 # This package provides specific modules of FSP for Quark X1000 SoC.
 # Copyright (c) 2013 - 2016 Intel Corporation.
 #
-# This program and the accompanying materials
-# are licensed and made available under the terms and conditions of the BSD License
-# which accompanies this distribution.  The full text of the license may be found at
+# This program and the accompanying materials are licensed and made available
+# under the terms and conditions of the BSD License which accompanies this
+# distribution.  The full text of the license may be found at
 # http://opensource.org/licenses/bsd-license.php
 #
 # THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
@@ -53,7 +53,7 @@
   #
   # SiliconInitUpdOffset must match the first UPD's offset in the structure of SiliconInitUpd
   #
-  gQuarkFspTokenSpaceGuid.SiliconInitUpdOffset        | 0x0014 | 0x04 | 0x00000070
+  gQuarkFspTokenSpaceGuid.SiliconInitUpdOffset        | 0x0014 | 0x04 | 0x00000080
 
   ################################################################################
   #
@@ -67,7 +67,7 @@
 
   gQuarkFspTokenSpaceGuid.RmuBaseAddress              | 0x0028 | 0x04 | 0xFFF00000
   gQuarkFspTokenSpaceGuid.RmuLength                   | 0x002C | 0x04 | 0x02000
-  gQuarkFspTokenSpaceGuid.SerialPortBaseAddress       | 0x0030 | 0x04 | 0
+  gQuarkFspTokenSpaceGuid.Reserved_30                 | 0x0030 | 0x04 | 0
 
   #
   # ACT to PRE command period in picoseconds.
@@ -170,7 +170,6 @@
   # Number of 32B blocks read for ECC scrub 2..16
   gQuarkFspTokenSpaceGuid.EccScrubBlkSize             | 0x005A | 0x01 | 2
 
-
   #
   # Size of the SMM region in 1 MiB chunks
   #
@@ -191,9 +190,33 @@
   #
   gQuarkFspTokenSpaceGuid.MrcDataLength               | 0x0064 | 0x04 | 0
 
+  #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  # The following three fields need be in a common header!
+  #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  #
+  # Poll for an input character.  Passing in NULL (zero, 0) tells FSP to
+  # indicate that no character is available.
+  #
+  gQuarkFspTokenSpaceGuid.SerialPortPollForChar       | 0x0068 | 0x04 | 0
+
+  #
+  # Read an input character.  Passing in NULL (zero) tells FSP to indicate
+  # that no characters are available by returning zero (0).
+  #
+  gQuarkFspTokenSpaceGuid.SerialPortReadChar          | 0x006C | 0x04 | 0
+
+  #
+  # Write a single character to the serial device/log.
+  # Passing in NULL (zero, 0) tells FSP to fake a successful write operation by
+  # dropping the buffer contents and returning the number of characters that
+  # were in the buffer.
+  #
+  gQuarkFspTokenSpaceGuid.SerialPortWriteChar         | 0x0070 | 0x04 | 0
+
   # !HDR EMBED:{MEMORY_INIT_UPD:MemoryInitUpd:END}
 
-  gQuarkFspTokenSpaceGuid.ReservedMemoryInitUpd       | 0x0068 | 0x08 | {0x00}
+  gQuarkFspTokenSpaceGuid.ReservedMemoryInitUpd       | 0x0074 | 0x0C | {0x00}
 
   ################################################################################
   #
@@ -202,8 +225,8 @@
   ################################################################################
   # !HDR EMBED:{SILICON_INIT_UPD:SiliconInitUpd:START}
   # SiliconInitUpdSignature: {$SI_UPD$}
-  gQuarkFspTokenSpaceGuid.Signature                   | 0x0070 | 0x08 | 0x244450555F495324
-  gQuarkFspTokenSpaceGuid.Revision                    | 0x0078 | 0x08 | 0x00
+  gQuarkFspTokenSpaceGuid.Signature                   | 0x0080 | 0x08 | 0x244450555F495324
+  gQuarkFspTokenSpaceGuid.Revision                    | 0x0088 | 0x08 | 0x00
 
   # !HDR EMBED:{SILICON_INIT_UPD:SiliconInitUpd:END}
 
@@ -211,7 +234,7 @@
   # The tool will use this field to determine the actual end of the UPD data
   # structure. Anything after this field will still be in the UPD binary block,
   # but will be excluded in the final UPD_DATA_REGION data structure.
-  gQuarkFspTokenSpaceGuid.PcdRegionTerminator         | 0x0080 | 2 | 0x55AA
+  gQuarkFspTokenSpaceGuid.PcdRegionTerminator         | 0x0090 | 2 | 0x55AA
 
 [PcdsDynamicVpd]
   #
