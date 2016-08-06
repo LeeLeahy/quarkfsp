@@ -422,7 +422,7 @@
   # !BSF NAME:{SerialPortBaseAddress}
   # !BSF HELP:{Debug serial port base address set by BIOS. Zero disables debug}
   # !BSF HELP:{+ serial output.}
-  gQuarkFspTokenSpaceGuid.SerialPortBaseAddress       | 0x0048 | 0x04 | 0
+  gQuarkFspTokenSpaceGuid.Reserved_48                 | 0x0048 | 0x04 | 0
 
   # !BSF NAME:{tRAS}
   # !BSF TYPE:{EditNum, HEX, (0x00000000,0xFFFFFFFF)}
@@ -573,6 +573,30 @@
   # !BSF HELP:{Length of saved MRC data}
   gQuarkFspTokenSpaceGuid.MrcDataLength               | 0x007C | 0x04 | 0
 
+  #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  # The following three fields need be in a common header!
+  #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  #
+  # Poll for an input character.  Passing in NULL (zero, 0) tells FSP to
+  # indicate that no character is available.
+  #
+  gQuarkFspTokenSpaceGuid.SerialPortPollForChar       | 0x0080 | 0x04 | 0
+
+  #
+  # Read an input character.  Passing in NULL (zero) tells FSP to indicate
+  # that no characters are available by returning zero (0).
+  #
+  gQuarkFspTokenSpaceGuid.SerialPortReadChar          | 0x0084 | 0x04 | 0
+
+  #
+  # Write a single character to the serial device/log.
+  # Passing in NULL (zero, 0) tells FSP to fake a successful write operation by
+  # dropping the buffer contents and returning the number of characters that
+  # were in the buffer.
+  #
+  gQuarkFspTokenSpaceGuid.SerialPortWriteChar         | 0x0088 | 0x04 | 0
+
   # !HDR EMBED:{FSP_M_CONFIG:FspmConfig:END}
 
 #============================================================================#
@@ -580,7 +604,7 @@
   # Note please keep "UpdTerminator" at the end of each UPD region.
   # The tool will use this field to determine the actual end of the UPD data
   # structure.
-  gQuarkFspTokenSpaceGuid.UpdTerminator               | 0x0080 | 0x02 | 0x55AA
+  gQuarkFspTokenSpaceGuid.UpdTerminator               | 0x008C | 0x02 | 0x55AA
 
 #============================================================================#
 # FSP-S (SiliconInit) UPDs
