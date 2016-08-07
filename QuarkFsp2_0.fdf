@@ -25,12 +25,12 @@ DEFINE FLASH_BASE       = 0x80040000     #The base address of the FSP
 DEFINE FLASH_BLOCK_SIZE = 0x00001000     #The block size
 
 #============================================================================#
-DEFINE FLASH_SIZE       = 0x00038000     #The flash size in bytes of the FSP
-DEFINE FLASH_NUM_BLOCKS = 0x38           #The number of blocks
+DEFINE FLASH_SIZE       = 0x00031000     #The flash size in bytes of the FSP
+DEFINE FLASH_NUM_BLOCKS = 0x31           #The number of blocks
 #============================================================================#
 SET gQuarkFspTokenSpaceGuid.PcdFlashFvFsptSize  = 0x00001000                 #
 SET gQuarkFspTokenSpaceGuid.PcdFlashFvFspmSize  = 0x0002f000                 #
-SET gQuarkFspTokenSpaceGuid.PcdFlashFvFspsSize  = 0x00008000                 #
+SET gQuarkFspTokenSpaceGuid.PcdFlashFvFspsSize  = 0x00001000                 #
 #============================================================================#
 
 ################################################################################
@@ -214,8 +214,6 @@ INF RuleOverride = FSPHEADER   $(FSP_PACKAGE)/Fsp2Header/FspHeader.inf
 # for this implementation
 #
 INF RuleOverride = RELOC   $(FSP_PACKAGE)/Override/IntelFsp2Pkg/FspSecCore/FspSecCoreS.inf
-
-INF MdeModulePkg/Core/DxeIplPeim/DxeIpl.inf
 
 #
 # Project specific configuration data files

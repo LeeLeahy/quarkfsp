@@ -13,22 +13,6 @@
 
     SECTION .text
 
-;
-; Following functions will be provided in C
-;
-extern ASM_PFX(FspApiCommon)
-
-;----------------------------------------------------------------------------
-; FspApiCommonContinue API
-;
-; This is the FSP API common entry point to resume the FSP execution
-;
-;----------------------------------------------------------------------------
-global ASM_PFX(FspApiCommonContinue)
-ASM_PFX(FspApiCommonContinue):
-  jmp    $
-  ret
-
 ;----------------------------------------------------------------------------
 ; Module Entrypoint API
 ;----------------------------------------------------------------------------
@@ -38,11 +22,12 @@ ASM_PFX(_ModuleEntryPoint):
 
 ;----------------------------------------------------------------------------
 ; Reference the following functions to pull them into the image
+;
+; Following functions will be provided in C
 ;----------------------------------------------------------------------------
 
 extern ASM_PFX(FspSiliconInitApi)
 extern ASM_PFX(NotifyPhaseApi)
 
-  jmp    FspApiCommon
   jmp    FspSiliconInitApi
   jmp    NotifyPhaseApi
