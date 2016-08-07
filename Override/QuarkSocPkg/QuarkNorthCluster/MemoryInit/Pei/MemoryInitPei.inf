@@ -67,7 +67,6 @@
 [LibraryClasses]
   PeimEntryPoint
   DebugLib
-  BaseMemoryLib
   SerialPortLib
 
 [Ppis]
