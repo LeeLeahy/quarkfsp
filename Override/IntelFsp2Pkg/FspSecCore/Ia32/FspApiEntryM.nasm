@@ -2,9 +2,9 @@
 ;  Provide FSP API entry points.
 ;
 ; Copyright (c) 2016, Intel Corporation. All rights reserved.<BR>
-; This program and the accompanying materials
-; are licensed and made available under the terms and conditions of the BSD License
-; which accompanies this distribution.  The full text of the license may be found at
+; This program and the accompanying materials are licensed and made available
+; under the terms and conditions of the BSD License which accompanies this
+; distribution.  The full text of the license may be found at
 ; http://opensource.org/licenses/bsd-license.php.
 ;
 ; THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
@@ -12,13 +12,6 @@
 ;;
 
     SECTION .text
-
-;
-; Following are fixed PCDs
-;
-extern   ASM_PFX(PcdGet32(PcdTemporaryRamBase))
-extern   ASM_PFX(PcdGet32(PcdTemporaryRamSize))
-extern   ASM_PFX(PcdGet32(PcdFspTemporaryRamSize))
 
 struc FSPM_UPD_COMMON
     ; FSP_UPD_HEADER {
