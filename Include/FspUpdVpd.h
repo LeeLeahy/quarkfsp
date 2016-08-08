@@ -36,9 +36,6 @@ are permitted provided that the following conditions are met:
 #pragma pack(1)
 
 
-/** TODO - Port to fit Quark SoC.
-**/
-
 #define MAX_CHANNELS_NUM       1
 #define MAX_DIMMS_NUM          1
 
@@ -219,7 +216,7 @@ typedef struct _UPD_DATA_REGION {
 } UPD_DATA_REGION;
 
 #define FSP_IMAGE_ID    0x305053462D4B5551        /* 'QUK-FSP0' */
-#define FSP_IMAGE_REV   0x00000000 
+#define FSP_IMAGE_REV   0x00000000
 
 typedef struct _VPD_DATA_REGION {
 /** Offset 0x0000
