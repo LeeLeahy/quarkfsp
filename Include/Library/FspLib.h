@@ -41,7 +41,7 @@ VOID ReturnHobListPointer(VOID *HobList);
   @retval FALSE      There is no data waiting to be read from the serial device.
 
 **/
-typedef INTN EFIAPI (*FN_SERIAL_PORT_POLL_FOR_CHAR)(VOID);
+typedef INTN (EFIAPI *FN_SERIAL_PORT_POLL_FOR_CHAR)(VOID);
 
 /**
   Reads a data byte from the serial device.
@@ -49,7 +49,7 @@ typedef INTN EFIAPI (*FN_SERIAL_PORT_POLL_FOR_CHAR)(VOID);
   @return Next character from the serial device.
 
 **/
-typedef UINT8 EFIAPI (*FN_SERIAL_PORT_READ_CHAR)(VOID);
+typedef UINT8 (EFIAPI *FN_SERIAL_PORT_READ_CHAR)(VOID);
 
 /**
   Write data from buffer to serial device.
@@ -69,7 +69,7 @@ typedef UINT8 EFIAPI (*FN_SERIAL_PORT_READ_CHAR)(VOID);
                            write operation failed.
 
 **/
-typedef UINTN EFIAPI (*FN_SERIAL_PORT_WRITE_CHAR)(
+typedef UINTN (EFIAPI *FN_SERIAL_PORT_WRITE_CHAR)(
   IN UINT8     *Buffer,
   IN UINTN     NumberOfBytes
 );

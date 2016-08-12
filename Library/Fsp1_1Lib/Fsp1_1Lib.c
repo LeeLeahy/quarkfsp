@@ -142,7 +142,7 @@ VOID GetMemoryParameters (
   MrcData->channel_width       = MemoryInitUpd->ChanWidth;
   MrcData->address_mode        = MemoryInitUpd->AddrMode;
   // Enable scrambling if requested.
-  MrcData->scrambling_enables  = MemoryInitUpd->Flags;
+  MrcData->scrambling_enables  = (UINT8)MemoryInitUpd->Flags;
   MrcData->ddr_type            = MemoryInitUpd->DramType;
   MrcData->dram_width          = MemoryInitUpd->DramWidth;
   MrcData->ddr_speed           = MemoryInitUpd->DramSpeed;

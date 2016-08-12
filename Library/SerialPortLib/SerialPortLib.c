@@ -144,5 +144,5 @@ SerialPortPoll (
     return FALSE;
   }
 
-  return SerialPortPollForChar();
+  return (BOOLEAN)SerialPortPollForChar();
 }
