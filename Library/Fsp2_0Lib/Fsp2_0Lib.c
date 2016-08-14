@@ -19,6 +19,7 @@
 #include <Library/FspLib.h>
 #include <Library/FspMemoryLib.h>
 #include <Pi/PiBootMode.h>
+#include <Uefi/UefiMultiPhase.h>
 #include <Pi/PiHob.h>
 #include <Library/HobLib.h>
 #include <FspmUpd.h>
