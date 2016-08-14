@@ -136,7 +136,7 @@ VOID GetMemoryParameters (
   MrcData->channel_width       = FspmUpd->FspmConfig.ChanWidth;
   MrcData->address_mode        = FspmUpd->FspmConfig.AddrMode;
   // Enable scrambling if requested.
-  MrcData->scrambling_enables  = FspmUpd->FspmConfig.Flags;
+  MrcData->scrambling_enables  = (UINT8)FspmUpd->FspmConfig.Flags;
   MrcData->ddr_type            = FspmUpd->FspmConfig.DramType;
   MrcData->dram_width          = FspmUpd->FspmConfig.DramWidth;
   MrcData->ddr_speed           = FspmUpd->FspmConfig.DramSpeed;
