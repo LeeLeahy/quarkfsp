@@ -23,6 +23,10 @@
 @if not defined WORKSPACE (
   call %~dp0\..\edksetup.bat
 )
+@if not defined EDK_TOOLS_BIN (
+  set EDK_TOOLS_BIN=%EDK_TOOLS_PATH%\Bin\Win32
+)
+call %BASE_TOOLS_PATH%\toolsetup.bat   Rebuild
 
 @echo off
 set VS_VERSION=
@@ -179,11 +183,11 @@ if "%ERRORLEVEL%"=="256" (
   if ERRORLEVEL 1 goto:PreBuildFail  
   echo UPD TXT file was generated successfully !
     
-  echo Generate VPD Header File ...    
   del /q /f %OUT_DIR%\%FSP_PKG_NAME%\%BD_TARGET%_%VS_VERSION%\FV\%UPD_GUID%.bin ^
             %OUT_DIR%\%FSP_PKG_NAME%\%BD_TARGET%_%VS_VERSION%\FV\%UPD_GUID%.map 2>nul
 
-  BaseTools\Bin\Win32\BPDG.exe ^
+  echo Generate VPD Header File ...
+  %EDK_TOOLS_BIN%\BPDG.exe ^
        %OUT_DIR%\%FSP_PKG_NAME%\%BD_TARGET%_%VS_VERSION%\FV\%UPD_GUID%.txt ^
        -o %OUT_DIR%\%FSP_PKG_NAME%\%BD_TARGET%_%VS_VERSION%\FV\%UPD_GUID%.bin ^
        -m %OUT_DIR%\%FSP_PKG_NAME%\%BD_TARGET%_%VS_VERSION%\FV\%UPD_GUID%.map
