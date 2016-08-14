@@ -34,7 +34,6 @@ endstruc
 ; Following functions will be provided in C
 ;
 extern ASM_PFX(SecStartup)
-extern ASM_PFX(FspApiCommon)
 
 ;
 ; Following functions will be provided in PlatformSecLib

@@ -36,7 +36,6 @@
 
 [Sources.IA32]
   Ia32/FspApiEntryM.nasm
-  Ia32/FspApiEntryCommon.nasm
   Ia32/FspHelper.nasm
   Ia32/Stack.nasm
 
