@@ -29,5 +29,5 @@ ASM_PFX(_ModuleEntryPoint):
 extern ASM_PFX(FspSiliconInitApi)
 extern ASM_PFX(NotifyPhaseApi)
 
-  jmp    FspSiliconInitApi
-  jmp    NotifyPhaseApi
+  jmp    ASM_PFX(FspSiliconInitApi)
+  jmp    ASM_PFX(NotifyPhaseApi)
