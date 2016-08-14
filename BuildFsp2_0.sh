@@ -195,6 +195,7 @@ function PreBuild(){
     fi
   fi
 
+  echo Generate the UPD header files
   touch $FSP_PACKAGE/Include/BootLoaderPlatformData.h
   python IntelFsp2Pkg/Tools/GenCfgOpt.py  \
         HEADER  \
@@ -208,14 +209,14 @@ function PreBuild(){
   if [ $? -eq "256" ]
    then
     echo
-    # No need to recreate header file
+    # No need to recreate the UPD header files
    else
     if [ $? -eq "1" ]
      then
       echo
     fi
 
-    echo Vpd header file was generated successfully !
+    echo UPD header files were generated successfully!
 
     echo Generate BSF File ...
     if [ -f $FSP_BIN_PKG_NAME/fsp.bsf ]
