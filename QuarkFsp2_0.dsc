@@ -308,7 +308,7 @@
 
   # Global definitions in BSF
   # !BSF PAGES:{MEM:"FSP MemoryInit Settings", SIL:"FSP SiliconInit Settings"}
-  # !BSF BLOCK:{NAME:"Quark FSP", VERSION:"0.1"}
+  # !BSF BLOCK:{NAME:"Quark FSP", VER:"0.1"}
 
 #============================================================================#
 # FSP-T (TempRamInit) UPDs
