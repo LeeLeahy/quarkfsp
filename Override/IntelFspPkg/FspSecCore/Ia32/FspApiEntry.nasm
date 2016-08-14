@@ -20,28 +20,27 @@
 ;
 ; Following are fixed PCDs
 ;
-extern    _gPcd_FixedAtBuild_PcdTemporaryRamBase
-extern    _gPcd_FixedAtBuild_PcdTemporaryRamSize
-extern    _gPcd_FixedAtBuild_PcdFspTemporaryRamSize
-extern    _gPcd_FixedAtBuild_PcdFspAreaBaseAddress
-extern    _gPcd_FixedAtBuild_PcdFspAreaSize
+extern    ASM_PFX(_gPcd_FixedAtBuild_PcdTemporaryRamBase)
+extern    ASM_PFX(_gPcd_FixedAtBuild_PcdTemporaryRamSize)
+extern    ASM_PFX(_gPcd_FixedAtBuild_PcdFspTemporaryRamSize)
+extern    ASM_PFX(_gPcd_FixedAtBuild_PcdFspAreaSize)
 
 ;
 ; Following functions will be provided in C
 ;
-extern    SecStartup
-extern    FspApiCallingCheck
-extern    TempRamExitApi
-extern    FspSiliconInitApi
-extern    NotifyPhaseApi
+extern    ASM_PFX(SecStartup)
+extern    ASM_PFX(FspApiCallingCheck)
+extern    ASM_PFX(TempRamExitApi)
+extern    ASM_PFX(FspSiliconInitApi)
+extern    ASM_PFX(NotifyPhaseApi)
 
 ;
 ; Following functions will be provided in PlatformSecLib
 ;
-extern    AsmGetFspBaseAddress
-extern    AsmGetFspInfoHeader
-extern    GetBootFirmwareVolumeOffset
-extern    Loader2PeiSwitchStack
+extern    ASM_PFX(AsmGetFspBaseAddress)
+extern    ASM_PFX(AsmGetFspInfoHeader)
+extern    ASM_PFX(GetBootFirmwareVolumeOffset)
+extern    ASM_PFX(Loader2PeiSwitchStack)
 
 ;
 ; Define the data length that we saved on the stack top
@@ -56,8 +55,8 @@ DATA_LEN_AT_STACK_TOP   equ     (DATA_LEN_OF_PER0 + DATA_LEN_OF_MCUD + 4)
 ; TempRamInit API is an empty API since Quark SoC does not support CAR.
 ;
 ;----------------------------------------------------------------------------
-          global        TempRamInitApi
-TempRamInitApi:
+          global        ASM_PFX(TempRamInitApi)
+ASM_PFX(TempRamInitApi):
   ;
   ; Check Parameter
   ;
@@ -69,10 +68,10 @@ TempRamInitApi:
   ;
   ; Set ECX/EDX to the bootloader temporary memory range
   ;
-  mov     ecx, [PcdGet32 (PcdTemporaryRamBase)]
+  mov     ecx, [ASM_PFX(PcdGet32 (PcdTemporaryRamBase))]
   mov     edx, ecx
-  add     edx, [PcdGet32 (PcdTemporaryRamSize)]
-  sub     edx, [PcdGet32 (PcdFspTemporaryRamSize)]
+  add     edx, [ASM_PFX(PcdGet32 (PcdTemporaryRamSize))]
+  sub     edx, [ASM_PFX(PcdGet32 (PcdFspTemporaryRamSize))]
 
   ; EAX - error flag
   xor     eax, eax
@@ -88,8 +87,8 @@ TempRamInitExit:
 ; ContinuationFunc provided in the parameter.
 ;
 ;----------------------------------------------------------------------------
-          global        FspInitApi
-FspInitApi:
+          global        ASM_PFX(FspInitApi)
+ASM_PFX(FspInitApi):
   mov     eax, 1
   jmp     FspApiCommon
 
@@ -99,8 +98,8 @@ FspInitApi:
 ; This FSP API is called after TempRamInit and initializes the memory.
 ;
 ;----------------------------------------------------------------------------
-          global        FspMemoryInitApi
-FspMemoryInitApi:
+          global        ASM_PFX(FspMemoryInitApi)
+ASM_PFX(FspMemoryInitApi):
   ;
   ; Save stack address in ecx
   ;
@@ -110,8 +109,8 @@ FspMemoryInitApi:
   ;
   ; Enable FSP STACK
   ;
-  mov     esp, [PcdGet32 (PcdTemporaryRamBase)]
-  add     esp, [PcdGet32 (PcdTemporaryRamSize)]
+  mov     esp, [ASM_PFX(PcdGet32 (PcdTemporaryRamBase))]
+  add     esp, [ASM_PFX(PcdGet32 (PcdTemporaryRamSize))]
 
   push    DATA_LEN_OF_MCUD     ; Size of the data region
   push    0x4455434D           ; Signature of the  data region 'MCUD'
@@ -156,7 +155,6 @@ FspMemoryInitApi:
 ; This is the FSP API common entry point to resume the FSP execution
 ;
 ;----------------------------------------------------------------------------
-          global        FspApiCommon
 FspApiCommon:
   ;
   ; EAX holds the API index
@@ -179,7 +177,7 @@ FspApiCommonL0:
   pushad
   push    dword [esp+(4*8)+4]                ; push ApiParam
   push    eax                                ; push ApiIdx
-  call    FspApiCallingCheck
+  call    ASM_PFX(FspApiCallingCheck)
   add     esp, 8
   cmp     eax, 0
   jz      FspApiCommonL1
@@ -193,8 +191,8 @@ FspApiCommonL1:
   jz      FspApiCommonL2
   cmp     eax, 3                             ; FspMemoryInit API
   jz      FspApiCommonL2
-  call    AsmGetFspInfoHeader
-  jmp     Loader2PeiSwitchStack
+  call    ASM_PFX(AsmGetFspInfoHeader)
+  jmp     ASM_PFX(Loader2PeiSwitchStack)
 
 FspApiCommonL2:
   ;
@@ -210,7 +208,7 @@ FspApiCommonL2:
   ; Update the FspInfoHeader pointer
   ;
   push    eax
-  call    AsmGetFspInfoHeader
+  call    ASM_PFX(AsmGetFspInfoHeader)
   mov     [esp+4], eax
   pop     eax
 
@@ -231,8 +229,8 @@ FspApiCommonL2:
   ; Setup new FSP stack
   ;
   mov     edi, esp
-  mov     esp, [PcdGet32(PcdTemporaryRamBase)]
-  add     esp, [PcdGet32(PcdTemporaryRamSize)]
+  mov     esp, [ASM_PFX(PcdGet32(PcdTemporaryRamBase))]
+  add     esp, [ASM_PFX(PcdGet32(PcdTemporaryRamSize))]
   sub     esp, (DATA_LEN_AT_STACK_TOP + 0x40)
 
   ;
@@ -248,9 +246,9 @@ FspApiCommonL2:
   ;
   ; Pass entry point of the PEI core
   ;
-  call    AsmGetFspBaseAddress
+  call    ASM_PFX(AsmGetFspBaseAddress)
   mov     edi, eax
-  add     edi, [PcdGet32(PcdFspAreaSize)]
+  add     edi, [ASM_PFX(PcdGet32(PcdFspAreaSize))]
   sub     edi, 0x20
   add     eax, [ds:edi]
   push    eax
@@ -262,25 +260,25 @@ FspApiCommonL2:
   ; PcdFspAreaBaseAddress are the same. For FSP with mulitple FVs,
   ; they are different. The code below can handle both cases.
   ;
-  call    AsmGetFspBaseAddress
+  call    ASM_PFX(AsmGetFspBaseAddress)
   mov     edi, eax
-  call    GetBootFirmwareVolumeOffset
+  call    ASM_PFX(GetBootFirmwareVolumeOffset)
   add     eax, edi
   push    eax
 
   ;
   ; Pass stack base and size into the PEI Core
   ;
-  mov     eax, [PcdGet32(PcdTemporaryRamBase)]
-  add     eax, [PcdGet32(PcdTemporaryRamSize)]
-  sub     eax, [PcdGet32(PcdFspTemporaryRamSize)]
+  mov     eax, [ASM_PFX(PcdGet32(PcdTemporaryRamBase))]
+  add     eax, [ASM_PFX(PcdGet32(PcdTemporaryRamSize))]
+  sub     eax, [ASM_PFX(PcdGet32(PcdFspTemporaryRamSize))]
   push    eax
-  push    dword [PcdGet32(PcdFspTemporaryRamSize)]
+  push    dword [ASM_PFX(PcdGet32(PcdFspTemporaryRamSize))]
 
   ;
   ; Pass Control into the PEI Core
   ;
-  call    SecStartup
+  call    ASM_PFX(SecStartup)
   add     esp, 4
 FspApiCommonExit:
   ret
@@ -308,16 +306,16 @@ FspApiCommonExit:
 ; Return:       None
 ;
 ;----------------------------------------------------------------------------
-          global        _ModuleEntryPoint
-_ModuleEntryPoint:
+          global        ASM_PFX(_ModuleEntryPoint)
+ASM_PFX(_ModuleEntryPoint):
 
   jmp     $
 
   ;
   ; Reference the routines to get the linker to pull them in
   ;
-  jmp     TempRamInitApi
-  jmp     FspInitApi
-  jmp     TempRamExitApi
-  jmp     FspSiliconInitApi
-  jmp     NotifyPhaseApi
+  jmp     ASM_PFX(TempRamInitApi)
+  jmp     ASM_PFX(FspInitApi)
+  jmp     ASM_PFX(TempRamExitApi)
+  jmp     ASM_PFX(FspSiliconInitApi)
+  jmp     ASM_PFX(NotifyPhaseApi)
