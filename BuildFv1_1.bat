@@ -204,7 +204,11 @@ if "%ERRORLEVEL%"=="256" (
 ) else (    
     if ERRORLEVEL 1 goto:PreBuildFail       
     echo Vpd header file was generated successfully !
-           
+
+    if not exist  %FSP_PKG_NAME%\Bsf (
+        mkdir  %FSP_PKG_NAME%\Bsf
+    )
+
     echo Generate BSF File ...   
     python IntelFspPkg\Tools\GenCfgOpt.py GENBSF ^
          %FSP_PKG_NAME%\%FSP_PKG_VPD_NAME%.dsc ^

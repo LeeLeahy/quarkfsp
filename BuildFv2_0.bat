@@ -231,7 +231,11 @@ if "%ERRORLEVEL%"=="256" (
 ) else (    
     if ERRORLEVEL 1 goto:PreBuildFail       
     echo UPD header files were generated successfully!
-           
+
+    if not exist  %FSP_PKG_NAME%\Bsf (
+        mkdir  %FSP_PKG_NAME%\Bsf
+    )
+
     echo Generate BSF File ...
 	python IntelFsp2Pkg/Tools/GenCfgOpt.py  \
           GENBSF  \
