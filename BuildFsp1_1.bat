@@ -158,7 +158,7 @@ rem ---------------------------------------------------------------------------
 rem ---------------------------------------------------------------------------
 rem Print usage and exit
 rem ---------------------------------------------------------------------------
-	echo Usage: QuarkFspPkg/BuildFsp [/h ^| /? ^| /r32 ^| /d32 ^| /clean]
+	echo Usage: %0 [/h ^| /? ^| /r32 ^| /d32 ^| /clean]
 	echo     Supported command list:
 	echo       /h or /?  - Help
 	echo       /r32 - 32 bit release build
