@@ -135,6 +135,8 @@ set  DEBUG_PRINT_ERROR_LEVEL=-DDEBUG_PRINT_ERROR_LEVEL=0x80000000
 set  DEBUG_PROPERTY_MASK=-DDEBUG_PROPERTY_MASK=0x23
 set  BD_MACRO=-D CFG_OUTDIR=%OUT_DIR% %DEBUG_PRINT_ERROR_LEVEL% %DEBUG_PROPERTY_MASK%
 set  BD_ARGS=-p %FSP_PKG_NAME%\%PLATFORM_NAME%.dsc  -Y PCD -Y LIBRARY -y %~dp0\Report%BD_TARGET%.log -b %BD_TARGET% %BD_MACRO% -a IA32 -n 4 -t %VS_VERSION%
+set  FSP_BUILD_TYPE=0x0001
+set  FSP_RELEASE_TYPE=0x0000
 goto Build32
 
 :DebugBuild32
@@ -143,6 +145,8 @@ set  DEBUG_PRINT_ERROR_LEVEL=-DDEBUG_PRINT_ERROR_LEVEL=0x80000042
 set  DEBUG_PROPERTY_MASK=-DDEBUG_PROPERTY_MASK=0x27
 set  BD_MACRO=-D CFG_DEBUG=1 -D CFG_OUTDIR=%OUT_DIR% %DEBUG_PRINT_ERROR_LEVEL% %DEBUG_PROPERTY_MASK%
 set  BD_ARGS=-p %FSP_PKG_NAME%\%PLATFORM_NAME%.dsc -Y PCD -Y LIBRARY -y %~dp0\Report%BD_TARGET%.log -b %BD_TARGET% %BD_MACRO% -a IA32 -n 4 -t %VS_VERSION%
+set  FSP_BUILD_TYPE=0x0000
+set  FSP_RELEASE_TYPE=0x0000
 goto Build32
 
 :Build32
@@ -267,37 +271,62 @@ echo.
 goto:EOF
 
 :PostBuild
-echo Start of PostBuild ...   
-echo Patch FD Image ...
-python IntelFspPkg\Tools\PatchFv.py ^
+echo Start of PostBuild ...
+echo Patch FSP-T Image ...
+python IntelFsp2Pkg\Tools\PatchFv.py ^
      %OUT_DIR%\%PLATFORM_NAME%\%BD_TARGET%_%VS_VERSION%\FV ^
-     %FSP_BASENAME%FV1:%FSP_BASENAME%FV2:%FSP_BASENAME%  ^
-     "0xFFFFFFFC, [0x000000B0],                                  @FVBASE" ^
-     "0xFFFFFFE0, <PeiCore:__ModuleEntryPoint>,     @PeiCore Entry" ^
-     "0x000000C4, <FspSecCore:_TempRamInitApi>,     @TempRamInit API" ^
-     "0x000000C8, <FspSecCore:_FspInitApi>,         @FspInit API" ^
-     "0x000000CC, <FspSecCore:_NotifyPhaseApi>,     @NotifyPhase API" ^
-     "0x000000D0, <FspSecCore:_FspMemoryInitApi>,   @FspMemoryInit API" ^
-     "0x000000D4, <FspSecCore:_TempRamExitApi>,     @TempRamExit API" ^
-     "0x000000D8, <FspSecCore:_FspSiliconInitApi>,  @FspSiliconInit API" ^
-     "0x000000B8, 06A70056-3D0F-4A94-A743-5491CC9391D3:0x1C,     @VPD Region offset" ^
-     "0x000000BC, [06A70056-3D0F-4A94-A743-5491CC9391D3:0x14]  - 0xF800001C,    @VPD Region size" ^
-     "0x00000100, PcdPeim:__gPcd_BinaryPatch_PcdVpdBaseAddress - [0x000000B0],  @VPD PCD offset" ^
-     "06A70056-3D0F-4A94-A743-5491CC9391D3:0x28, ([06A70056-3D0F-4A94-A743-5491CC9391D3:0x18] + 0x00000003) & 0x00FFFFFC + 06A70056-3D0F-4A94-A743-5491CC9391D3:0x1C,  @UPD Region offset"
+     FSP-T:QUARK ^
+     "0x0000,            _BASE_FSP-T_,                                                                                       @Temporary Base" ^
+     "<[0x0000]>+0x00AC, [<[0x0000]>+0x0020],                                                                                @FSP-T Size" ^
+     "<[0x0000]>+0x00B0, [0x0000],                                                                                           @FSP-T Base" ^
+     "<[0x0000]>+0x00B4, ([<[0x0000]>+0x00B4] & 0xFFFFFFFF) | 0x0001,                                                        @FSP-T Image Attribute" ^
+     "<[0x0000]>+0x00B6, ([<[0x0000]>+0x00B6] & 0xFFFF0FFC) | 0x1000 | %FSP_BUILD_TYPE% | %FSP_RELEASE_TYPE%,                @FSP-T Component Attribute" ^
+     "<[0x0000]>+0x00B8, 70BCF6A5-FFB1-47D8-B1AE-EFE5508E23EA:0x1C - <[0x0000]>,                                             @FSP-T CFG Offset" ^
+     "<[0x0000]>+0x00BC, [70BCF6A5-FFB1-47D8-B1AE-EFE5508E23EA:0x14] & 0xFFFFFF - 0x001C,                                    @FSP-T CFG Size" ^
+     "<[0x0000]>+0x00C4, FspSecCoreT:_TempRamInitApi - [0x0000],                                                             @TempRamInit API" ^
+     "0x0000,            0x00000000,                                                                                         @Restore the value"
 if ERRORLEVEL 1 exit /b 1
 
-@REM Patch FspInfoHeader relative offset
-python IntelFspPkg\Tools\PatchFv.py ^
+echo Patch FSP-M Image ...
+python IntelFsp2Pkg\Tools\PatchFv.py ^
      %OUT_DIR%\%PLATFORM_NAME%\%BD_TARGET%_%VS_VERSION%\FV ^
-     %FSP_BASENAME%FV1:%FSP_BASENAME%FV2:%FSP_BASENAME%  ^
-     "FspSecCore:_FspInfoHeaderRelativeOff, FspSecCore:_AsmGetFspBaseAddress - {912740BE-2284-4734-B971-84B027353F0C:0x1C}, @FSP Header Offset" 
+     FSP-M:QUARK ^
+     "0x0000,            _BASE_FSP-M_,                                                                                       @Temporary Base" ^
+     "<[0x0000]>+0x00AC, [<[0x0000]>+0x0020],                                                                                @FSP-M Size" ^
+     "<[0x0000]>+0x00B0, [0x0000],                                                                                           @FSP-M Base" ^
+     "<[0x0000]>+0x00B4, ([<[0x0000]>+0x00B4] & 0xFFFFFFFF) | 0x0001,                                                        @FSP-M Image Attribute" ^
+     "<[0x0000]>+0x00B6, ([<[0x0000]>+0x00B6] & 0xFFFF0FFC) | 0x2000 | %FSP_BUILD_TYPE% | %FSP_RELEASE_TYPE%,                @FSP-M Component Attribute" ^
+     "<[0x0000]>+0x00B8, D5B86AEA-6AF7-40D4-8014-982301BC3D89:0x1C - <[0x0000]>,                                             @FSP-M CFG Offset" ^
+     "<[0x0000]>+0x00BC, [D5B86AEA-6AF7-40D4-8014-982301BC3D89:0x14] & 0xFFFFFF - 0x001C,                                    @FSP-M CFG Size" ^
+     "<[0x0000]>+0x00D0, FspSecCoreM:_FspMemoryInitApi - [0x0000],                                                           @MemoryInitApi API" ^
+     "<[0x0000]>+0x00D4, FspSecCoreM:_TempRamExitApi - [0x0000],                                                             @TempRamExit API" ^
+     "FspSecCoreM:_FspPeiCoreEntryOff, PeiCore:__ModuleEntryPoint - [0x0000],                                                @PeiCore Entry" ^
+     "0x0000,            0x00000000,                                                                                         @Restore the value" ^
+     "FspSecCoreM:_FspInfoHeaderRelativeOff, FspSecCoreM:_AsmGetFspInfoHeader - {912740BE-2284-4734-B971-84B027353F0C:0x1C}, @FSP-M Header Offset"
 if ERRORLEVEL 1 exit /b 1
 
-@REM Patch VPD base into the PcdPeim module patchable PCD
-python IntelFspPkg\Tools\PatchFv.py ^
+echo Patch FSP-S Image ...
+python IntelFsp2Pkg\Tools\PatchFv.py ^
      %OUT_DIR%\%PLATFORM_NAME%\%BD_TARGET%_%VS_VERSION%\FV ^
-     %FSP_BASENAME%FV1:%FSP_BASENAME%FV2:%FSP_BASENAME%  ^
-     "PcdPeim:__gPcd_BinaryPatch_PcdVpdBaseAddress, {[0x000000B8]}, @VPD PCD base"
+     FSP-S:QUARK ^
+     "0x0000,            _BASE_FSP-S_,                                                                                       @Temporary Base" ^
+     "<[0x0000]>+0x00AC, [<[0x0000]>+0x0020],                                                                                @FSP-S Size" ^
+     "<[0x0000]>+0x00B0, [0x0000],                                                                                           @FSP-S Base" ^
+     "<[0x0000]>+0x00B4, ([<[0x0000]>+0x00B4] & 0xFFFFFFFF) | 0x0001,                                                        @FSP-S Image Attribute" ^
+     "<[0x0000]>+0x00B6, ([<[0x0000]>+0x00B6] & 0xFFFF0FFC) | 0x3000 | %FSP_BUILD_TYPE% | %FSP_RELEASE_TYPE%,                @FSP-S Component Attribute" ^
+     "<[0x0000]>+0x00B8, E3CD9B18-998C-4F76-B65E-98B154E5446F:0x1C - <[0x0000]>,                                             @FSP-S CFG Offset" ^
+     "<[0x0000]>+0x00BC, [E3CD9B18-998C-4F76-B65E-98B154E5446F:0x14] & 0xFFFFFF - 0x001C,                                    @FSP-S CFG Size" ^
+     "<[0x0000]>+0x00D8, FspSecCoreS:_FspSiliconInitApi - [0x0000],                                                          @SiliconInit API" ^
+     "<[0x0000]>+0x00CC, FspSecCoreS:_NotifyPhaseApi - [0x0000],                                                             @NotifyPhase API" ^
+     "0x0000,            0x00000000,                                                                                         @Restore the value"
+if ERRORLEVEL 1 exit /b 1
+
+echo Split the FSP Image ...
+python IntelFsp2Pkg/Tools/SplitFspBin.py  ^
+    split  ^
+    -n "FSP.fd"  ^
+    -f %OUT_DIR%\%PLATFORM_NAME%\%BD_TARGET%_%VS_VERSION%\FVQUARK.fd  ^
+    -o %OUT_DIR%\%PLATFORM_NAME%\%BD_TARGET%_%VS_VERSION%\FV
 if ERRORLEVEL 1 exit /b 1
 
 echo Patch is DONE
