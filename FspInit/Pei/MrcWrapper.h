@@ -122,14 +122,12 @@ typedef struct {
 
 EFI_STATUS
 InstallEfiMemory (
-  IN      EFI_PEI_SERVICES                           **PeiServices,
   IN      EFI_BOOT_MODE                              BootMode,
   IN      UINT32                                     TotalMemorySize
   );
 
 EFI_STATUS
 InstallS3Memory (
-  IN      EFI_PEI_SERVICES                      **PeiServices,
   IN      UINT32                                TotalMemorySize
   );
 
@@ -146,13 +144,11 @@ SaveConfig (
 
 VOID
 RetriveRequiredMemorySize (
-  IN      EFI_PEI_SERVICES                  **PeiServices,
   OUT     UINTN                             *Size
   );
 
 EFI_STATUS
 GetMemoryMap (
-  IN     EFI_PEI_SERVICES                                    **PeiServices,
   IN     UINT32                                              TotalMemorySize,
   IN OUT PEI_DUAL_CHANNEL_DDR_MEMORY_MAP_RANGE               *MemoryMap,
   IN OUT UINT8                                               *NumRanges
@@ -160,7 +156,6 @@ GetMemoryMap (
 
 EFI_STATUS
 BaseMemoryTest (
-  IN  EFI_PEI_SERVICES                   **PeiServices,
   IN  EFI_PHYSICAL_ADDRESS               BeginAddress,
   IN  UINT64                             MemoryLength,
   IN  PEI_MEMORY_TEST_OP                 Operation,

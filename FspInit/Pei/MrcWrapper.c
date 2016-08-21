@@ -194,8 +194,7 @@ PostInstallMemory (
 
   Do memory initialisation for QNC DDR3 SDRAM Controller
 
-  @param  FfsHeader    Not used.
-  @param  PeiServices  General purpose services available to every PEIM.
+  @param  PeiServices  Not used
 
   @return EFI_SUCCESS  Memory initialisation completed successfully.
           All other error conditions encountered result in an ASSERT.
@@ -340,7 +339,7 @@ MemoryInit (
 
     DEBUG ((EFI_D_INFO, "Following BOOT_ON_S3_RESUME boot path.\n"));
 
-    Status = InstallS3Memory (PeiServices, MrcData.mem_size);
+    Status = InstallS3Memory (MrcData.mem_size);
     if (EFI_ERROR (Status)) {
       REPORT_STATUS_CODE (
         EFI_ERROR_CODE + EFI_ERROR_UNRECOVERED,
@@ -358,7 +357,6 @@ MemoryInit (
   DEBUG ((EFI_D_INFO, "InstallEfiMemory, TotalSize = 0x%08x\n", MrcData.mem_size));
 
   Status = InstallEfiMemory (
-             PeiServices,
              BootMode,
              MrcData.mem_size
              );
@@ -415,10 +413,8 @@ SaveConfig (
 
   This function installs memory.
 
-  @param   PeiServices    PEI Services table.
-  @param   BootMode       The specific boot path that is being followed
-  @param   Mch            Pointer to the DualChannelDdrMemoryInit PPI
-  @param   RowConfArray   Row configuration information for each row in the system.
+  @param   BootMode        The specific boot path that is being followed
+  @param   TotalMemorySize Size of memory in bytes
 
   @return  EFI_SUCCESS            The function completed successfully.
            EFI_INVALID_PARAMETER  One of the input parameters was invalid.
@@ -427,7 +423,6 @@ SaveConfig (
 **/
 EFI_STATUS
 InstallEfiMemory (
-  IN      EFI_PEI_SERVICES                           **PeiServices,
   IN      EFI_BOOT_MODE                              BootMode,
   IN      UINT32                                     TotalMemorySize
   )
@@ -452,7 +447,6 @@ InstallEfiMemory (
   //
   if (BootMode != BOOT_ON_FLASH_UPDATE) {
     Status = BaseMemoryTest (
-              PeiServices,
               0x100000,
               (TotalMemorySize - 0x100000),
               Quick,
@@ -470,7 +464,6 @@ InstallEfiMemory (
   ZeroMem (MemoryMap, sizeof (PEI_DUAL_CHANNEL_DDR_MEMORY_MAP_RANGE) * NumRanges);
 
   Status = GetMemoryMap (
-             PeiServices,
              TotalMemorySize,
              (PEI_DUAL_CHANNEL_DDR_MEMORY_MAP_RANGE *) MemoryMap,
              &NumRanges
@@ -701,7 +694,7 @@ InstallEfiMemory (
 
   Find memory that is reserved so PEI has some to use.
 
-  @param  PeiServices      PEI Services table.
+  @param  TotalMemorySize      Memory size in bytes
 
   @return EFI_SUCCESS  The function completed successfully.
                        Error value from LocatePpi()
@@ -709,7 +702,6 @@ InstallEfiMemory (
 **/
 EFI_STATUS
 InstallS3Memory (
-  IN      EFI_PEI_SERVICES                      **PeiServices,
   IN      UINT32                                TotalMemorySize
   )
 {
@@ -735,7 +727,6 @@ InstallS3Memory (
   ZeroMem (MemoryMap, sizeof (PEI_DUAL_CHANNEL_DDR_MEMORY_MAP_RANGE) * NumRanges);
 
   Status = GetMemoryMap (
-             PeiServices,
              TotalMemorySize,
              (PEI_DUAL_CHANNEL_DDR_MEMORY_MAP_RANGE *) MemoryMap,
              &NumRanges
@@ -871,7 +862,6 @@ InstallS3Memory (
   This function returns the memory ranges to be enabled, along with information
   describing how the range should be used.
 
-  @param  PeiServices   PEI Services Table.
   @param  TimingData    Detected DDR timing parameters for installed memory.
   @param  RowConfArray  Pointer to an array of EFI_DUAL_CHANNEL_DDR_ROW_CONFIG structures. The number
                         of items in the array must match MaxRows returned by the McGetRowInfo() function.
@@ -886,7 +876,6 @@ InstallS3Memory (
 **/
 EFI_STATUS
 GetMemoryMap (
-  IN     EFI_PEI_SERVICES                                    **PeiServices,
   IN     UINT32                                              TotalMemorySize,
   IN OUT PEI_DUAL_CHANNEL_DDR_MEMORY_MAP_RANGE               *MemoryMap,
   IN OUT UINT8                                               *NumRanges
@@ -1086,7 +1075,6 @@ GetMemoryMap (
 
 EFI_STATUS
 BaseMemoryTest (
-  IN  EFI_PEI_SERVICES                   **PeiServices,
   IN  EFI_PHYSICAL_ADDRESS               BeginAddress,
   IN  UINT64                             MemoryLength,
   IN  PEI_MEMORY_TEST_OP                 Operation,
