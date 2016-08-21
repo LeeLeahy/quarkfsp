@@ -3,9 +3,9 @@
 #
 # Copyright (c) 2013-2015 Intel Corporation.
 #
-# This program and the accompanying materials
-# are licensed and made available under the terms and conditions of the BSD License
-# which accompanies this distribution.  The full text of the license may be found at
+# This program and the accompanying materials are licensed and made available
+# under the terms and conditions of the BSD License which accompanies this
+# distribution.  The full text of the license may be found at
 # http://opensource.org/licenses/bsd-license.php
 #
 # THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
@@ -20,24 +20,18 @@
 ################################################################################
 [Defines]
   INF_VERSION                    = 0x00010005
-  BASE_NAME                      = MemoryInitPei
+  BASE_NAME                      = MrcLib
   FILE_GUID                      = D2C69B26-82E1-4a1b-AD35-ED0261B9F347
-  MODULE_TYPE                    = PEIM
+  MODULE_TYPE                    = BASE
   VERSION_STRING                 = 1.0
-
-  ENTRY_POINT                    = PeimMemoryInit
+  LIBRARY_CLASS                  = MrcLib
 
 #
-# The following information is for reference only and not required by the build tools.
+# The following information is for reference only and not required by the build
+# tools.
 #
 #  VALID_ARCHITECTURES           = IA32 X64 IPF EBC
 #
-
-[BuildOptions]
-  GCC:DEBUG_*_*_CC_FLAGS               = -DGCC -Wno-unused-function
-  GCC:RELEASE_*_*_CC_FLAGS             = -DNDEBUG -DGCC -Wno-unused-function
-  INTEL:RELEASE_*_*_CC_FLAGS           = /D NDEBUG
-  MSFT:RELEASE_*_*_CC_FLAGS            = /D NDEBUG
 
 [Sources]
   memory_options.h
@@ -57,11 +51,10 @@
   mrc.c
   hte.c
   hte.h
-  MemoryInit.h
-  MemoryInit.c
 
 [Packages]
   QuarkSocPkg/QuarkSocPkg.dec
+  QuarkFspPkg/QuarkFspPkg.dec
   MdePkg/MdePkg.dec
 
 [LibraryClasses]
@@ -69,12 +62,10 @@
   DebugLib
   SerialPortLib
 
-[Ppis]
-  gQNCMemoryInitPpiGuid                        # PPI ALWAYS_PRODUCED
-
-[Depex]
-  TRUE
-
 [BuildOptions]
+  GCC:DEBUG_*_*_CC_FLAGS               = -DGCC -Wno-unused-function
+  GCC:RELEASE_*_*_CC_FLAGS             = -DNDEBUG -DGCC -Wno-unused-function
+  INTEL:RELEASE_*_*_CC_FLAGS           = /D NDEBUG
+  MSFT:RELEASE_*_*_CC_FLAGS            = /D NDEBUG
   # /Oi option to use the intrinsic memset function in source code.
   MSFT:*_*_*_CC_FLAGS = /Oi

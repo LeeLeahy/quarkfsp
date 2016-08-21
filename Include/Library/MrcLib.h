@@ -1,6 +1,6 @@
 /************************************************************************
  *
- * Copyright (c) 2013-2016 Intel Corporation.
+ * Copyright (c) 2016 Intel Corporation.
  *
  * This program and the accompanying materials are licensed and made available
  * under the terms and conditions of the BSD License which accompanies this
@@ -11,20 +11,9 @@
  * WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
  *
  ************************************************************************/
-#ifndef _MEMINIT_H_
-#define _MEMINIT_H_
-
-// function prototypes
-void MemInit(MRCParams_t *mrc_params);
-
-typedef void (*MemInitFn_t)(MRCParams_t *mrc_params);
-
-typedef struct MemInit_s {
-  uint16_t    post_code;
-  uint16_t    boot_path;
-  MemInitFn_t init_fn;
-} MemInit_t;
+#ifndef __MRC_LIB_H__
+#define __MRC_LIB_H__
 
 VOID EFIAPI Mrc( MRCParams_t *MrcData);
 
-#endif // _MEMINIT_H_
+#endif // __MRC_LIB_H__

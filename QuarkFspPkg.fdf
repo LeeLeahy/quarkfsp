@@ -117,7 +117,6 @@ INF RuleOverride = RELOC QuarkFspPkg/Override/IntelFspPkg/FspSecCore/FspSecCore.
 INF MdeModulePkg/Core/Pei/PeiMain.inf
 INF MdeModulePkg/Universal/PCD/Pei/Pcd.inf
 
-INF  QuarkFspPkg/Override/QuarkSocPkg/QuarkNorthCluster/MemoryInit/Pei/MemoryInitPei.inf
 INF  QuarkFspPkg/FspInit/Pei/FspInitPreMem.inf
 
 [FV.QUARKFV2]

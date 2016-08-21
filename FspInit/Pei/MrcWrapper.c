@@ -15,6 +15,7 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 
 #include "CommonHeader.h"
 #include "MrcWrapper.h"
+#include <Library/MrcLib.h>
 
 #define RESERVED_CPU_S3_SAVE_OFFSET (RESERVED_ACPI_S3_RANGE_OFFSET - sizeof (SMM_S3_RESUME_STATE))
 
@@ -209,7 +210,6 @@ MemoryInit (
   EFI_BOOT_MODE                               BootMode;
   EFI_STATUS                                  Status;
   EFI_STATUS_CODE_VALUE                       ErrorCodeValue;
-  PEI_QNC_MEMORY_INIT_PPI                     *QncMemoryInitPpi;
   UINT16                                      PmswAdr;
 
   ErrorCodeValue  = 0;
@@ -302,17 +302,6 @@ MemoryInit (
     }
   }
 
-  //
-  // Locate Memory Reference Code PPI
-  //
-  Status = PeiServicesLocatePpi (
-             &gQNCMemoryInitPpiGuid,        // GUID
-             0,                             // INSTANCE
-             NULL,                          // EFI_PEI_PPI_DESCRIPTOR
-             (VOID **)&QncMemoryInitPpi     // PPI
-             );
-  ASSERT_EFI_ERROR (Status);
-
   PmswAdr = (UINT16)(LpcPciCfg32 (R_QNC_LPC_GPE0BLK) & 0xFFFF) + R_QNC_GPE0BLK_PMSW;
   if( IoRead32 (PmswAdr) & B_QNC_GPE0BLK_PMSW_DRAM_INIT) {
     // MRC did not complete last execution, force cold boot path
@@ -325,7 +314,7 @@ MemoryInit (
   //
   // Call Memory Reference Code's Routines
   //
-  QncMemoryInitPpi->MrcStart (&MrcData);
+  Mrc (&MrcData);
 
   // Mark MRC completed
   IoAnd32 (PmswAdr, ~(UINT32)B_QNC_GPE0BLK_PMSW_DRAM_INIT);

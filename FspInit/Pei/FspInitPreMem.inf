@@ -75,6 +75,7 @@
   IntelQNCLib
   ReportStatusCodeLib
   FspLib
+  MrcLib
 
 [Depex]
   TRUE

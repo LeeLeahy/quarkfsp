@@ -156,6 +156,7 @@
   IntelQNCLib|QuarkSocPkg/QuarkNorthCluster/Library/IntelQNCLib/IntelQNCLib.inf
   QNCAccessLib|QuarkSocPkg/QuarkNorthCluster/Library/QNCAccessLib/QNCAccessLib.inf
   IoApicLib|PcAtChipsetPkg/Library/BaseIoApicLib/BaseIoApicLib.inf
+  MrcLib|QuarkFspPkg/Override/QuarkSocPkg/QuarkNorthCluster/MemoryInit/Pei/MrcLib.inf
 
   #
   # Quark South Cluster
@@ -673,7 +674,6 @@
   QuarkFspPkg/Fsp2Header/FspHeader.inf
 
   QuarkFspPkg/FspInit/Pei/FspInitPreMem.inf
-  QuarkSocPkg/QuarkNorthCluster/MemoryInit/Pei/MemoryInitPei.inf
 
   #
   # FSP IPL

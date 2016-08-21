@@ -158,7 +158,6 @@ INF MdeModulePkg/Universal/PCD/Pei/Pcd.inf
 #
 # Project specific PEIMs
 #
-INF $(SOC_PACKAGE)/QuarkNorthCluster/MemoryInit/Pei/MemoryInitPei.inf
 INF $(FSP_PACKAGE)/FspInit/Pei/FspInitPreMem.inf
 
 #
