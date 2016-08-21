@@ -161,13 +161,6 @@ INF MdeModulePkg/Universal/PCD/Pei/Pcd.inf
 INF $(SOC_PACKAGE)/QuarkNorthCluster/MemoryInit/Pei/MemoryInitPei.inf
 INF $(FSP_PACKAGE)/FspInit/Pei/FspInitPreMem.inf
 
-##
-#  Microcode File
-##
-FILE FREEFORM = PCD(gEfiQuarkNcSocIdTokenSpaceGuid.PcdQuarkMicrocodeFile) {
-    SECTION RAW = QuarkSocBinPkg/QuarkNorthCluster/Binary/QuarkMicrocode/RMU.bin
-}
-
 #
 # Description file
 #
