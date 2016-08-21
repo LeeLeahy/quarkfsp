@@ -37,15 +37,15 @@ function USAGE()
 function Clean(){
   echo Removing Build and Conf directories ...
   if [ -d Build ]
-   then 
+   then
     rm -r Build
   fi
   if [ -d Conf/.cache ]
-    then 
+    then
      rm  -r Conf/.cache
   fi
   if [ -f *.log ]
-   then 
+   then
     rm *.log
   fi
   WORKSPACE=
@@ -73,18 +73,18 @@ function PreBuildRet(){
 
 function CopyBin(){
  if [ -f $1/*.efi ]
-  then 
-   cp $1/*.efi   $2 
+  then
+   cp $1/*.efi   $2
    #/D /U /Y > NUL
  fi
  if [ -f $1/*.inf ]
    then
-     cp $1/*.inf   $2 
+     cp $1/*.inf   $2
    #/D /U /Y > NUL
  fi
  if [ -f $1/*.depex ]
    then
-    cp $1/*.depex $2 
+    cp $1/*.depex $2
    #/D /U /Y > NUL
  fi
 }
@@ -96,7 +96,7 @@ function PreBuild(){
   $python_command
 
   error=256
-  if [ $? -eq $error ] 
+  if [ $? -eq $error ]
    then
     echo  DSC is not changed, no need to recreate MAP and BIN file
   else
@@ -132,13 +132,13 @@ function PreBuild(){
   $python_command
 
   if [ $? -eq "256" ]
-   then 
+   then
     echo
     # No need to recreate header file
-   else 
-      if [ $? -eq "1" ] 
-       then 
-        echo 
+   else
+      if [ $? -eq "1" ]
+       then
+        echo
       fi
 
     echo Vpd header file was generated successfully !
@@ -152,8 +152,8 @@ function PreBuild(){
     echo $python_command
     $python_command
 
-    if [ $? -eq "1" ] 
-       then 
+    if [ $? -eq "1" ]
+       then
         return 1
     fi
 
@@ -183,7 +183,6 @@ function PostBuild(){
      "0x000000D8, FspSecCore:_FspSiliconInitApi - [0x000000B0],  @FspSiliconInit API" \
      "0x000000B8, 06A70056-3D0F-4A94-A743-5491CC9391D3:0x1C,  @VPD Region offset" \
      "0x000000BC, [06A70056-3D0F-4A94-A743-5491CC9391D3:0x14]  - 0xF800001C,    @VPD Region size" \
-     "0x00000100, PcdPeim:__gPcd_BinaryPatch_PcdVpdBaseAddress - [0x000000B0],  @VPD PCD offset" \
      "06A70056-3D0F-4A94-A743-5491CC9391D3:0x28, ([06A70056-3D0F-4A94-A743-5491CC9391D3:0x18] + 0x00000003) & 0x00FFFFFC + 06A70056-3D0F-4A94-A743-5491CC9391D3:0x1C,  @UPD Region offset"
   if [ $? -ne 0 ]
    then
@@ -200,7 +199,7 @@ function  Build32(){
    OverrideBaseTools $*
    build -m $FSP_PKG_NAME/FspHeader/FspHeader.inf $BD_ARGS -DCFG_PREBUILD
    if [ $? -ne 0 ]
-   then 
+   then
      exit 1
    fi
 
@@ -208,17 +207,17 @@ function  Build32(){
 
    if [ $? -eq 1 ]
    then
-     exit 1 
+     exit 1
    fi
 
    build $BD_ARGS
    if [ $? -ne 0 ]
-   then 
+   then
      exit 1
    fi
    PostBuild
    if [ $? -ne 0 ]
-   then 
+   then
      exit 1
    fi
 }
@@ -248,12 +247,7 @@ function patchFspInfoHeader(){
     python IntelFspPkg/Tools/PatchFv.py \
      $OUT_DIR/$FSP_PKG_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV \
      QUARKFV1:QUARKFV2:QUARK  \
-    "FspSecCore:_FspInfoHeaderRelativeOff, FspSecCore:_AsmGetFspBaseAddress - {912740BE-2284-4734-B971-84B027353F0C:0x1C}, @FSP Header Offset" 
-
-     # Patch VPD base into the PcdPeim module patchable PCD
-     python IntelFspPkg/Tools/PatchFv.py \
-        $OUT_DIR/$FSP_PKG_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV QUARKFV1:QUARKFV2:QUARK \
-        "PcdPeim:__gPcd_BinaryPatch_PcdVpdBaseAddress, {[0x000000B8]}, @VPD PCD base"
+    "FspSecCore:_FspInfoHeaderRelativeOff, FspSecCore:_AsmGetFspBaseAddress - {912740BE-2284-4734-B971-84B027353F0C:0x1C}, @FSP Header Offset"
 
      if [ $? -ne 0 ]
        then
@@ -282,23 +276,23 @@ function CopyFspBinaryToBinPkg(){
     fi
 }
 
-function OverrideBaseTools() { 
-   if [ -e $FSP_PKG_NAME/Override/BaseTools/Conf/build_rule.template ] 
-    then 
-     echo Overriding build_rule.template... 
-      cp -f $FSP_PKG_NAME/Override/BaseTools/Conf/build_rule.template Conf/build_rule.txt 
-   fi 
+function OverrideBaseTools() {
+   if [ -e $FSP_PKG_NAME/Override/BaseTools/Conf/build_rule.template ]
+    then
+     echo Overriding build_rule.template...
+      cp -f $FSP_PKG_NAME/Override/BaseTools/Conf/build_rule.template Conf/build_rule.txt
+   fi
 
-   if [ -e $FSP_PKG_NAME/Override/BaseTools/Conf/tools_def.template ] 
-     then 
-     echo Overriding tools_def.template... 
-      cp -f $FSP_PKG_NAME/Override/BaseTools/Conf/tools_def.template Conf/tools_def.txt 
-  fi 
+   if [ -e $FSP_PKG_NAME/Override/BaseTools/Conf/tools_def.template ]
+     then
+     echo Overriding tools_def.template...
+      cp -f $FSP_PKG_NAME/Override/BaseTools/Conf/tools_def.template Conf/tools_def.txt
+  fi
 
- } 
+ }
 
 
-if [ -d Conf ] 
+if [ -d Conf ]
  then
    . ./$Edksetup
  else
@@ -306,7 +300,7 @@ if [ -d Conf ]
    . ./$Edksetup
 fi
 
-if [ ! -d $WORKSPACE/$FSP_BIN_PKG_NAME ] 
+if [ ! -d $WORKSPACE/$FSP_BIN_PKG_NAME ]
  then
    mkdir $WORKSPACE/$FSP_BIN_PKG_NAME
 fi
@@ -319,13 +313,13 @@ elif [ "$1" = "-r32" ]
   ReleaseBuild32
   CopyFspBinaryToBinPkg
 elif [ "$1" = "-d32" ]
- then 
-   DebugBuild32
-   CopyFspBinaryToBinPkg 
-elif [ -z "$1" ] 
  then
    DebugBuild32
-else 
+   CopyFspBinaryToBinPkg
+elif [ -z "$1" ]
+ then
+   DebugBuild32
+else
   echo
   echo  ERROR: $1 is not valid parameter.
   USAGE

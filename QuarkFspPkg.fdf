@@ -93,6 +93,15 @@ READ_LOCK_STATUS   = TRUE
 FvNameGuid         = 52F1AFB6-78A6-448f-8274-F370549AC5D0
 
 #
+# Tell the PEI dispatcher that FSP does not require the PCD PEIM.
+# Without the APRIORI, the dispatcher automatically adds a dependency
+# on the PCD PEIM!
+#
+APRIORI PEI {
+    INF QuarkFspPkg/FspInit/Pei/FspInitPreMem.inf
+}
+
+#
 # FSP Description file
 #
 FILE RAW = D9093578-08EB-44DF-B9D8-D0C1D3D55D96 {
@@ -115,7 +124,6 @@ FILE RAW = 06A70056-3D0F-4A94-A743-5491CC9391D3 {
 #
 INF RuleOverride = RELOC QuarkFspPkg/Override/IntelFspPkg/FspSecCore/FspSecCore.inf
 INF MdeModulePkg/Core/Pei/PeiMain.inf
-INF MdeModulePkg/Universal/PCD/Pei/Pcd.inf
 
 INF  QuarkFspPkg/FspInit/Pei/FspInitPreMem.inf
 

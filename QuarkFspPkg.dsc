@@ -270,14 +270,9 @@
   #
   # PEIM
   #
-  MdeModulePkg/Universal/PCD/Pei/Pcd.inf {
-    <LibraryClasses>
-      PcdLib|MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
-  }
+  QuarkFspPkg/FspInit/Pei/FspInitPreMem.inf
 
   #
   # FSP INFO Header
   #
   QuarkFspPkg/FspHeader/FspHeader.inf
-
-  QuarkFspPkg/FspInit/Pei/FspInitPreMem.inf

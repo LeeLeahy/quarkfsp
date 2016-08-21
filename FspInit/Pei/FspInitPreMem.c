@@ -19,6 +19,7 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include "FspInitPreMem.h"
 #include "CommonHeader.h"
 #include "MrcWrapper.h"
+#include <Library/DebugLib.h>
 
 EFI_PEI_NOTIFY_DESCRIPTOR mMemoryDiscoveredNotifyList[] = {
   {
@@ -397,31 +398,37 @@ IN CONST EFI_PEI_SERVICES     **PeiServices
   // PEI Core will switch stack after this PEIM exit.  After that the MTRR
   // can be set.
   //
+DEBUG((EFI_D_ERROR, "PeimFspInitPreMem Calling NotifyPpi\r\n"));
   Status = (**PeiServices).NotifyPpi(PeiServices, &mMemoryDiscoveredNotifyList[0]);
   ASSERT_EFI_ERROR(Status);
 
   //
   // Install serivce PPIs
   //
+DEBUG((EFI_D_ERROR, "PeimFspInitPreMem Calling InstallPpi\r\n"));
   Status = (**PeiServices).InstallPpi(PeiServices, mPpiList);
   ASSERT_EFI_ERROR(Status);
 
   //
   // Get boot mode from boot loader
   //
+DEBUG((EFI_D_ERROR, "PeimFspInitPreMem Calling UpdateBootMode\r\n"));
   Status = UpdateBootMode ((EFI_PEI_SERVICES**)PeiServices, &BootMode);
   ASSERT_EFI_ERROR (Status);
 
   //
   // Do SOC Init Pre memory init.
   //
+DEBUG((EFI_D_ERROR, "PeimFspInitPreMem Calling PeiQNCPreMemInit\r\n"));
   PeiQNCPreMemInit ();
 
   //
   // Make legacy SPI READ/WRITE enabled if not a secure build
   //
+DEBUG((EFI_D_ERROR, "PeimFspInitPreMem Calling LpcPciCfg32And\r\n"));
   LpcPciCfg32And (R_QNC_LPC_BIOS_CNTL, ~B_QNC_LPC_BIOS_CNTL_BIOSWE);
 
+DEBUG((EFI_D_ERROR, "PeimFspInitPreMem Calling MemoryInit\r\n"));
   DEBUG((EFI_D_INFO, "MRC Entry\n"));
   MemoryInit((EFI_PEI_SERVICES**)PeiServices);
 
