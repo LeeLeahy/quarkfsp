@@ -156,7 +156,7 @@
   IntelQNCLib|QuarkSocPkg/QuarkNorthCluster/Library/IntelQNCLib/IntelQNCLib.inf
   QNCAccessLib|QuarkSocPkg/QuarkNorthCluster/Library/QNCAccessLib/QNCAccessLib.inf
   IoApicLib|PcAtChipsetPkg/Library/BaseIoApicLib/BaseIoApicLib.inf
-  MrcLib|QuarkFspPkg/Override/QuarkSocPkg/QuarkNorthCluster/MemoryInit/Pei/MrcLib.inf
+  MrcLib|QuarkFspPkg/Library/MrcLib/MrcLib.inf
 
   #
   # Quark South Cluster
