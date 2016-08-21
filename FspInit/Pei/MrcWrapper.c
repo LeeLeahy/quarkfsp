@@ -52,74 +52,6 @@ GetFspReservedMemorySize (VOID)
 }
 
 /**
-  Find pointer to RAW data in Firmware volume file.
-
-  @param   FvNameGuid       Firmware volume to search. If == NULL search all.
-  @param   FileNameGuid     Firmware volume file to search for.
-  @param   SectionData      Pointer to RAW data section of found file.
-  @param   SectionDataSize  Pointer to UNITN to get size of RAW data.
-
-  @retval  EFI_SUCCESS            Raw Data found.
-  @retval  EFI_INVALID_PARAMETER  FileNameGuid == NULL.
-  @retval  EFI_NOT_FOUND          Firmware volume file not found.
-  @retval  EFI_UNSUPPORTED        Unsupported in current enviroment (PEI or DXE).
-
-**/
-EFI_STATUS
-EFIAPI
-FindFvFileRawDataSection (
-  IN CONST EFI_GUID                 *FvNameGuid OPTIONAL,
-  IN CONST EFI_GUID                 *FileNameGuid,
-  OUT VOID                          **SectionData,
-  OUT UINTN                         *SectionDataSize
-  )
-{
-  EFI_STATUS                        Status;
-  UINTN                             Instance;
-  EFI_PEI_FV_HANDLE                 VolumeHandle;
-  EFI_PEI_FILE_HANDLE               FileHandle;
-  EFI_SECTION_TYPE                  SearchType;
-  EFI_FV_INFO                       VolumeInfo;
-  EFI_FV_FILE_INFO                  FileInfo;
-
-  if (FileNameGuid == NULL || SectionData == NULL || SectionDataSize == NULL) {
-    return EFI_INVALID_PARAMETER;
-  }
-  *SectionData = NULL;
-  *SectionDataSize = 0;
-
-  SearchType = EFI_SECTION_RAW;
-  for (Instance = 0; !EFI_ERROR((PeiServicesFfsFindNextVolume (Instance, &VolumeHandle))); Instance++) {
-    if (FvNameGuid != NULL) {
-      Status = PeiServicesFfsGetVolumeInfo (VolumeHandle, &VolumeInfo);
-      if (EFI_ERROR (Status)) {
-        continue;
-      }
-      if (!CompareGuid (FvNameGuid, &VolumeInfo.FvName)) {
-        continue;
-      }
-    }
-    Status = PeiServicesFfsFindFileByName (FileNameGuid, VolumeHandle, &FileHandle);
-    if (!EFI_ERROR (Status)) {
-      Status = PeiServicesFfsGetFileInfo (FileHandle, &FileInfo);
-      if (EFI_ERROR (Status)) {
-        continue;
-      }
-      if (IS_SECTION2(FileInfo.Buffer)) {
-        *SectionDataSize = SECTION2_SIZE(FileInfo.Buffer) - sizeof(EFI_COMMON_SECTION_HEADER2);
-      } else {
-        *SectionDataSize = SECTION_SIZE(FileInfo.Buffer) - sizeof(EFI_COMMON_SECTION_HEADER);
-      }
-      Status = PeiServicesFfsFindSectionData (SearchType, FileHandle, SectionData);
-      if (!EFI_ERROR (Status)) {
-        return Status;
-      }
-    }
-  }
-  return EFI_NOT_FOUND;
-}
-
-/**
   Configure MRC from memory controller fuse settings.
 
   @param  MrcData      - MRC configuration data to be updated.
@@ -511,7 +443,6 @@ InstallEfiMemory (
   UINT8                                 SmramRanges;
   UINT64                                PeiMemoryLength;
   UINTN                                 BufferSize;
-  UINTN                                 RequiredMemSize;
   EFI_RESOURCE_ATTRIBUTE_TYPE           Attribute;
   EFI_PHYSICAL_ADDRESS                  BadMemoryAddress;
   EFI_SMRAM_DESCRIPTOR                  DescriptorAcpiVariable;
@@ -564,15 +495,9 @@ InstallEfiMemory (
                );
 
   //
-  // Get required memory size for ACPI use. This helps to put ACPI memory on the topest
-  //
-  RequiredMemSize = 0;
-  RetriveRequiredMemorySize (PeiServices, &RequiredMemSize);
-
-  //
   // Carve out the top memory reserved for ACPI
   //
-  Status = PeiServicesInstallPeiMemory (PeiMemoryBaseAddress, (PeiMemoryLength - RequiredMemSize));
+  Status = PeiServicesInstallPeiMemory (PeiMemoryBaseAddress, PeiMemoryLength);
   ASSERT_EFI_ERROR (Status);
 
   BuildResourceDescriptorHob (
@@ -939,69 +864,6 @@ InstallS3Memory (
   }
 
   return EFI_SUCCESS;
-}
-
-/**
-
-  This function returns the size, in bytes, required for the DXE phase.
-
-  @param  PeiServices    PEI Services table.
-  @param  Size           Pointer to the size, in bytes, required for the DXE phase.
-
-  @return  None
-
-**/
-VOID
-RetriveRequiredMemorySize (
-  IN      EFI_PEI_SERVICES                  **PeiServices,
-  OUT     UINTN                             *Size
-  )
-{
-  EFI_PEI_HOB_POINTERS           Hob;
-  EFI_MEMORY_TYPE_INFORMATION    *MemoryData;
-  UINT8                          Index;
-  UINTN                          TempPageNum;
-
-  MemoryData  = NULL;
-  TempPageNum = 0;
-  Index       = 0;
-
-  PeiServicesGetHobList ((VOID **)&Hob.Raw);
-  while (!END_OF_HOB_LIST (Hob)) {
-    if (Hob.Header->HobType == EFI_HOB_TYPE_GUID_EXTENSION &&
-        CompareGuid (&Hob.Guid->Name, &gEfiMemoryTypeInformationGuid)
-          ) {
-      MemoryData = (EFI_MEMORY_TYPE_INFORMATION *) (Hob.Raw + sizeof (EFI_HOB_GENERIC_HEADER) + sizeof (EFI_GUID));
-      break;
-    }
-
-    Hob.Raw = GET_NEXT_HOB (Hob);
-  }
-  //
-  // Platform PEIM should supply such a information. Generic PEIM doesn't assume any default value
-  //
-  if (!MemoryData) {
-    return ;
-  }
-
-  while (MemoryData[Index].Type != EfiMaxMemoryType) {
-    //
-    // Accumulate default memory size requirements
-    //
-    TempPageNum += MemoryData[Index].NumberOfPages;
-    Index++;
-  }
-
-  if (TempPageNum == 0) {
-    return ;
-  }
-
-  //
-  // Add additional pages used by DXE memory manager
-  //
-  (*Size) = (TempPageNum + EDKII_DXE_MEM_SIZE_PAGES) * EFI_PAGE_SIZE;
-
-  return ;
 }
 
 /**
