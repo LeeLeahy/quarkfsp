@@ -41,7 +41,6 @@
   gEfiPeiMemoryDiscoveredPpiGuid            # PPI ALWAYS_CONSUMED
   gEfiPeiStallPpiGuid                       # PPI ALWAYS_PRODUCED
   gEfiPeiResetPpiGuid                       # PPI ALWAYS_PRODUCED
-  gQNCMemoryInitPpiGuid                         # PPI ALWAYS_CONSUMED
 
 [Guids]
   gEfiMemoryConfigDataGuid                  # PPI ALWAYS_CONSUMED
@@ -63,7 +62,6 @@
   BaseLib
   BaseMemoryLib
   IoLib
-  PcdLib
   PciLib
   HobLib
   PciExpressLib

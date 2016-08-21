@@ -170,7 +170,6 @@
 [PcdsFeatureFlag]
 
 [PcdsFixedAtBuild]
-  gEfiIntelFrameworkModulePkgTokenSpaceGuid.PcdS3AcpiReservedMemorySize|0x20000
   gEfiMdeModulePkgTokenSpaceGuid.PcdResetOnMemoryTypeInformationChange|FALSE
 !if $(LOGGING)
   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x27
@@ -627,19 +626,9 @@
   #
   # PEIM
   #
-  MdeModulePkg/Universal/PCD/Pei/Pcd.inf {
-    <LibraryClasses>
-      PcdLib|MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
-  }
+  QuarkFspPkg/FspInit/Pei/FspInitPreMem.inf
 
   #
   # FSP INFO Header
   #
   QuarkFspPkg/Fsp2Header/FspHeader.inf
-
-  QuarkFspPkg/FspInit/Pei/FspInitPreMem.inf
-
-  #
-  # FSP IPL
-  #
-  MdeModulePkg/Core/DxeIplPeim/DxeIpl.inf

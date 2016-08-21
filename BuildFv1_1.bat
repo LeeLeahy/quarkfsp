@@ -1,9 +1,9 @@
 @REM
-@REM This file contains an 'Intel Peripheral Driver' and is      
+@REM This file contains an 'Intel Peripheral Driver' and is
 @REM licensed for Intel CPUs and chipsets under the terms of your
-@REM license agreement with Intel or your vendor.  This file may 
-@REM be modified by the user, subject to additional terms of the 
-@REM license agreement                                           
+@REM license agreement with Intel or your vendor.  This file may
+@REM be modified by the user, subject to additional terms of the
+@REM license agreement
 @REM
 @REM
 @REM Copyright (c) 2008 - 2016, Intel Corporation All rights reserved
@@ -146,7 +146,7 @@ goto Build32
 build  -m %FSP_PKG_NAME%\FspHeader\FspHeader.inf -D CFG_PREBUILD=1 %BD_ARGS%
 if ERRORLEVEL 1 goto DIE
 call :PreBuild  CALL_RET
-if "%CALL_RET%"=="1" goto DIE 
+if "%CALL_RET%"=="1" goto DIE
 build  %BD_ARGS%
 if ERRORLEVEL 1 goto DIE
 call :PostBuild
@@ -178,11 +178,11 @@ python IntelFspPkg\Tools\GenCfgOpt.py UPDTXT ^
      %OUT_DIR%\%FSP_PKG_NAME%\%BD_TARGET%_%VS_VERSION%\FV ^
      %BD_MACRO%
 if "%ERRORLEVEL%"=="256" (
-  REM  DSC is not changed, no need to recreate MAP and BIN file    
+  REM  DSC is not changed, no need to recreate MAP and BIN file
 ) else (
-  if ERRORLEVEL 1 goto:PreBuildFail  
+  if ERRORLEVEL 1 goto:PreBuildFail
   echo UPD TXT file was generated successfully !
-    
+
   del /q /f %OUT_DIR%\%FSP_PKG_NAME%\%BD_TARGET%_%VS_VERSION%\FV\%UPD_GUID%.bin ^
             %OUT_DIR%\%FSP_PKG_NAME%\%BD_TARGET%_%VS_VERSION%\FV\%UPD_GUID%.map 2>nul
 
@@ -200,26 +200,26 @@ python IntelFspPkg\Tools\GenCfgOpt.py HEADER ^
          %FSP_PKG_NAME%\Include\BootLoaderPlatformData.h ^
          %BD_MACRO%
 if "%ERRORLEVEL%"=="256" (
-    REM  No need to recreate header file          
-) else (    
-    if ERRORLEVEL 1 goto:PreBuildFail       
+    REM  No need to recreate header file
+) else (
+    if ERRORLEVEL 1 goto:PreBuildFail
     echo Vpd header file was generated successfully !
 
     if not exist  %FSP_PKG_NAME%\Bsf (
         mkdir  %FSP_PKG_NAME%\Bsf
     )
 
-    echo Generate BSF File ...   
+    echo Generate BSF File ...
     python IntelFspPkg\Tools\GenCfgOpt.py GENBSF ^
          %FSP_PKG_NAME%\%FSP_PKG_VPD_NAME%.dsc ^
          %OUT_DIR%\%FSP_PKG_NAME%\%BD_TARGET%_%VS_VERSION%\FV ^
          %FSP_PKG_NAME%\Bsf\%FSP_BASENAME%Fsp.bsf ^
          %BD_MACRO%
-         
+
     if ERRORLEVEL 1 goto:PreBuildFail
     echo BSF file was generated successfully !
-    
-    copy %OUT_DIR%\%FSP_PKG_NAME%\%BD_TARGET%_%VS_VERSION%\FV\FspUpdVpd.h  %FSP_PKG_NAME%\Include\FspUpdVpd.h 
+
+    copy %OUT_DIR%\%FSP_PKG_NAME%\%BD_TARGET%_%VS_VERSION%\FV\FspUpdVpd.h  %FSP_PKG_NAME%\Include\FspUpdVpd.h
 )
 
 :PreBuildRet
@@ -234,7 +234,7 @@ echo.
 goto:EOF
 
 :PostBuild
-echo Start of PostBuild ...   
+echo Start of PostBuild ...
 echo Patch FD Image ...
 python IntelFspPkg\Tools\PatchFv.py ^
      %OUT_DIR%\%FSP_PKG_NAME%\%BD_TARGET%_%VS_VERSION%\FV ^
@@ -249,7 +249,6 @@ python IntelFspPkg\Tools\PatchFv.py ^
      "0x000000D8, <FspSecCore:_FspSiliconInitApi>,  @FspSiliconInit API" ^
      "0x000000B8, 06A70056-3D0F-4A94-A743-5491CC9391D3:0x1C,     @VPD Region offset" ^
      "0x000000BC, [06A70056-3D0F-4A94-A743-5491CC9391D3:0x14]  - 0xF800001C,    @VPD Region size" ^
-     "0x00000100, PcdPeim:__gPcd_BinaryPatch_PcdVpdBaseAddress - [0x000000B0],  @VPD PCD offset" ^
      "06A70056-3D0F-4A94-A743-5491CC9391D3:0x28, ([06A70056-3D0F-4A94-A743-5491CC9391D3:0x18] + 0x00000003) & 0x00FFFFFC + 06A70056-3D0F-4A94-A743-5491CC9391D3:0x1C,  @UPD Region offset"
 if ERRORLEVEL 1 exit /b 1
 
@@ -257,14 +256,7 @@ if ERRORLEVEL 1 exit /b 1
 python IntelFspPkg\Tools\PatchFv.py ^
      %OUT_DIR%\%FSP_PKG_NAME%\%BD_TARGET%_%VS_VERSION%\FV ^
      %FSP_BASENAME%FV1:%FSP_BASENAME%FV2:%FSP_BASENAME%  ^
-     "FspSecCore:_FspInfoHeaderRelativeOff, FspSecCore:_AsmGetFspBaseAddress - {912740BE-2284-4734-B971-84B027353F0C:0x1C}, @FSP Header Offset" 
-if ERRORLEVEL 1 exit /b 1
-
-@REM Patch VPD base into the PcdPeim module patchable PCD
-python IntelFspPkg\Tools\PatchFv.py ^
-     %OUT_DIR%\%FSP_PKG_NAME%\%BD_TARGET%_%VS_VERSION%\FV ^
-     %FSP_BASENAME%FV1:%FSP_BASENAME%FV2:%FSP_BASENAME%  ^
-     "PcdPeim:__gPcd_BinaryPatch_PcdVpdBaseAddress, {[0x000000B8]}, @VPD PCD base"
+     "FspSecCore:_FspInfoHeaderRelativeOff, FspSecCore:_AsmGetFspBaseAddress - {912740BE-2284-4734-B971-84B027353F0C:0x1C}, @FSP Header Offset"
 if ERRORLEVEL 1 exit /b 1
 
 echo Patch is DONE
