@@ -260,11 +260,6 @@
   QuarkFspPkg/Override/IntelFspPkg/FspSecCore/FspSecCore.inf
 
   #
-  # PEI Core
-  #
-  MdeModulePkg/Core/Pei/PeiMain.inf
-
-  #
   # PEIM
   #
   QuarkFspPkg/FspInit/Pei/FspInitPreMem.inf

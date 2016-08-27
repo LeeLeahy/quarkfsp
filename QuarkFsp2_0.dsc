@@ -619,11 +619,6 @@
   $(FSP_PACKAGE)/Override/IntelFsp2Pkg/FspSecCore/FspSecCoreS.inf
 
   #
-  # PEI Core
-  #
-  MdeModulePkg/Core/Pei/PeiMain.inf
-
-  #
   # PEIM
   #
   QuarkFspPkg/FspInit/Pei/FspInitPreMem.inf

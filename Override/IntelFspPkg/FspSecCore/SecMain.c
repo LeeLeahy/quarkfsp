@@ -123,8 +123,8 @@ SecStartup (
 
   //
   // Call PeiCore Entry
-  //  
-  PeiCore (&SecCoreData, mPeiSecPlatformInformationPpi);
+  //
+//  PeiCore (&SecCoreData, mPeiSecPlatformInformationPpi);
 
   //
   // Should never be here

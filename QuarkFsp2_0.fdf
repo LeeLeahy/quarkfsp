@@ -193,8 +193,6 @@ FILE FREEFORM = 1B45CC0A-156A-428A-AF62-49864DA0E6E6 {
 #
 INF RuleOverride = RELOC   $(FSP_PACKAGE)/Override/IntelFsp2Pkg/FspSecCore/FspSecCoreM.inf
 
-INF MdeModulePkg/Core/Pei/PeiMain.inf
-
 #
 # Project specific PEIMs
 #

@@ -240,7 +240,6 @@ python IntelFspPkg\Tools\PatchFv.py ^
      %OUT_DIR%\%FSP_PKG_NAME%\%BD_TARGET%_%VS_VERSION%\FV ^
      %FSP_BASENAME%FV1:%FSP_BASENAME%FV2:%FSP_BASENAME%  ^
      "0xFFFFFFFC, [0x000000B0],                                  @FVBASE" ^
-     "0xFFFFFFE0, <PeiCore:__ModuleEntryPoint>,     @PeiCore Entry" ^
      "0x000000C4, <FspSecCore:_TempRamInitApi>,     @TempRamInit API" ^
      "0x000000C8, <FspSecCore:_FspInitApi>,         @FspInit API" ^
      "0x000000CC, <FspSecCore:_NotifyPhaseApi>,     @NotifyPhase API" ^
