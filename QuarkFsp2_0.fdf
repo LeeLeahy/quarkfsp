@@ -171,7 +171,7 @@ FvNameGuid         = 87c50b02-8ba6-4bde-b680-dca1fc066e8a
 # on the PCD PEIM!
 #
 #APRIORI PEI {
-#    INF $(FSP_PACKAGE)/FspInit/Pei/FspInitPreMem.inf
+#    INF $(FSP_PACKAGE)/Library/FspMemoryInit/FspMemoryInit.inf
 #}
 
 #
@@ -181,10 +181,10 @@ INF RuleOverride = FSPHEADER   $(FSP_PACKAGE)/Fsp2Header/FspHeader.inf
 
 #
 # Manually add the PEI APRIORI file - Contains file GUIDs, 16 bytes each
-#     FspInit/FspInitPreMem
+#     FspMemoryInit/FspMemoryInit
 #
 FILE FREEFORM = 1B45CC0A-156A-428A-AF62-49864DA0E6E6 {
-    SECTION RAW = $(FSP_PACKAGE)/FspInit/Pei/FspInitGuid.bin
+    SECTION RAW = $(FSP_PACKAGE)/Library/FspMemoryInit/FspMemoryInitGuid.bin
 }
 
 #
@@ -198,7 +198,7 @@ INF MdeModulePkg/Core/Pei/PeiMain.inf
 #
 # Project specific PEIMs
 #
-INF $(FSP_PACKAGE)/FspInit/Pei/FspInitPreMem.inf
+INF $(FSP_PACKAGE)/Library/FspMemoryInit/FspMemoryInit.inf
 
 #
 # Description file

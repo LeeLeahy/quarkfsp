@@ -626,7 +626,7 @@
   #
   # PEIM
   #
-  QuarkFspPkg/FspInit/Pei/FspInitPreMem.inf
+  QuarkFspPkg/Library/FspMemoryInit/FspMemoryInit.inf
 
   #
   # FSP INFO Header

@@ -22,8 +22,8 @@
   ENTRY_POINT                    = PeimFspInitPreMem
 
 [Sources]
-  FspInitPreMem.c
-  FspInitPreMem.h
+  FspMemoryInit.c
+  FspMemoryInit.h
   MrcWrapper.c
   MrcWrapper.h
   CommonHeader.h
