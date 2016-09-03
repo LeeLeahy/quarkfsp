@@ -98,58 +98,6 @@ FspSpecificMemoryDiscoveredHook (
 }
 
 /**
-  This function reports and installs new FV
-
-  @retval     EFI_SUCCESS          The function completes successfully
-**/
-EFI_STATUS
-ReportAndInstallNewFv (
-  VOID
-)
-{
-  EFI_FIRMWARE_VOLUME_EXT_HEADER *FwVolExtHeader;
-  FSP_INFO_HEADER                *FspInfoHeader;
-  EFI_FIRMWARE_VOLUME_HEADER     *FvHeader;
-  UINT8                          *CurPtr;
-  UINT8                          *EndPtr;
-
-  FspInfoHeader = GetFspInfoHeaderFromApiContext();
-  if (FspInfoHeader->Signature != FSP_INFO_HEADER_SIGNATURE) {
-    DEBUG ((DEBUG_ERROR, "The signature of FspInfoHeader getting from API context is invalid.\n"));
-    FspInfoHeader = GetFspInfoHeader();
-  }
-
-  CurPtr = (UINT8 *)FspInfoHeader->ImageBase;
-  EndPtr = CurPtr + FspInfoHeader->ImageSize - 1;
-
-  while (CurPtr < EndPtr) {
-    FvHeader = (EFI_FIRMWARE_VOLUME_HEADER *)CurPtr;
-    if (FvHeader->Signature != EFI_FVH_SIGNATURE) {
-      break;
-    }
-
-    if (FvHeader->ExtHeaderOffset != 0) {
-      //
-      // Searching for the silicon FV in the FSP image.
-      //
-      FwVolExtHeader = (EFI_FIRMWARE_VOLUME_EXT_HEADER *) ((UINT8 *) FvHeader + FvHeader->ExtHeaderOffset);
-      if (CompareGuid(&FwVolExtHeader->FvName, &gFspSiliconFvGuid)) {
-        PeiServicesInstallFvInfoPpi (
-          NULL,
-          (VOID *)FvHeader,
-          (UINTN) FvHeader->FvLength,
-          NULL,
-          NULL
-          );
-      }
-    }
-    CurPtr += FvHeader->FvLength;
-  }
-
-  return EFI_SUCCESS;
-}
-
-/**
 This function will be called when MRC is done.
 
 @param  PeiServices General purpose services available to every PEIM.
