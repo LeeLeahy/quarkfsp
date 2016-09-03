@@ -110,6 +110,8 @@ IN       EFI_PEI_FILE_HANDLE  FileHandle,
 IN CONST EFI_PEI_SERVICES     **PeiServices
 )
 {
+  EFI_STATUS Status;
+
   //
   // Do SOC Init Pre memory init.
   //
@@ -124,10 +126,12 @@ DEBUG((EFI_D_ERROR, "PeimFspInitPreMem Calling LpcPciCfg32And\r\n"));
 
 DEBUG((EFI_D_ERROR, "PeimFspInitPreMem Calling MemoryInit\r\n"));
   DEBUG((EFI_D_INFO, "MRC Entry\n"));
-  MemoryInit();
-  MrcDone();
+  Status = MemoryInit();
+  if (!EFI_ERROR(Status)) {
+    MrcDone();
+  }
 
-  SetFspApiReturnStatus(EFI_SUCCESS);
+  SetFspApiReturnStatus(Status);
   Pei2LoaderSwitchStack();
-  return EFI_SUCCESS;
+  return Status;
 }

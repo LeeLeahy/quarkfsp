@@ -67,7 +67,6 @@
   FspCommonLib
   FspPlatformLib
   FspSwitchStackLib
-  ResetSystemLib
   IntelQNCLib
   ReportStatusCodeLib
   FspLib

@@ -43,15 +43,12 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include <Library/DebugLib.h>
 #include <Library/PeimEntryPoint.h>
 #include <Library/BaseLib.h>
-#include <Library/PeiServicesTablePointerLib.h>
-#include <Library/PeiServicesLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/HobLib.h>
 #include <Library/PciCf8Lib.h>
 #include <Library/IoLib.h>
 #include <Library/PciLib.h>
 #include <Library/ReportStatusCodeLib.h>
-#include <Library/ResetSystemLib.h>
 #include <Library/IntelQNCLib.h>
 #include <Library/PcdLib.h>
 #include <Library/SmbusLib.h>
@@ -67,5 +64,8 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include <Library/FspMemoryLib.h>
 
 #include <Register/Cpuid.h>
+
+#define FSP_STATUS_RESET_REQUIRED_COLD		0x40000001
+#define FSP_STATUS_RESET_REQUIRED_WARM		0x40000002
 
 #endif

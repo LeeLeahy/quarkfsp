@@ -278,7 +278,7 @@ MemoryInit (
           EFI_ERROR_CODE + EFI_ERROR_UNRECOVERED,
           ErrorCodeValue
         );
-        ResetCold ();
+        return FSP_STATUS_RESET_REQUIRED_COLD;
         break;
 
       default:
@@ -320,7 +320,7 @@ MemoryInit (
         EFI_ERROR_CODE + EFI_ERROR_UNRECOVERED,
         ErrorCodeValue
       );
-      ResetCold ();
+      return FSP_STATUS_RESET_REQUIRED_COLD;
     }
     PostInstallMemory (&MrcData, TRUE);
     return EFI_SUCCESS;
