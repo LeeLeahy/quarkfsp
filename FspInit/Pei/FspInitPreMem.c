@@ -124,7 +124,7 @@ DEBUG((EFI_D_ERROR, "PeimFspInitPreMem Calling LpcPciCfg32And\r\n"));
 
 DEBUG((EFI_D_ERROR, "PeimFspInitPreMem Calling MemoryInit\r\n"));
   DEBUG((EFI_D_INFO, "MRC Entry\n"));
-  MemoryInit((EFI_PEI_SERVICES**)PeiServices);
+  MemoryInit();
   MrcDone();
 
   SetFspApiReturnStatus(EFI_SUCCESS);

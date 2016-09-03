@@ -133,7 +133,7 @@ InstallS3Memory (
 
 EFI_STATUS
 MemoryInit (
-  IN EFI_PEI_SERVICES                       **PeiServices
+  VOID
   );
 
 

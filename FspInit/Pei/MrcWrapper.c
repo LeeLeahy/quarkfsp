@@ -195,15 +195,13 @@ PostInstallMemory (
 
   Do memory initialisation for QNC DDR3 SDRAM Controller
 
-  @param  PeiServices  Not used
-
   @return EFI_SUCCESS  Memory initialisation completed successfully.
           All other error conditions encountered result in an ASSERT.
 
 **/
 EFI_STATUS
 MemoryInit (
-  IN EFI_PEI_SERVICES          **PeiServices
+  VOID
   )
 {
   MRC_PARAMS                                 MrcData;
