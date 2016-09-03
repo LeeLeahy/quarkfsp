@@ -37,7 +37,6 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include <Guid/MemoryConfigData.h>
 #include <Guid/FspSiliconFv.h>
 #include <Guid/FspSmbios.h>
-#include <Ppi/Stall.h>
 #include <Ppi/MemoryDiscovered.h>
 #include <FspApi.h>
 #include <Register/Cpuid.h>
@@ -49,26 +48,6 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #define DDRFREQ_UNKNOWN                 0
 #define DDRFREQ_800MHZ                  800
 #define DDRFREQ_1066MHZ                 1066
-
-/**
-This function provides a blocking stall for reset at least the given number of microseconds
-stipulated in the final argument.
-
-@param  PeiServices General purpose services available to every PEIM.
-
-@param  this Pointer to the local data for the interface.
-
-@param  Microseconds number of microseconds for which to stall.
-
-@retval EFI_SUCCESS the function provided at least the required stall.
-**/
-EFI_STATUS
-EFIAPI
-Stall(
-IN CONST EFI_PEI_SERVICES   **PeiServices,
-IN CONST EFI_PEI_STALL_PPI  *This,
-IN UINTN                    Microseconds
-);
 
 /**
   This function will be called when MRC is done.

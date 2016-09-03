@@ -29,43 +29,6 @@ EFI_PEI_NOTIFY_DESCRIPTOR mMemoryDiscoveredNotifyList[] = {
   }
 };
 
-STATIC EFI_PEI_STALL_PPI mStallPpi = {
-  PEI_STALL_RESOLUTION,
-  Stall
-};
-
-STATIC EFI_PEI_PPI_DESCRIPTOR mPpiList[] = {
-  {
-    (EFI_PEI_PPI_DESCRIPTOR_PPI),
-    &gEfiPeiStallPpiGuid,
-    &mStallPpi
-  }
-};
-
-/**
-  This function provides a blocking stall for reset at least the given number of microseconds
-  stipulated in the final argument.
-
-  @param  PeiServices General purpose services available to every PEIM.
-
-  @param  this Pointer to the local data for the interface.
-
-  @param  Microseconds number of microseconds for which to stall.
-
-  @retval EFI_SUCCESS the function provided at least the required stall.
-**/
-EFI_STATUS
-EFIAPI
-Stall (
-  IN CONST EFI_PEI_SERVICES   **PeiServices,
-  IN CONST EFI_PEI_STALL_PPI  *This,
-  IN UINTN                    Microseconds
-  )
-{
-  MicroSecondDelay (Microseconds);
-  return EFI_SUCCESS;
-}
-
 /**
   Peform the boot mode determination logic
   If the box is closed, then
@@ -375,13 +338,6 @@ IN CONST EFI_PEI_SERVICES     **PeiServices
   //
 DEBUG((EFI_D_ERROR, "PeimFspInitPreMem Calling NotifyPpi\r\n"));
   Status = (**PeiServices).NotifyPpi(PeiServices, &mMemoryDiscoveredNotifyList[0]);
-  ASSERT_EFI_ERROR(Status);
-
-  //
-  // Install serivce PPIs
-  //
-DEBUG((EFI_D_ERROR, "PeimFspInitPreMem Calling InstallPpi\r\n"));
-  Status = (**PeiServices).InstallPpi(PeiServices, mPpiList);
   ASSERT_EFI_ERROR(Status);
 
   //
