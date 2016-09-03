@@ -16,30 +16,14 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #ifndef _FSP_INIT_PRE_MEM_H_
 #define _FSP_INIT_PRE_MEM_H_
 
-#include <PiPei.h>
-#include <Library/PeiServicesLib.h>
-#include <Library/BaseLib.h>
-#include <Library/BaseMemoryLib.h>
-#include <Library/IoLib.h>
-#include <Library/PcdLib.h>
-#include <Library/HobLib.h>
-#include <Library/PciCf8Lib.h>
-#include <Library/PciLib.h>
-#include <Library/TimerLib.h>
-#include <Library/DebugLib.h>
 #include <Library/CacheLib.h>
-#include <Library/FspCommonLib.h>
 #include <Library/FspPlatformLib.h>
 #include <Library/FspSwitchStackLib.h>
-#include <Library/IntelQNCLib.h>
-#include <Library/QNCAccessLib.h>
 #include <Guid/GuidHobFsp.h>
 #include <Guid/MemoryConfigData.h>
 #include <Guid/FspSiliconFv.h>
 #include <Guid/FspSmbios.h>
-#include <Ppi/MemoryDiscovered.h>
 #include <FspApi.h>
-#include <Register/Cpuid.h>
 #include <Include/IndustryStandard/SmBios.h>
 #include <mrc.h>
 
@@ -48,24 +32,5 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #define DDRFREQ_UNKNOWN                 0
 #define DDRFREQ_800MHZ                  800
 #define DDRFREQ_1066MHZ                 1066
-
-/**
-  This function will be called when MRC is done.
-
-  @param  PeiServices General purpose services available to every PEIM.
-
-  @param  NotifyDescriptor Information about the notify event..
-
-  @param  Ppi The notify context.
-
-  @retval EFI_SUCCESS If the function completed successfully.
-**/
-EFI_STATUS
-EFIAPI
-MemoryDiscoveredPpiNotifyCallback (
-  IN EFI_PEI_SERVICES           **PeiServices,
-  IN EFI_PEI_NOTIFY_DESCRIPTOR  *NotifyDescriptor,
-  IN VOID                       *Ppi
-  );
 
 #endif /* _FSP_INIT_PRE_MEM_H_ */

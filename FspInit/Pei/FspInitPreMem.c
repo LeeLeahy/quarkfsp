@@ -16,110 +16,25 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 
 **/
 
-#include "FspInitPreMem.h"
 #include "CommonHeader.h"
+#include "FspInitPreMem.h"
 #include "MrcWrapper.h"
 #include <Library/DebugLib.h>
 
-EFI_PEI_NOTIFY_DESCRIPTOR mMemoryDiscoveredNotifyList[] = {
-  {
-    (EFI_PEI_PPI_DESCRIPTOR_NOTIFY_CALLBACK | EFI_PEI_PPI_DESCRIPTOR_TERMINATE_LIST),
-    &gEfiPeiMemoryDiscoveredPpiGuid,
-    MemoryDiscoveredPpiNotifyCallback
-  }
-};
-
-/**
-  This function will be called when MRC is done.
-
-  @param  PeiServices General purpose services available to every PEIM.
-
-  @retval EFI_SUCCESS If the function completed successfully.
-**/
-EFI_STATUS
-EFIAPI
-FspSpecificMemoryDiscoveredHook (
-  IN EFI_PEI_SERVICES           **PeiServices,
-  IN EFI_BOOT_MODE                BootMode
-)
-{
-  EFI_STATUS                            Status = EFI_SUCCESS;
-  UINT32                                RegData32;
-  UINT8                                 CpuAddressWidth;
-  UINT32                                RegEax;
-
-  DEBUG ((EFI_D_INFO, "FSP Specific PEIM Memory Callback\n"));
-
-  //
-  // Do QNC initialization after MRC
-  //
-  PeiQNCPostMemInit ();
-
-  //
-  // Set E000/F000 Routing
-  //
-  RegData32 = QNCPortRead (QUARK_NC_HOST_BRIDGE_SB_PORT_ID, QNC_MSG_FSBIC_REG_HMISC);
-  RegData32 |= (BIT2|BIT1);
-  QNCPortWrite (QUARK_NC_HOST_BRIDGE_SB_PORT_ID, QNC_MSG_FSBIC_REG_HMISC, RegData32);
-
-  if (BootMode == BOOT_ON_S3_RESUME) {
-    return EFI_SUCCESS;
-  }
-
-  //
-  // Build flash HOB, it's going to be used by GCD and E820 building
-  // Map full SPI flash decode range (regardless of smaller SPI flash parts installed)
-  //
-  BuildResourceDescriptorHob (
-    EFI_RESOURCE_FIRMWARE_DEVICE,
-    (EFI_RESOURCE_ATTRIBUTE_PRESENT    |
-    EFI_RESOURCE_ATTRIBUTE_INITIALIZED |
-    EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE),
-    (SIZE_4GB - SIZE_8MB),
-    SIZE_8MB
-    );
-
-  //
-  // Create a CPU hand-off information
-  //
-  CpuAddressWidth = 32;
-  AsmCpuid (CPUID_EXTENDED_FUNCTION, &RegEax, NULL, NULL, NULL);
-  if (RegEax >= CPUID_VIR_PHY_ADDRESS_SIZE) {
-    AsmCpuid (CPUID_VIR_PHY_ADDRESS_SIZE, &RegEax, NULL, NULL, NULL);
-    CpuAddressWidth = (UINT8) (RegEax & 0xFF);
-  }
-  DEBUG ((EFI_D_INFO, "CpuAddressWidth: %d\n", CpuAddressWidth));
-
-  BuildCpuHob (CpuAddressWidth, 16);
-
-  ASSERT_EFI_ERROR (Status);
-
-  return Status;
-}
-
 /**
 This function will be called when MRC is done.
-
-@param  PeiServices General purpose services available to every PEIM.
-
-@param  NotifyDescriptor Information about the notify event..
-
-@param  Ppi The notify context.
-
-@retval EFI_SUCCESS If the function completed successfully.
 **/
-EFI_STATUS
+VOID
 EFIAPI
-MemoryDiscoveredPpiNotifyCallback(
-IN EFI_PEI_SERVICES           **PeiServices,
-IN EFI_PEI_NOTIFY_DESCRIPTOR  *NotifyDescriptor,
-IN VOID                       *Ppi
+MrcDone(
+  VOID
 )
 {
   EFI_BOOT_MODE          BootMode;
   EFI_HOB_GUID_TYPE      *GuidHob;
+  UINT32                 RegData32;
 
-  DEBUG((DEBUG_INFO, "Memory Discovered Notify invoked ...\n"));
+  DEBUG((DEBUG_INFO, "MrcDone entered\n"));
 
   //============================================================
   //  MemoryInit
@@ -135,9 +50,16 @@ IN VOID                       *Ppi
   BootMode = GetBootMode();
 
   //
-  // FSP specific hook
+  // Do QNC initialization after MRC
   //
-  FspSpecificMemoryDiscoveredHook(PeiServices, BootMode);
+  PeiQNCPostMemInit ();
+
+  //
+  // Set E000/F000 Routing
+  //
+  RegData32 = QNCPortRead (QUARK_NC_HOST_BRIDGE_SB_PORT_ID, QNC_MSG_FSBIC_REG_HMISC);
+  RegData32 |= (BIT2|BIT1);
+  QNCPortWrite (QUARK_NC_HOST_BRIDGE_SB_PORT_ID, QNC_MSG_FSBIC_REG_HMISC, RegData32);
 
   //
   // Build FSP Non-Volatile Storage Hob
@@ -168,10 +90,7 @@ IN VOID                       *Ppi
   // This is the end of the FspMemoryInit API
   // Give control back to the boot loader
   //
-  DEBUG((DEBUG_INFO | DEBUG_INIT, "FspMemoryInitApi() - End\n"));
-  SetFspApiReturnStatus(EFI_SUCCESS);
-  Pei2LoaderSwitchStack();
-  return EFI_SUCCESS;
+  DEBUG((DEBUG_INFO | DEBUG_INIT, "MrcDone exiting\n"));
 }
 
 /**
@@ -191,19 +110,6 @@ IN       EFI_PEI_FILE_HANDLE  FileHandle,
 IN CONST EFI_PEI_SERVICES     **PeiServices
 )
 {
-  EFI_STATUS                 Status;
-
-  //
-  // Now that all of the pre-permament memory activities have
-  // been taken care of, post a call-back for the permament-memory
-  // resident services, such as HOB construction.
-  // PEI Core will switch stack after this PEIM exit.  After that the MTRR
-  // can be set.
-  //
-DEBUG((EFI_D_ERROR, "PeimFspInitPreMem Calling NotifyPpi\r\n"));
-  Status = (**PeiServices).NotifyPpi(PeiServices, &mMemoryDiscoveredNotifyList[0]);
-  ASSERT_EFI_ERROR(Status);
-
   //
   // Do SOC Init Pre memory init.
   //
@@ -219,6 +125,9 @@ DEBUG((EFI_D_ERROR, "PeimFspInitPreMem Calling LpcPciCfg32And\r\n"));
 DEBUG((EFI_D_ERROR, "PeimFspInitPreMem Calling MemoryInit\r\n"));
   DEBUG((EFI_D_INFO, "MRC Entry\n"));
   MemoryInit((EFI_PEI_SERVICES**)PeiServices);
+  MrcDone();
 
-  return Status;
+  SetFspApiReturnStatus(EFI_SUCCESS);
+  Pei2LoaderSwitchStack();
+  return EFI_SUCCESS;
 }
