@@ -51,12 +51,12 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include <Library/IoLib.h>
 #include <Library/PciLib.h>
 #include <Library/ReportStatusCodeLib.h>
+#include <Library/ResetSystemLib.h>
 #include <Library/IntelQNCLib.h>
 #include <Library/PcdLib.h>
 #include <Library/SmbusLib.h>
 #include <Library/TimerLib.h>
 #include <Library/PrintLib.h>
-#include <Library/ResetSystemLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/PerformanceLib.h>
 #include <Library/CacheMaintenanceLib.h>

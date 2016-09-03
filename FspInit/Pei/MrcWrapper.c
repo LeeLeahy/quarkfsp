@@ -292,7 +292,7 @@ MemoryInit (
           EFI_ERROR_CODE + EFI_ERROR_UNRECOVERED,
           ErrorCodeValue
         );
-        PeiServicesResetSystem ();
+        ResetCold ();
         break;
 
       default:
@@ -334,7 +334,7 @@ MemoryInit (
         EFI_ERROR_CODE + EFI_ERROR_UNRECOVERED,
         ErrorCodeValue
       );
-      PeiServicesResetSystem ();
+      ResetCold ();
     }
     PostInstallMemory (&MrcData, TRUE);
     return EFI_SUCCESS;

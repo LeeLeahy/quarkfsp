@@ -33,13 +33,11 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include <Library/FspSwitchStackLib.h>
 #include <Library/IntelQNCLib.h>
 #include <Library/QNCAccessLib.h>
-#include <Library/ResetSystemLib.h>
 #include <Guid/GuidHobFsp.h>
 #include <Guid/MemoryConfigData.h>
 #include <Guid/FspSiliconFv.h>
 #include <Guid/FspSmbios.h>
 #include <Ppi/Stall.h>
-#include <Ppi/Reset.h>
 #include <Ppi/MemoryDiscovered.h>
 #include <FspApi.h>
 #include <Register/Cpuid.h>
@@ -51,20 +49,6 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #define DDRFREQ_UNKNOWN                 0
 #define DDRFREQ_800MHZ                  800
 #define DDRFREQ_1066MHZ                 1066
-
-/**
-This function reset the entire platform, including all processor and devices, and
-reboots the system.
-
-@param  PeiServices General purpose services available to every PEIM.
-
-@retval EFI_SUCCESS if it completed successfully.
-**/
-EFI_STATUS
-EFIAPI
-ResetSystem(
-IN CONST EFI_PEI_SERVICES          **PeiServices
-);
 
 /**
 This function provides a blocking stall for reset at least the given number of microseconds

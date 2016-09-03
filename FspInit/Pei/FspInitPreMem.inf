@@ -40,7 +40,6 @@
 [Ppis]
   gEfiPeiMemoryDiscoveredPpiGuid            # PPI ALWAYS_CONSUMED
   gEfiPeiStallPpiGuid                       # PPI ALWAYS_PRODUCED
-  gEfiPeiResetPpiGuid                       # PPI ALWAYS_PRODUCED
 
 [Guids]
   gEfiMemoryConfigDataGuid                  # PPI ALWAYS_CONSUMED

@@ -34,38 +34,13 @@ STATIC EFI_PEI_STALL_PPI mStallPpi = {
   Stall
 };
 
-STATIC EFI_PEI_RESET_PPI mResetPpi = { ResetSystem };
-
 STATIC EFI_PEI_PPI_DESCRIPTOR mPpiList[] = {
   {
     (EFI_PEI_PPI_DESCRIPTOR_PPI),
     &gEfiPeiStallPpiGuid,
     &mStallPpi
-  },
-  {
-    (EFI_PEI_PPI_DESCRIPTOR_PPI | EFI_PEI_PPI_DESCRIPTOR_TERMINATE_LIST),
-    &gEfiPeiResetPpiGuid,
-    &mResetPpi
   }
 };
-
-/**
-  This function reset the entire platform, including all processor and devices, and
-  reboots the system.
-
-  @param  PeiServices General purpose services available to every PEIM.
-
-  @retval EFI_SUCCESS if it completed successfully.
-**/
-EFI_STATUS
-EFIAPI
-ResetSystem (
-  IN CONST EFI_PEI_SERVICES          **PeiServices
-  )
-{
-  ResetCold();
-  return EFI_SUCCESS;
-}
 
 /**
   This function provides a blocking stall for reset at least the given number of microseconds
