@@ -1126,7 +1126,6 @@ InfoPostInstallMemory (
   OUT     UINTN                     *NumSmramRegionsPtr OPTIONAL
   )
 {
-  EFI_STATUS                            Status;
   EFI_PEI_HOB_POINTERS                  Hob;
   UINT64                                RmuBaseAddress;
   EFI_SMRAM_HOB_DESCRIPTOR_BLOCK        *SmramHobDescriptorBlock;
@@ -1156,8 +1155,7 @@ InfoPostInstallMemory (
   //
   RmuBaseAddress = 0;
 
-  Status = PeiServicesGetHobList ((VOID **) &Hob.Raw);
-  ASSERT_EFI_ERROR (Status);
+  Hob.Raw = GetHobList ();
   while (!END_OF_HOB_LIST (Hob)) {
     if (Hob.Header->HobType == EFI_HOB_TYPE_RESOURCE_DESCRIPTOR) {
       if (Hob.ResourceDescriptor->ResourceType == EFI_RESOURCE_MEMORY_RESERVED) {
