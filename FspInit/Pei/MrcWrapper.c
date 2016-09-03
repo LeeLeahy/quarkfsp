@@ -56,10 +56,8 @@ GetFspReservedMemorySize (VOID)
   Configure MRC from memory controller fuse settings.
 
   @param  MrcData      - MRC configuration data to be updated.
-
-  @return EFI_SUCCESS    MRC Config parameters updated from platform data.
 **/
-EFI_STATUS
+VOID
 MrcConfigureFromMcFuses (
   OUT MRC_PARAMS                          *MrcData
   )
@@ -79,19 +77,14 @@ MrcConfigureFromMcFuses (
   } else {
     MrcData->ecc_enables = 1;
   }
-  return EFI_SUCCESS;
 }
 
 /**
-  Configure MRC from platform info hob.
+  Get MRC parametes from the BIOS.
 
   @param  MrcData      - MRC configuration data to be updated.
-
-  @return EFI_SUCCESS    MRC Config parameters updated from hob.
-  @return EFI_NOT_FOUND  Platform Info or MRC Config parameters not found.
-  @return EFI_INVALID_PARAMETER  Wrong params in hob.
 **/
-EFI_STATUS
+VOID
 MrcConfigureFromInfoHob (
   OUT MRC_PARAMS  *MrcData
   )
@@ -115,8 +108,6 @@ MrcConfigureFromInfoHob (
     MrcData->params.tRRD,
     MrcData->params.tFAW
     ));
-
-  return EFI_SUCCESS;
 }
 
 /**
@@ -261,10 +252,8 @@ MemoryInit (
   //
   // Configure MRC input parameters.
   //
-  Status = MrcConfigureFromMcFuses (&MrcData);
-  ASSERT_EFI_ERROR (Status);
-  Status = MrcConfigureFromInfoHob (&MrcData);
-  ASSERT_EFI_ERROR (Status);
+  MrcConfigureFromMcFuses (&MrcData);
+  MrcConfigureFromInfoHob (&MrcData);
 
   if (BootMode == BOOT_IN_RECOVERY_MODE) {
     //
