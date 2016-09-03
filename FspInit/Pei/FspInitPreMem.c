@@ -30,87 +30,6 @@ EFI_PEI_NOTIFY_DESCRIPTOR mMemoryDiscoveredNotifyList[] = {
 };
 
 /**
-  Peform the boot mode determination logic
-  If the box is closed, then
-    1. If it's first time to boot, it's boot with full config .
-    2. If the ChassisIntrution is selected, force to be a boot with full config
-    3. Otherwise it's boot with no change.
-
-  @param  PeiServices General purpose services available to every PEIM.
-
-  @param  BootMode The detected boot mode.
-
-  @retval EFI_SUCCESS if the boot mode could be set
-**/
-EFI_STATUS
-UpdateBootMode (
-  IN  EFI_PEI_SERVICES     **PeiServices,
-  OUT EFI_BOOT_MODE        *BootModePtr
-  )
-{
-  EFI_STATUS Status;
-  CHAR16 *BootModeDescStr;
-
-  //
-  // Get BootMode from Boot Loader
-  //
-  *BootModePtr = (EFI_BOOT_MODE)GetBootMode();
-
-  //
-  //Detect BootMode
-  //
-  switch (*BootModePtr) {
-  case BOOT_WITH_FULL_CONFIGURATION:
-    BootModeDescStr = L"BOOT_WITH_FULL_CONFIGURATION";
-    break;
-  case BOOT_WITH_MINIMAL_CONFIGURATION:
-    BootModeDescStr = L"BOOT_WITH_MINIMAL_CONFIGURATION";
-    break;
-  case BOOT_ASSUMING_NO_CONFIGURATION_CHANGES:
-    BootModeDescStr = L"BOOT_ASSUMING_NO_CONFIGURATION_CHANGES";
-    break;
-  case BOOT_WITH_FULL_CONFIGURATION_PLUS_DIAGNOSTICS:
-    BootModeDescStr = L"BOOT_WITH_FULL_CONFIGURATION_PLUS_DIAGNOSTICS";
-    break;
-  case BOOT_WITH_DEFAULT_SETTINGS:
-    BootModeDescStr = L"BOOT_WITH_DEFAULT_SETTINGS";
-    break;
-  case BOOT_ON_S4_RESUME:
-    BootModeDescStr = L"BOOT_ON_S4_RESUME";
-    break;
-  case BOOT_ON_S5_RESUME:
-    BootModeDescStr = L"BOOT_ON_S5_RESUME";
-    break;
-  case BOOT_WITH_MFG_MODE_SETTINGS:
-    BootModeDescStr = L"BOOT_WITH_MFG_MODE_SETTINGS";
-    break;
-  case BOOT_ON_S2_RESUME:
-    BootModeDescStr = L"BOOT_ON_S2_RESUME";
-    break;
-  case BOOT_ON_S3_RESUME:
-    BootModeDescStr = L"BOOT_ON_S3_RESUME";
-    break;
-  case BOOT_ON_FLASH_UPDATE:
-    BootModeDescStr = L"BOOT_ON_FLASH_UPDATE";
-    break;
-  case BOOT_IN_RECOVERY_MODE:
-    BootModeDescStr = L"BOOT_IN_RECOVERY_MODE";
-    break;
-  default:
-    BootModeDescStr = L"UNKOWN";
-    break;
-  }
-  if (BootModeDescStr != NULL) {
-    DEBUG ((EFI_D_INFO, "BootMode: %s\n", BootModeDescStr));
-  }
-
-  Status = PeiServicesSetBootMode (*BootModePtr);
-  ASSERT_EFI_ERROR (Status);
-
-  return EFI_SUCCESS;
-}
-
-/**
   This function will be called when MRC is done.
 
   @param  PeiServices General purpose services available to every PEIM.
@@ -249,7 +168,6 @@ IN EFI_PEI_NOTIFY_DESCRIPTOR  *NotifyDescriptor,
 IN VOID                       *Ppi
 )
 {
-  EFI_STATUS             Status;
   EFI_BOOT_MODE          BootMode;
   EFI_HOB_GUID_TYPE      *GuidHob;
 
@@ -266,8 +184,7 @@ IN VOID                       *Ppi
   //
   // Get Boot Mode
   //
-  Status = PeiServicesGetBootMode(&BootMode);
-  ASSERT_EFI_ERROR(Status);
+  BootMode = GetBootMode();
 
   //
   // FSP specific hook
@@ -327,7 +244,6 @@ IN CONST EFI_PEI_SERVICES     **PeiServices
 )
 {
   EFI_STATUS                 Status;
-  EFI_BOOT_MODE          BootMode;
 
   //
   // Now that all of the pre-permament memory activities have
@@ -339,13 +255,6 @@ IN CONST EFI_PEI_SERVICES     **PeiServices
 DEBUG((EFI_D_ERROR, "PeimFspInitPreMem Calling NotifyPpi\r\n"));
   Status = (**PeiServices).NotifyPpi(PeiServices, &mMemoryDiscoveredNotifyList[0]);
   ASSERT_EFI_ERROR(Status);
-
-  //
-  // Get boot mode from boot loader
-  //
-DEBUG((EFI_D_ERROR, "PeimFspInitPreMem Calling UpdateBootMode\r\n"));
-  Status = UpdateBootMode ((EFI_PEI_SERVICES**)PeiServices, &BootMode);
-  ASSERT_EFI_ERROR (Status);
 
   //
   // Do SOC Init Pre memory init.

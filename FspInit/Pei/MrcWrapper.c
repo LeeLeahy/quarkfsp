@@ -227,8 +227,7 @@ MemoryInit (
   //
   // Determine boot mode
   //
-  Status = PeiServicesGetBootMode (&BootMode);
-  ASSERT_EFI_ERROR (Status);
+  BootMode = GetBootMode();
 
   //
   // Initialize Error type for reporting status code
