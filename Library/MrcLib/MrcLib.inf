@@ -58,7 +58,6 @@
   MdePkg/MdePkg.dec
 
 [LibraryClasses]
-  PeimEntryPoint
   DebugLib
   SerialPortLib
 
