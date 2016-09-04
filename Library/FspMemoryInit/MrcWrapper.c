@@ -183,6 +183,27 @@ PostInstallMemory (
 }
 
 /**
+  This function saves a config to a HOB.
+
+  @param  MrcData         The MRC timing data to save
+**/
+VOID
+SaveConfig (
+  IN MRC_PARAMS *MrcData
+  )
+{
+  //
+  // Build HOB data for Memory Config
+  // HOB data size (stored in variable) is required to be multiple of 8 bytes
+  //
+  BuildGuidDataHob (
+    &gFspNonVolatileStorageHobGuid,
+    (VOID *) &MrcData->timings,
+    ((sizeof (MrcData->timings) + 0x7) & (~0x7))
+    );
+}
+
+/**
 
   Do memory initialisation for QNC DDR3 SDRAM Controller
 
@@ -343,44 +364,9 @@ MemoryInit (
   // Save current configuration into Hob and will save into Variable later in DXE
   //
   DEBUG ((EFI_D_INFO, "SaveConfig.\n"));
-  Status = SaveConfig (
-             &MrcData
-             );
-  ASSERT_EFI_ERROR (Status);
-
+  SaveConfig (&MrcData);
   DEBUG ((EFI_D_INFO, "MemoryInit Complete.\n"));
 
-  return EFI_SUCCESS;
-}
-
-/**
-
-  This function saves a config to a HOB.
-
-  @param  RowInfo         The MCH row configuration information.
-  @param  TimingData      Timing data to be saved.
-  @param  RowConfArray    Row configuration information for each row in the system.
-  @param  SpdData         SPD info read for each DIMM slot in the system.
-
-  @return EFI_SUCCESS:    The function completed successfully.
-
-**/
-EFI_STATUS
-SaveConfig (
-  IN MRC_PARAMS *MrcData
-  )
-{
-  //
-  // Build HOB data for Memory Config
-  // HOB data size (stored in variable) is required to be multiple of 8 bytes
-  //
-  BuildGuidDataHob (
-    &gEfiMemoryConfigDataGuid,
-    (VOID *) &MrcData->timings,
-    ((sizeof (MrcData->timings) + 0x7) & (~0x7))
-    );
-
-  DEBUG ((EFI_D_INFO, "IIO IoApicBase  = %x IoApicLimit=%x\n", IOAPIC_BASE, (IOAPIC_BASE + IOAPIC_SIZE - 1)));
   return EFI_SUCCESS;
 }
 

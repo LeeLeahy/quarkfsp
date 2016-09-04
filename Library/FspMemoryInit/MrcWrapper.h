@@ -136,12 +136,6 @@ MemoryInit (
   VOID
   );
 
-
-EFI_STATUS
-SaveConfig (
-  IN      MRCParams_t                      *MrcData
-  );
-
 VOID
 RetriveRequiredMemorySize (
   OUT     UINTN                             *Size

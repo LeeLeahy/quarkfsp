@@ -28,7 +28,6 @@ MrcDone(
 )
 {
   EFI_BOOT_MODE          BootMode;
-  EFI_HOB_GUID_TYPE      *GuidHob;
   UINT32                 RegData32;
 
   DEBUG((DEBUG_INFO, "MrcDone entered\n"));
@@ -59,23 +58,14 @@ MrcDone(
   QNCPortWrite (QUARK_NC_HOST_BRIDGE_SB_PORT_ID, QNC_MSG_FSBIC_REG_HMISC, RegData32);
 
   //
-  // Build FSP Non-Volatile Storage Hob
-  //
-  if (BootMode  != BOOT_ON_S3_RESUME) {
-    GuidHob = GetFirstGuidHob (&gEfiMemoryConfigDataGuid);
-    if (GuidHob != NULL) {
-      //
-      // Include the EFI_HOB_GENERIC_HEADER header in HOB.
-      //
-      BuildGuidDataHob (&gFspNonVolatileStorageHobGuid, (void *)((UINTN)GET_GUID_HOB_DATA (GuidHob) - sizeof (EFI_HOB_GUID_TYPE)), GET_GUID_HOB_DATA_SIZE (GuidHob) + sizeof (EFI_HOB_GUID_TYPE));
-    }
-  }
-
   // Create SMBIOS Memory Info HOB
-  DEBUG((DEBUG_INFO | DEBUG_INIT, "BuildFspSmbiosMemoryInfoHob\n"));
-  BuildFspSmbiosMemoryInfoHob (MemoryTypeDdr3, DDRFREQ_800MHZ, 128, 16,
-                               ErrorDetectingMethodNone, NUM_CHANNELS,
-                               MAX_SOCKETS, &gFspSmbiosMemoryInfoHobGuid);
+  //
+  if (BootMode != BOOT_ON_S3_RESUME) {
+    DEBUG((DEBUG_INFO | DEBUG_INIT, "BuildFspSmbiosMemoryInfoHob\n"));
+    BuildFspSmbiosMemoryInfoHob (MemoryTypeDdr3, DDRFREQ_800MHZ, 128, 16,
+                                 ErrorDetectingMethodNone, NUM_CHANNELS,
+                                 MAX_SOCKETS, &gFspSmbiosMemoryInfoHobGuid);
+  }
 
   //
   // Calling use FspMemoryInit API

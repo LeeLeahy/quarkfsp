@@ -41,7 +41,6 @@
   gEfiPeiMemoryDiscoveredPpiGuid            # PPI ALWAYS_CONSUMED
 
 [Guids]
-  gEfiMemoryConfigDataGuid                  # PPI ALWAYS_CONSUMED
   gFspReservedMemoryResourceHobGuid         # PPI ALWAYS_PRODUCED
   gFspNonVolatileStorageHobGuid             # PPI ALWAYS_PRODUCED
   gFspSiliconFvGuid                         # PPI ALWAYS_CONSUMED
