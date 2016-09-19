@@ -435,15 +435,6 @@ InstallEfiMemory (
   PeiMemoryLength = MemoryMap[NumRanges - 1].RangeLength;
 
   //
-  // Build the GUID'd HOB for DXE
-  //
-  BuildGuidDataHob (
-               &gEfiMemoryTypeInformationGuid,
-               mDefaultQncMemoryTypeInformation,
-               sizeof(mDefaultQncMemoryTypeInformation)
-               );
-
-  //
   // Carve out the top memory reserved for ACPI
   //
   Status = PeiServicesInstallPeiMemory (PeiMemoryBaseAddress, PeiMemoryLength);
