@@ -167,7 +167,7 @@ PostInstallMemory (
   //
   // Find the 64KB of memory for Rmu Main at the top of available memory.
   //
-  InfoPostInstallMemory (&RmuMainDestBaseAddress, NULL, NULL);
+  InfoPostInstallMemory (&RmuMainDestBaseAddress);
   DEBUG ((EFI_D_INFO, "RmuMain Base Address : 0x%08x\n", RmuMainDestBaseAddress));
 
   //
@@ -389,19 +389,14 @@ InstallEfiMemory (
   )
 {
   EFI_PHYSICAL_ADDRESS                  PeiMemoryBaseAddress;
-  EFI_SMRAM_HOB_DESCRIPTOR_BLOCK        *SmramHobDescriptorBlock;
   EFI_STATUS                            Status;
-  EFI_PEI_HOB_POINTERS                  Hob;
   PEI_DUAL_CHANNEL_DDR_MEMORY_MAP_RANGE MemoryMap[MAX_RANGES];
   UINT8                                 Index;
   UINT8                                 NumRanges;
-  UINT8                                 SmramIndex;
   UINT8                                 SmramRanges;
   UINT64                                PeiMemoryLength;
-  UINTN                                 BufferSize;
   EFI_RESOURCE_ATTRIBUTE_TYPE           Attribute;
   EFI_PHYSICAL_ADDRESS                  BadMemoryAddress;
-  EFI_SMRAM_DESCRIPTOR                  DescriptorAcpiVariable;
 
   //
   // Test the memory from 1M->TOM
@@ -596,58 +591,6 @@ InstallEfiMemory (
     }
   }
 
-  if (SmramRanges == 0) {
-    return EFI_SUCCESS;
-  }
-
-  //
-  // Allocate one extra EFI_SMRAM_DESCRIPTOR to describe a page of SMRAM memory that contains a pointer
-  // to the SMM Services Table that is required on the S3 resume path
-  //
-  BufferSize = sizeof (EFI_SMRAM_HOB_DESCRIPTOR_BLOCK);
-  BufferSize += ((SmramRanges - 1) * sizeof (EFI_SMRAM_DESCRIPTOR));
-
-  Hob.Raw = BuildGuidHob (
-              &gEfiSmmPeiSmramMemoryReserveGuid,
-              BufferSize
-              );
-  ASSERT (Hob.Raw);
-
-  SmramHobDescriptorBlock = (EFI_SMRAM_HOB_DESCRIPTOR_BLOCK *) (Hob.Raw);
-  SmramHobDescriptorBlock->NumberOfSmmReservedRegions = SmramRanges;
-
-  SmramIndex = 0;
-  for (Index = 0; Index < NumRanges; Index++) {
-    if ((MemoryMap[Index].Type == DualChannelDdrSmramCacheable) ||
-        (MemoryMap[Index].Type == DualChannelDdrSmramNonCacheable)
-        ) {
-      //
-      // This is an SMRAM range, create an SMRAM descriptor
-      //
-      SmramHobDescriptorBlock->Descriptor[SmramIndex].PhysicalStart = MemoryMap[Index].PhysicalAddress;
-      SmramHobDescriptorBlock->Descriptor[SmramIndex].CpuStart      = MemoryMap[Index].CpuAddress;
-      SmramHobDescriptorBlock->Descriptor[SmramIndex].PhysicalSize  = MemoryMap[Index].RangeLength;
-      if (MemoryMap[Index].Type == DualChannelDdrSmramCacheable) {
-        SmramHobDescriptorBlock->Descriptor[SmramIndex].RegionState = EFI_SMRAM_CLOSED | EFI_CACHEABLE;
-      } else {
-        SmramHobDescriptorBlock->Descriptor[SmramIndex].RegionState = EFI_SMRAM_CLOSED;
-      }
-
-      SmramIndex++;
-    }
-  }
-
-  //
-  // Build a HOB with the location of the reserved memory range.
-  //
-  CopyMem(&DescriptorAcpiVariable, &SmramHobDescriptorBlock->Descriptor[SmramRanges-1], sizeof(EFI_SMRAM_DESCRIPTOR));
-  DescriptorAcpiVariable.CpuStart += RESERVED_CPU_S3_SAVE_OFFSET;
-  BuildGuidDataHob (
-    &gEfiAcpiVariableGuid,
-    &DescriptorAcpiVariable,
-    sizeof (EFI_SMRAM_DESCRIPTOR)
-    );
-
   return EFI_SUCCESS;
 }
 
@@ -667,18 +610,11 @@ InstallS3Memory (
   )
 {
   EFI_STATUS                            Status;
-  UINTN                                 S3MemoryBase;
-  UINTN                                 S3MemorySize;
   UINT8                                 SmramRanges;
   UINT8                                 NumRanges;
   UINT8                                 Index;
-  UINT8                                 SmramIndex;
   UINTN                                 BufferSize;
-  EFI_PEI_HOB_POINTERS                  Hob;
-  EFI_SMRAM_HOB_DESCRIPTOR_BLOCK        *SmramHobDescriptorBlock;
   PEI_DUAL_CHANNEL_DDR_MEMORY_MAP_RANGE MemoryMap[MAX_RANGES];
-  RESERVED_ACPI_S3_RANGE                *S3MemoryRangeData;
-  EFI_SMRAM_DESCRIPTOR                  DescriptorAcpiVariable;
 
   //
   // Get the Memory Map
@@ -715,84 +651,6 @@ InstallS3Memory (
   if (SmramRanges > 0) {
     BufferSize += ((SmramRanges - 1) * sizeof (EFI_SMRAM_DESCRIPTOR));
   }
-
-  Hob.Raw = BuildGuidHob (
-              &gEfiSmmPeiSmramMemoryReserveGuid,
-              BufferSize
-              );
-  ASSERT (Hob.Raw);
-
-  SmramHobDescriptorBlock = (EFI_SMRAM_HOB_DESCRIPTOR_BLOCK *) (Hob.Raw);
-  SmramHobDescriptorBlock->NumberOfSmmReservedRegions = SmramRanges;
-
-  SmramIndex = 0;
-  for (Index = 0; Index < NumRanges; Index++) {
-    if ((MemoryMap[Index].Type == DualChannelDdrSmramCacheable) ||
-        (MemoryMap[Index].Type == DualChannelDdrSmramNonCacheable)
-        ) {
-      //
-      // This is an SMRAM range, create an SMRAM descriptor
-      //
-      SmramHobDescriptorBlock->Descriptor[SmramIndex].PhysicalStart = MemoryMap[Index].PhysicalAddress;
-      SmramHobDescriptorBlock->Descriptor[SmramIndex].CpuStart      = MemoryMap[Index].CpuAddress;
-      SmramHobDescriptorBlock->Descriptor[SmramIndex].PhysicalSize  = MemoryMap[Index].RangeLength;
-      if (MemoryMap[Index].Type == DualChannelDdrSmramCacheable) {
-        SmramHobDescriptorBlock->Descriptor[SmramIndex].RegionState = EFI_SMRAM_CLOSED | EFI_CACHEABLE;
-      } else {
-        SmramHobDescriptorBlock->Descriptor[SmramIndex].RegionState = EFI_SMRAM_CLOSED;
-      }
-
-      SmramIndex++;
-    }
-  }
-
-  //
-  // Build a HOB with the location of the reserved memory range.
-  //
-  CopyMem(&DescriptorAcpiVariable, &SmramHobDescriptorBlock->Descriptor[SmramRanges-1], sizeof(EFI_SMRAM_DESCRIPTOR));
-  DescriptorAcpiVariable.CpuStart += RESERVED_CPU_S3_SAVE_OFFSET;
-  BuildGuidDataHob (
-    &gEfiAcpiVariableGuid,
-    &DescriptorAcpiVariable,
-    sizeof (EFI_SMRAM_DESCRIPTOR)
-    );
-
-  //
-  // Get the location and size of the S3 memory range in the reserved page and
-  // install it as PEI Memory.
-  //
-
-  DEBUG ((EFI_D_INFO, "TSEG Base = 0x%08x\n", SmramHobDescriptorBlock->Descriptor[SmramRanges-1].PhysicalStart));
-  S3MemoryRangeData = (RESERVED_ACPI_S3_RANGE*)(UINTN)
-    (SmramHobDescriptorBlock->Descriptor[SmramRanges-1].PhysicalStart + RESERVED_ACPI_S3_RANGE_OFFSET);
-
-  S3MemoryBase  = (UINTN) (S3MemoryRangeData->AcpiReservedMemoryBase);
-  DEBUG ((EFI_D_INFO, "S3MemoryBase = 0x%08x\n", S3MemoryBase));
-  S3MemorySize  = (UINTN) (S3MemoryRangeData->AcpiReservedMemorySize);
-  DEBUG ((EFI_D_INFO, "S3MemorySize = 0x%08x\n", S3MemorySize));
-
-  Status        = PeiServicesInstallPeiMemory (S3MemoryBase, S3MemorySize);
-  ASSERT_EFI_ERROR (Status);
-
-  //
-  // Retrieve the system memory length and build memory hob for the system
-  // memory above 1MB. So Memory Callback can set cache for the system memory
-  // correctly on S3 boot path, just like it does on Normal boot path.
-  //
-  ASSERT_EFI_ERROR ((S3MemoryRangeData->SystemMemoryLength - 0x100000) > 0);
-  BuildResourceDescriptorHob (
-            EFI_RESOURCE_SYSTEM_MEMORY,
-            (
-            EFI_RESOURCE_ATTRIBUTE_PRESENT |
-            EFI_RESOURCE_ATTRIBUTE_INITIALIZED |
-            EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE |
-            EFI_RESOURCE_ATTRIBUTE_WRITE_COMBINEABLE |
-            EFI_RESOURCE_ATTRIBUTE_WRITE_THROUGH_CACHEABLE |
-            EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE
-            ),
-            0x100000,
-            S3MemoryRangeData->SystemMemoryLength - 0x100000
-            );
 
   for (Index = 0; Index < NumRanges; Index++) {
     if ((MemoryMap[Index].Type == DualChannelDdrMainMemory) &&
@@ -1097,37 +955,20 @@ Done:
 /** Return info derived from Installing Memory by MemoryInit.
 
   @param[out]      RmuMainBaseAddressPtr   Return RmuMainBaseAddress to this location.
-  @param[out]      SmramDescriptorPtr  Return start of Smram descriptor list to this location.
-  @param[out]      NumSmramRegionsPtr  Return numbers of Smram regions to this location.
 
   @return Address of RMU shadow region at the top of available memory.
-  @return List of Smram descriptors for each Smram region.
-  @return Numbers of Smram regions.
 **/
 VOID
 EFIAPI
 InfoPostInstallMemory (
-  OUT     UINT32                    *RmuMainBaseAddressPtr OPTIONAL,
-  OUT     EFI_SMRAM_DESCRIPTOR      **SmramDescriptorPtr OPTIONAL,
-  OUT     UINTN                     *NumSmramRegionsPtr OPTIONAL
+  OUT     UINT32                    *RmuMainBaseAddressPtr OPTIONAL
   )
 {
   EFI_PEI_HOB_POINTERS                  Hob;
   UINT64                                RmuBaseAddress;
-  EFI_SMRAM_HOB_DESCRIPTOR_BLOCK        *SmramHobDescriptorBlock;
   UINT32                                RmuIndex;
 
-  if ((RmuMainBaseAddressPtr == NULL) && (SmramDescriptorPtr == NULL) && (NumSmramRegionsPtr == NULL)) {
-    return;
-  }
-
-  SmramHobDescriptorBlock = NULL;
-  if (SmramDescriptorPtr != NULL) {
-    *SmramDescriptorPtr = NULL;
-  }
-  if (NumSmramRegionsPtr != NULL) {
-    *NumSmramRegionsPtr = 0;
-  }
+  ASSERT (RmuMainBaseAddressPtr != NULL);
 
   //
   // Determine the location of the RMU reserved memory area
@@ -1150,16 +991,6 @@ InfoPostInstallMemory (
         //
         if (RmuIndex-- == 0) {
           RmuBaseAddress = (UINT64) (Hob.ResourceDescriptor->PhysicalStart);
-        }
-      }
-    } else if (Hob.Header->HobType == EFI_HOB_TYPE_GUID_EXTENSION) {
-      if (CompareGuid (&(Hob.Guid->Name), &gEfiSmmPeiSmramMemoryReserveGuid)) {
-        SmramHobDescriptorBlock = (VOID*) (Hob.Raw + sizeof (EFI_HOB_GUID_TYPE));
-        if (SmramDescriptorPtr != NULL) {
-          *SmramDescriptorPtr = SmramHobDescriptorBlock->Descriptor;
-        }
-        if (NumSmramRegionsPtr != NULL) {
-          *NumSmramRegionsPtr = SmramHobDescriptorBlock->NumberOfSmmReservedRegions;
         }
       }
     }

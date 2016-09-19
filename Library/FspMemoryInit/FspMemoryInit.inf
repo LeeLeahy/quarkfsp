@@ -46,9 +46,7 @@
   gFspSiliconFvGuid                         # PPI ALWAYS_CONSUMED
   gFspBootLoaderTolumHobGuid                # PPI ALWAYS_PRODUCED
   gFspSmbiosMemoryInfoHobGuid               # CONSUMES
-  gEfiAcpiVariableGuid                          # ALWAYS_CONSUMED L"AcpiGlobalVariab"
   gEfiMemoryTypeInformationGuid                 # ALWAYS_CONSUMED L"MemoryTypeInformation"
-  gEfiSmmPeiSmramMemoryReserveGuid              # ALWAYS_PRODUCED  Hob: GUID_EXTENSION
   gEfiMemoryOverwriteControlDataGuid            # SOMETIMES_CONSUMED
 
 [LibraryClasses]

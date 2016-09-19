@@ -166,9 +166,7 @@ SetPlatformImrPolicy (
 VOID
 EFIAPI
 InfoPostInstallMemory (
-  OUT     UINT32                  *RmuBaseAddressPtr OPTIONAL,
-  OUT     EFI_SMRAM_DESCRIPTOR    **SmramDescriptorPtr OPTIONAL,
-  OUT     UINTN                   *NumSmramRegionsPtr OPTIONAL
+  OUT     UINT32                  *RmuBaseAddressPtr OPTIONAL
   );
 
 #endif
