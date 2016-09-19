@@ -121,52 +121,8 @@ typedef struct {
 //
 
 EFI_STATUS
-InstallEfiMemory (
-  IN      EFI_BOOT_MODE                              BootMode,
-  IN      UINT32                                     TotalMemorySize
-  );
-
-EFI_STATUS
-InstallS3Memory (
-  IN      UINT32                                TotalMemorySize
-  );
-
-EFI_STATUS
 MemoryInit (
   VOID
-  );
-
-VOID
-RetriveRequiredMemorySize (
-  OUT     UINTN                             *Size
-  );
-
-EFI_STATUS
-GetMemoryMap (
-  IN     UINT32                                              TotalMemorySize,
-  IN OUT PEI_DUAL_CHANNEL_DDR_MEMORY_MAP_RANGE               *MemoryMap,
-  IN OUT UINT8                                               *NumRanges
-  );
-
-EFI_STATUS
-BaseMemoryTest (
-  IN  EFI_PHYSICAL_ADDRESS               BeginAddress,
-  IN  UINT64                             MemoryLength,
-  IN  PEI_MEMORY_TEST_OP                 Operation,
-  OUT EFI_PHYSICAL_ADDRESS               *ErrorAddress
-  );
-
-EFI_STATUS
-SetPlatformImrPolicy (
-  IN      EFI_PHYSICAL_ADDRESS    PeiMemoryBaseAddress,
-  IN      UINT64                  PeiMemoryLength,
-  IN      UINTN                   RequiredMemSize
-  );
-
-VOID
-EFIAPI
-InfoPostInstallMemory (
-  OUT     UINT32                  *RmuBaseAddressPtr OPTIONAL
   );
 
 #endif

@@ -145,43 +145,6 @@ EccScrubSetup(
   McD0PciCfg32 (QNC_ACCESS_PORT_MCR) = SCRUB_RESUME_MSG();
 }
 
-/** Post InstallS3Memory / InstallEfiMemory tasks given MrcData context.
-
-  @param[in]       MrcData  MRC configuration.
-  @param[in]       IsS3     TRUE if after InstallS3Memory.
-
-**/
-VOID
-PostInstallMemory (
-  IN MRC_PARAMS                           *MrcData,
-  IN BOOLEAN                              IsS3
-  )
-{
-  UINT32                            RmuMainDestBaseAddress;
-
-  //
-  // Setup ECC policy (All boot modes).
-  //
-  QNCPolicyDblEccBitErr (V_WDT_CONTROL_DBL_ECC_BIT_ERR_WARM);
-
-  //
-  // Find the 64KB of memory for Rmu Main at the top of available memory.
-  //
-  InfoPostInstallMemory (&RmuMainDestBaseAddress);
-  DEBUG ((EFI_D_INFO, "RmuMain Base Address : 0x%08x\n", RmuMainDestBaseAddress));
-
-  //
-  // Relocate RmuMain.
-  //
-  if (IsS3) {
-    QNCSendOpcodeDramReady (RmuMainDestBaseAddress);
-  } else {
-    RmuMainRelocation (RmuMainDestBaseAddress, GetRmuBaseAddress(), GetRmuLength());
-    QNCSendOpcodeDramReady (RmuMainDestBaseAddress);
-    EccScrubSetup (MrcData);
-  }
-}
-
 /**
   This function saves a config to a HOB.
 
@@ -205,168 +168,277 @@ SaveConfig (
 
 /**
 
-  Do memory initialisation for QNC DDR3 SDRAM Controller
+  This function returns the memory ranges to be enabled, along with information
+  describing how the range should be used.
 
-  @return EFI_SUCCESS  Memory initialisation completed successfully.
-          All other error conditions encountered result in an ASSERT.
+  @param  TimingData    Detected DDR timing parameters for installed memory.
+  @param  RowConfArray  Pointer to an array of EFI_DUAL_CHANNEL_DDR_ROW_CONFIG structures. The number
+                        of items in the array must match MaxRows returned by the McGetRowInfo() function.
+  @param  MemoryMap     Buffer to record details of the memory ranges tobe enabled.
+  @param  NumRanges     On input, this contains the maximum number of memory ranges that can be described
+                        in the MemoryMap buffer.
+
+  @return MemoryMap     The buffer will be filled in
+          NumRanges     will contain the actual number of memory ranges that are to be anabled.
+          EFI_SUCCESS   The function completed successfully.
 
 **/
 EFI_STATUS
-MemoryInit (
-  VOID
+GetMemoryMap (
+  IN     UINT32                                              TotalMemorySize,
+  IN OUT PEI_DUAL_CHANNEL_DDR_MEMORY_MAP_RANGE               *MemoryMap,
+  IN OUT UINT8                                               *NumRanges
   )
 {
-  MRC_PARAMS                                 MrcData;
-  EFI_BOOT_MODE                               BootMode;
-  EFI_STATUS                                  Status;
-  EFI_STATUS_CODE_VALUE                       ErrorCodeValue;
-  UINT16                                      PmswAdr;
+  EFI_PHYSICAL_ADDRESS              MemoryAddress;
+  EFI_PHYSICAL_ADDRESS              MemorySize;
+  UINT8                             ExtendedMemoryIndex;
+  UINT32                            Register;
+  UINT32                            TsegSize;
 
-  ErrorCodeValue  = 0;
+  if ((*NumRanges) < MAX_RANGES) {
+    return EFI_BUFFER_TOO_SMALL;
+  }
 
-  //
-  // It is critical that both of these data structures are initialized to 0.
-  // This PEIM knows the number of DIMMs in the system and works with that
-  // information.  The MCH PEIM that consumes these data structures does not
-  // know the number of DIMMs so it expects the entire structure to be
-  // properly initialized.  By initializing these to zero, all flags indicating
-  // that the SPD is present or the row should be configured are set to false.
-  //
-  ZeroMem (&MrcData, sizeof(MrcData));
+  *NumRanges = 0;
 
   //
-  // Determine boot mode
+  // Generate Memory ranges for the memory map.
   //
-  BootMode = GetBootMode();
 
   //
-  // Initialize Error type for reporting status code
+  // Add memory below 640KB to the memory map. Make sure memory between
+  // 640KB and 1MB are reserved, even if not used for SMRAM
   //
-  switch (BootMode) {
-  case BOOT_ON_FLASH_UPDATE:
-    ErrorCodeValue = EFI_COMPUTING_UNIT_MEMORY + EFI_CU_MEMORY_EC_UPDATE_FAIL;
-    break;
-  case BOOT_ON_S3_RESUME:
-    ErrorCodeValue = EFI_COMPUTING_UNIT_MEMORY + EFI_CU_MEMORY_EC_S3_RESUME_FAIL;
-    break;
-  default:
-    ErrorCodeValue = EFI_COMPUTING_UNIT_MEMORY;
-    break;
+  MemoryMap[*NumRanges].PhysicalAddress = 0;
+  MemoryMap[*NumRanges].CpuAddress      = 0;
+  MemoryMap[*NumRanges].RangeLength     = 0xA0000;
+  MemoryMap[*NumRanges].Type            = DualChannelDdrMainMemory;
+  (*NumRanges)++;
+
+  //
+  // Just mark this range reserved
+  //
+  MemoryMap[*NumRanges].PhysicalAddress = 0xA0000;
+  MemoryMap[*NumRanges].CpuAddress      = 0xA0000;
+  MemoryMap[*NumRanges].RangeLength     = 0x60000;
+  MemoryMap[*NumRanges].Type            = DualChannelDdrGraphicsReservedMemory;
+  (*NumRanges)++;
+
+  //
+  // Add remaining memory to the memory map
+  //
+  MemoryAddress = 0x100000;
+  MemorySize = TotalMemorySize - MemoryAddress;
+
+  MemoryMap[*NumRanges].PhysicalAddress = MemoryAddress;
+  MemoryMap[*NumRanges].CpuAddress      = MemoryAddress;
+  MemoryMap[*NumRanges].RangeLength     = MemorySize;
+  MemoryMap[*NumRanges].Type            = DualChannelDdrMainMemory;
+  (*NumRanges)++;
+  MemoryAddress += MemorySize;
+
+  ExtendedMemoryIndex = (UINT8) (*NumRanges - 1);
+
+  // ------------------------ Top of physical memory
+  //
+  //      --------------      TSEG + 1 page
+  // S3 Memory base structure
+  //      --------------      RESERVED_ACPI_S3_RANGE_OFFSET
+  // CPU S3 data
+  //      --------------      RESERVED_CPU_S3_SAVE_OFFSET
+  //
+  // ------------------------ TSEG Base
+  // Copy of RMU binary
+  // ------------------------ TOLUM: RmuBaseAddress
+  // BIOS reserved area
+  // ------------------------
+  // FSP reserved area
+  // ------------------------
+  // DRAM
+  // ------------------------ 0x00100000
+  // DRAM
+  // ------------------------ 0x000A0000
+  // DRAM
+  // ------------------------ 0
+
+  //
+  // See if we need to trim TSEG out of the highest memory range
+  //
+  TsegSize = GetSmmTsegSize();
+  Register = (UINT32)((MemoryAddress - 1) & SMM_END_MASK);
+  if (TsegSize > 0) {
+    MemoryMap[*NumRanges].RangeLength           = (TsegSize * 1024 * 1024);
+    MemoryAddress                              -= MemoryMap[*NumRanges].RangeLength;
+    MemoryMap[*NumRanges].PhysicalAddress       = MemoryAddress;
+    MemoryMap[*NumRanges].CpuAddress            = MemoryAddress;
+    MemoryMap[ExtendedMemoryIndex].RangeLength -= MemoryMap[*NumRanges].RangeLength;
+    MemoryMap[*NumRanges].Type = DualChannelDdrSmramCacheable;
+    (*NumRanges)++;
   }
 
   //
-  // Specify MRC boot mode
+  // Set the TSEG base address
   //
-  switch (BootMode) {
-  case BOOT_ON_S3_RESUME:
-  case BOOT_ON_FLASH_UPDATE:
-    MrcData.boot_mode = bmS3;
-    break;
-  case BOOT_ASSUMING_NO_CONFIGURATION_CHANGES:
-    MrcData.boot_mode = bmFast;
-    break;
-  default:
-    MrcData.boot_mode = bmCold;
-    break;
+  Register |= (UINT32)(((RShiftU64(MemoryAddress, 16)) & SMM_START_MASK)
+            | SMM_WRITE_OPEN | SMM_READ_OPEN | SMM_CODE_RD_OPEN);
+  QncHsmmcWrite (Register);
+
+  //
+  // Trim off 64K memory for RMU Main binary shadow
+  //
+  MemoryMap[*NumRanges].RangeLength           = 0x10000;
+  ASSERT(MemoryMap[*NumRanges].RangeLength >= GetRmuLength());
+  MemoryAddress                              -= MemoryMap[*NumRanges].RangeLength;
+  MemoryMap[*NumRanges].PhysicalAddress       = MemoryAddress;
+  MemoryMap[*NumRanges].CpuAddress            = MemoryAddress;
+  MemoryMap[ExtendedMemoryIndex].RangeLength -= MemoryMap[*NumRanges].RangeLength;
+  MemoryMap[*NumRanges].Type = DualChannelDdrRmuReservedMemory;
+  (*NumRanges)++;
+
+  //
+  // Trim off the BIOS reserved area
+  //
+  if (GetBootLoaderTolumSize() > 0) {
+    MemoryMap[*NumRanges].RangeLength           = GetBootLoaderTolumSize();
+    MemoryAddress                              -= MemoryMap[*NumRanges].RangeLength;
+    MemoryMap[*NumRanges].PhysicalAddress       = MemoryAddress;
+    MemoryMap[*NumRanges].CpuAddress            = MemoryAddress;
+    MemoryMap[ExtendedMemoryIndex].RangeLength -= MemoryMap[*NumRanges].RangeLength;
+    MemoryMap[*NumRanges].Type = DualChannelDdrBiosReservedMemory;
+    (*NumRanges)++;
   }
 
   //
-  // Configure MRC input parameters.
+  // Trim off the FSP reserved area
   //
-  MrcConfigureFromMcFuses (&MrcData);
-  MrcConfigureFromInfoHob (&MrcData);
+  MemoryMap[*NumRanges].RangeLength           = GetFspReservedMemorySize();
+  MemoryAddress                              -= MemoryMap[*NumRanges].RangeLength;
+  MemoryMap[*NumRanges].PhysicalAddress       = MemoryAddress;
+  MemoryMap[*NumRanges].CpuAddress            = MemoryAddress;
+  MemoryMap[ExtendedMemoryIndex].RangeLength -= MemoryMap[*NumRanges].RangeLength;
+  MemoryMap[*NumRanges].Type = DualChannelDdrFspReservedMemory;
+  (*NumRanges)++;
 
-  if (BootMode == BOOT_IN_RECOVERY_MODE) {
-    //
-    // Always do bmCold on recovery.
-    //
-    DEBUG ((DEBUG_INFO, "MemoryInit:Force bmCold on Recovery\n"));
-    MrcData.boot_mode = bmCold;
-  } else {
+  //
+  // Display the memory segments
+  //
+  DEBUG_CODE_BEGIN();
+  {
+    UINT32 Index;
 
-    //
-    // Get the saved memory data if possible
-    //
-    if ((GetMrcDataPtr() != 0) && (GetMrcDataLength() != 0)) {
-      ASSERT(GetMrcDataLength() == sizeof(MrcData.timings));
-      CopyMem (&MrcData.timings, (void *)GetMrcDataPtr(), GetMrcDataLength());
-    } else {
-      switch (BootMode) {
-      case BOOT_ON_S3_RESUME:
-      case BOOT_ON_FLASH_UPDATE:
-        DEBUG ((DEBUG_ERROR, "ERROR: MRC data missing - reboot\n"));
-        REPORT_STATUS_CODE (
-          EFI_ERROR_CODE + EFI_ERROR_UNRECOVERED,
-          ErrorCodeValue
-        );
-        return FSP_STATUS_RESET_REQUIRED_COLD;
-        break;
+    MemoryAddress = TotalMemorySize;
+    DEBUG ((EFI_D_ERROR, "+------------------------- 0x%08x: Top of physical memory\n", MemoryAddress));
+    Index = *NumRanges - 1;
 
-      default:
-        MrcData.boot_mode = bmCold;
-        break;
-      }
+    // Display SMM area if enabled
+    Index = ExtendedMemoryIndex + 1;
+    if (TsegSize > 0) {
+      MemoryAddress -= MemoryMap[Index].RangeLength;
+      ASSERT(MemoryAddress == MemoryMap[Index].PhysicalAddress);
+      DEBUG ((EFI_D_ERROR, "|\n"));
+      DEBUG ((EFI_D_ERROR, "|      --------------      0x%08x: TSEG + 1 page\n", MemoryAddress + EFI_PAGE_SIZE));
+      DEBUG ((EFI_D_ERROR, "| S3 Memory base structure\n"));
+      DEBUG ((EFI_D_ERROR, "|      --------------      0x%08x: RESERVED_ACPI_S3_RANGE_OFFSET\n", MemoryAddress + RESERVED_ACPI_S3_RANGE_OFFSET));
+      DEBUG ((EFI_D_ERROR, "| CPU S3 data\n"));
+      DEBUG ((EFI_D_ERROR, "|      --------------      0x%08x: RESERVED_CPU_S3_SAVE_OFFSET\n", MemoryAddress + RESERVED_CPU_S3_SAVE_OFFSET));
+      DEBUG ((EFI_D_ERROR, "|\n"));
+      DEBUG ((EFI_D_ERROR, "+------------------------- 0x%08x: TSEG Base\n", MemoryAddress));
+      Index++;
     }
-  }
 
-  PmswAdr = (UINT16)(LpcPciCfg32 (R_QNC_LPC_GPE0BLK) & 0xFFFF) + R_QNC_GPE0BLK_PMSW;
-  if( IoRead32 (PmswAdr) & B_QNC_GPE0BLK_PMSW_DRAM_INIT) {
-    // MRC did not complete last execution, force cold boot path
-    MrcData.boot_mode = bmCold;
-  }
+    // Display RMU area
+    MemoryAddress -= MemoryMap[Index].RangeLength;
+    ASSERT(MemoryAddress == MemoryMap[Index].PhysicalAddress);
+    DEBUG ((EFI_D_ERROR, "| Copy of RMU binary\n"));
+    DEBUG ((EFI_D_ERROR, "+------------------------- 0x%08x: RmuBaseAddress (TOLUM)\n", MemoryAddress));
+    Index++;
 
-  // Mark MRC pending
-  IoOr32 (PmswAdr, (UINT32)B_QNC_GPE0BLK_PMSW_DRAM_INIT);
-
-  //
-  // Call Memory Reference Code's Routines
-  //
-  Mrc (&MrcData);
-
-  // Mark MRC completed
-  IoAnd32 (PmswAdr, ~(UINT32)B_QNC_GPE0BLK_PMSW_DRAM_INIT);
-
-
-  //
-  // Note emulation platform has to read actual memory size
-  // MrcData.mem_size from PcdGet32 (PcdMemorySize);
-
-  if (BootMode == BOOT_ON_S3_RESUME) {
-
-    DEBUG ((EFI_D_INFO, "Following BOOT_ON_S3_RESUME boot path.\n"));
-
-    Status = InstallS3Memory (MrcData.mem_size);
-    if (EFI_ERROR (Status)) {
-      REPORT_STATUS_CODE (
-        EFI_ERROR_CODE + EFI_ERROR_UNRECOVERED,
-        ErrorCodeValue
-      );
-      return FSP_STATUS_RESET_REQUIRED_COLD;
+    // Display BIOS reserved area if requested
+    if (GetBootLoaderTolumSize() > 0) {
+      MemoryAddress -= MemoryMap[Index].RangeLength;
+      ASSERT(MemoryAddress == MemoryMap[Index].PhysicalAddress);
+      DEBUG ((EFI_D_ERROR, "| BIOS reserved area\n"));
+      DEBUG ((EFI_D_ERROR, "+------------------------- 0x%08x\n", MemoryAddress));
+      Index++;
     }
-    PostInstallMemory (&MrcData, TRUE);
-    return EFI_SUCCESS;
+
+    // Display FSP reserved area
+    MemoryAddress -= MemoryMap[Index].RangeLength;
+    ASSERT(MemoryAddress == MemoryMap[Index].PhysicalAddress);
+    DEBUG ((EFI_D_ERROR, "| FSP reserved area\n"));
+    DEBUG ((EFI_D_ERROR, "+------------------------- 0x%08x\n", MemoryAddress));
+
+    // Display DRAM areas
+    Index = ExtendedMemoryIndex;
+    do {
+      MemoryAddress -= MemoryMap[Index].RangeLength;
+      ASSERT(MemoryAddress == MemoryMap[Index].PhysicalAddress);
+      DEBUG ((EFI_D_ERROR, "| DRAM\n"));
+      DEBUG ((EFI_D_ERROR, "+------------------------- 0x%08x\n", MemoryAddress));
+    } while (Index-- != 0);
+  }
+  DEBUG_CODE_END ();
+  return EFI_SUCCESS;
+}
+
+EFI_STATUS
+BaseMemoryTest (
+  IN  EFI_PHYSICAL_ADDRESS               BeginAddress,
+  IN  UINT64                             MemoryLength,
+  IN  PEI_MEMORY_TEST_OP                 Operation,
+  OUT EFI_PHYSICAL_ADDRESS               *ErrorAddress
+  )
+{
+  UINT32                TestPattern;
+  EFI_PHYSICAL_ADDRESS  TempAddress;
+  UINT32                SpanSize;
+
+  TestPattern = 0x5A5A5A5A;
+  SpanSize    = 0;
+
+  //
+  // Make sure we don't try and test anything above the max physical address range
+  //
+  ASSERT (BeginAddress + MemoryLength < MAX_ADDRESS);
+
+  switch (Operation) {
+  case Extensive:
+    SpanSize = 0x4;
+    break;
+
+  case Sparse:
+  case Quick:
+    SpanSize = 0x40000;
+    break;
+
+  case Ignore:
+    goto Done;
+    break;
+  }
+  //
+  // Write the test pattern into memory range
+  //
+  TempAddress = BeginAddress;
+  while (TempAddress < BeginAddress + MemoryLength) {
+    (*(UINT32 *) (UINTN) TempAddress) = TestPattern;
+    TempAddress += SpanSize;
+  }
+  //
+  // Read pattern from memory and compare it
+  //
+  TempAddress = BeginAddress;
+  while (TempAddress < BeginAddress + MemoryLength) {
+    if ((*(UINT32 *) (UINTN) TempAddress) != TestPattern) {
+      *ErrorAddress = TempAddress;
+      DEBUG ((EFI_D_ERROR, "Memory test failed at 0x%x.\n", TempAddress));
+      return EFI_DEVICE_ERROR;
+    }
+
+    TempAddress += SpanSize;
   }
 
-  //
-  // Assign physical memory to PEI and DXE
-  //
-  DEBUG ((EFI_D_INFO, "InstallEfiMemory, TotalSize = 0x%08x\n", MrcData.mem_size));
-
-  Status = InstallEfiMemory (
-             BootMode,
-             MrcData.mem_size
-             );
-  ASSERT_EFI_ERROR (Status);
-
-  PostInstallMemory (&MrcData, FALSE);
-
-  //
-  // Save current configuration into Hob and will save into Variable later in DXE
-  //
-  DEBUG ((EFI_D_INFO, "SaveConfig.\n"));
-  SaveConfig (&MrcData);
-  DEBUG ((EFI_D_INFO, "MemoryInit Complete.\n"));
-
+Done:
   return EFI_SUCCESS;
 }
 
@@ -667,282 +739,6 @@ InstallS3Memory (
   return EFI_SUCCESS;
 }
 
-/**
-
-  This function returns the memory ranges to be enabled, along with information
-  describing how the range should be used.
-
-  @param  TimingData    Detected DDR timing parameters for installed memory.
-  @param  RowConfArray  Pointer to an array of EFI_DUAL_CHANNEL_DDR_ROW_CONFIG structures. The number
-                        of items in the array must match MaxRows returned by the McGetRowInfo() function.
-  @param  MemoryMap     Buffer to record details of the memory ranges tobe enabled.
-  @param  NumRanges     On input, this contains the maximum number of memory ranges that can be described
-                        in the MemoryMap buffer.
-
-  @return MemoryMap     The buffer will be filled in
-          NumRanges     will contain the actual number of memory ranges that are to be anabled.
-          EFI_SUCCESS   The function completed successfully.
-
-**/
-EFI_STATUS
-GetMemoryMap (
-  IN     UINT32                                              TotalMemorySize,
-  IN OUT PEI_DUAL_CHANNEL_DDR_MEMORY_MAP_RANGE               *MemoryMap,
-  IN OUT UINT8                                               *NumRanges
-  )
-{
-  EFI_PHYSICAL_ADDRESS              MemoryAddress;
-  EFI_PHYSICAL_ADDRESS              MemorySize;
-  UINT8                             ExtendedMemoryIndex;
-  UINT32                            Register;
-  UINT32                            TsegSize;
-
-  if ((*NumRanges) < MAX_RANGES) {
-    return EFI_BUFFER_TOO_SMALL;
-  }
-
-  *NumRanges = 0;
-
-  //
-  // Generate Memory ranges for the memory map.
-  //
-
-  //
-  // Add memory below 640KB to the memory map. Make sure memory between
-  // 640KB and 1MB are reserved, even if not used for SMRAM
-  //
-  MemoryMap[*NumRanges].PhysicalAddress = 0;
-  MemoryMap[*NumRanges].CpuAddress      = 0;
-  MemoryMap[*NumRanges].RangeLength     = 0xA0000;
-  MemoryMap[*NumRanges].Type            = DualChannelDdrMainMemory;
-  (*NumRanges)++;
-
-  //
-  // Just mark this range reserved
-  //
-  MemoryMap[*NumRanges].PhysicalAddress = 0xA0000;
-  MemoryMap[*NumRanges].CpuAddress      = 0xA0000;
-  MemoryMap[*NumRanges].RangeLength     = 0x60000;
-  MemoryMap[*NumRanges].Type            = DualChannelDdrGraphicsReservedMemory;
-  (*NumRanges)++;
-
-  //
-  // Add remaining memory to the memory map
-  //
-  MemoryAddress = 0x100000;
-  MemorySize = TotalMemorySize - MemoryAddress;
-
-  MemoryMap[*NumRanges].PhysicalAddress = MemoryAddress;
-  MemoryMap[*NumRanges].CpuAddress      = MemoryAddress;
-  MemoryMap[*NumRanges].RangeLength     = MemorySize;
-  MemoryMap[*NumRanges].Type            = DualChannelDdrMainMemory;
-  (*NumRanges)++;
-  MemoryAddress += MemorySize;
-
-  ExtendedMemoryIndex = (UINT8) (*NumRanges - 1);
-
-  // ------------------------ Top of physical memory
-  //
-  //      --------------      TSEG + 1 page
-  // S3 Memory base structure
-  //      --------------      RESERVED_ACPI_S3_RANGE_OFFSET
-  // CPU S3 data
-  //      --------------      RESERVED_CPU_S3_SAVE_OFFSET
-  //
-  // ------------------------ TSEG Base
-  // Copy of RMU binary
-  // ------------------------ TOLUM: RmuBaseAddress
-  // BIOS reserved area
-  // ------------------------
-  // FSP reserved area
-  // ------------------------
-  // DRAM
-  // ------------------------ 0x00100000
-  // DRAM
-  // ------------------------ 0x000A0000
-  // DRAM
-  // ------------------------ 0
-
-  //
-  // See if we need to trim TSEG out of the highest memory range
-  //
-  TsegSize = GetSmmTsegSize();
-  Register = (UINT32)((MemoryAddress - 1) & SMM_END_MASK);
-  if (TsegSize > 0) {
-    MemoryMap[*NumRanges].RangeLength           = (TsegSize * 1024 * 1024);
-    MemoryAddress                              -= MemoryMap[*NumRanges].RangeLength;
-    MemoryMap[*NumRanges].PhysicalAddress       = MemoryAddress;
-    MemoryMap[*NumRanges].CpuAddress            = MemoryAddress;
-    MemoryMap[ExtendedMemoryIndex].RangeLength -= MemoryMap[*NumRanges].RangeLength;
-    MemoryMap[*NumRanges].Type = DualChannelDdrSmramCacheable;
-    (*NumRanges)++;
-  }
-
-  //
-  // Set the TSEG base address
-  //
-  Register |= (UINT32)(((RShiftU64(MemoryAddress, 16)) & SMM_START_MASK)
-            | SMM_WRITE_OPEN | SMM_READ_OPEN | SMM_CODE_RD_OPEN);
-  QncHsmmcWrite (Register);
-
-  //
-  // Trim off 64K memory for RMU Main binary shadow
-  //
-  MemoryMap[*NumRanges].RangeLength           = 0x10000;
-  ASSERT(MemoryMap[*NumRanges].RangeLength >= GetRmuLength());
-  MemoryAddress                              -= MemoryMap[*NumRanges].RangeLength;
-  MemoryMap[*NumRanges].PhysicalAddress       = MemoryAddress;
-  MemoryMap[*NumRanges].CpuAddress            = MemoryAddress;
-  MemoryMap[ExtendedMemoryIndex].RangeLength -= MemoryMap[*NumRanges].RangeLength;
-  MemoryMap[*NumRanges].Type = DualChannelDdrRmuReservedMemory;
-  (*NumRanges)++;
-
-  //
-  // Trim off the BIOS reserved area
-  //
-  if (GetBootLoaderTolumSize() > 0) {
-    MemoryMap[*NumRanges].RangeLength           = GetBootLoaderTolumSize();
-    MemoryAddress                              -= MemoryMap[*NumRanges].RangeLength;
-    MemoryMap[*NumRanges].PhysicalAddress       = MemoryAddress;
-    MemoryMap[*NumRanges].CpuAddress            = MemoryAddress;
-    MemoryMap[ExtendedMemoryIndex].RangeLength -= MemoryMap[*NumRanges].RangeLength;
-    MemoryMap[*NumRanges].Type = DualChannelDdrBiosReservedMemory;
-    (*NumRanges)++;
-  }
-
-  //
-  // Trim off the FSP reserved area
-  //
-  MemoryMap[*NumRanges].RangeLength           = GetFspReservedMemorySize();
-  MemoryAddress                              -= MemoryMap[*NumRanges].RangeLength;
-  MemoryMap[*NumRanges].PhysicalAddress       = MemoryAddress;
-  MemoryMap[*NumRanges].CpuAddress            = MemoryAddress;
-  MemoryMap[ExtendedMemoryIndex].RangeLength -= MemoryMap[*NumRanges].RangeLength;
-  MemoryMap[*NumRanges].Type = DualChannelDdrFspReservedMemory;
-  (*NumRanges)++;
-
-  //
-  // Display the memory segments
-  //
-  DEBUG_CODE_BEGIN();
-  {
-    UINT32 Index;
-
-    MemoryAddress = TotalMemorySize;
-    DEBUG ((EFI_D_ERROR, "+------------------------- 0x%08x: Top of physical memory\n", MemoryAddress));
-    Index = *NumRanges - 1;
-
-    // Display SMM area if enabled
-    Index = ExtendedMemoryIndex + 1;
-    if (TsegSize > 0) {
-      MemoryAddress -= MemoryMap[Index].RangeLength;
-      ASSERT(MemoryAddress == MemoryMap[Index].PhysicalAddress);
-      DEBUG ((EFI_D_ERROR, "|\n"));
-      DEBUG ((EFI_D_ERROR, "|      --------------      0x%08x: TSEG + 1 page\n", MemoryAddress + EFI_PAGE_SIZE));
-      DEBUG ((EFI_D_ERROR, "| S3 Memory base structure\n"));
-      DEBUG ((EFI_D_ERROR, "|      --------------      0x%08x: RESERVED_ACPI_S3_RANGE_OFFSET\n", MemoryAddress + RESERVED_ACPI_S3_RANGE_OFFSET));
-      DEBUG ((EFI_D_ERROR, "| CPU S3 data\n"));
-      DEBUG ((EFI_D_ERROR, "|      --------------      0x%08x: RESERVED_CPU_S3_SAVE_OFFSET\n", MemoryAddress + RESERVED_CPU_S3_SAVE_OFFSET));
-      DEBUG ((EFI_D_ERROR, "|\n"));
-      DEBUG ((EFI_D_ERROR, "+------------------------- 0x%08x: TSEG Base\n", MemoryAddress));
-      Index++;
-    }
-
-    // Display RMU area
-    MemoryAddress -= MemoryMap[Index].RangeLength;
-    ASSERT(MemoryAddress == MemoryMap[Index].PhysicalAddress);
-    DEBUG ((EFI_D_ERROR, "| Copy of RMU binary\n"));
-    DEBUG ((EFI_D_ERROR, "+------------------------- 0x%08x: RmuBaseAddress (TOLUM)\n", MemoryAddress));
-    Index++;
-
-    // Display BIOS reserved area if requested
-    if (GetBootLoaderTolumSize() > 0) {
-      MemoryAddress -= MemoryMap[Index].RangeLength;
-      ASSERT(MemoryAddress == MemoryMap[Index].PhysicalAddress);
-      DEBUG ((EFI_D_ERROR, "| BIOS reserved area\n"));
-      DEBUG ((EFI_D_ERROR, "+------------------------- 0x%08x\n", MemoryAddress));
-      Index++;
-    }
-
-    // Display FSP reserved area
-    MemoryAddress -= MemoryMap[Index].RangeLength;
-    ASSERT(MemoryAddress == MemoryMap[Index].PhysicalAddress);
-    DEBUG ((EFI_D_ERROR, "| FSP reserved area\n"));
-    DEBUG ((EFI_D_ERROR, "+------------------------- 0x%08x\n", MemoryAddress));
-
-    // Display DRAM areas
-    Index = ExtendedMemoryIndex;
-    do {
-      MemoryAddress -= MemoryMap[Index].RangeLength;
-      ASSERT(MemoryAddress == MemoryMap[Index].PhysicalAddress);
-      DEBUG ((EFI_D_ERROR, "| DRAM\n"));
-      DEBUG ((EFI_D_ERROR, "+------------------------- 0x%08x\n", MemoryAddress));
-    } while (Index-- != 0);
-  }
-  DEBUG_CODE_END ();
-  return EFI_SUCCESS;
-}
-
-EFI_STATUS
-BaseMemoryTest (
-  IN  EFI_PHYSICAL_ADDRESS               BeginAddress,
-  IN  UINT64                             MemoryLength,
-  IN  PEI_MEMORY_TEST_OP                 Operation,
-  OUT EFI_PHYSICAL_ADDRESS               *ErrorAddress
-  )
-{
-  UINT32                TestPattern;
-  EFI_PHYSICAL_ADDRESS  TempAddress;
-  UINT32                SpanSize;
-
-  TestPattern = 0x5A5A5A5A;
-  SpanSize    = 0;
-
-  //
-  // Make sure we don't try and test anything above the max physical address range
-  //
-  ASSERT (BeginAddress + MemoryLength < MAX_ADDRESS);
-
-  switch (Operation) {
-  case Extensive:
-    SpanSize = 0x4;
-    break;
-
-  case Sparse:
-  case Quick:
-    SpanSize = 0x40000;
-    break;
-
-  case Ignore:
-    goto Done;
-    break;
-  }
-  //
-  // Write the test pattern into memory range
-  //
-  TempAddress = BeginAddress;
-  while (TempAddress < BeginAddress + MemoryLength) {
-    (*(UINT32 *) (UINTN) TempAddress) = TestPattern;
-    TempAddress += SpanSize;
-  }
-  //
-  // Read pattern from memory and compare it
-  //
-  TempAddress = BeginAddress;
-  while (TempAddress < BeginAddress + MemoryLength) {
-    if ((*(UINT32 *) (UINTN) TempAddress) != TestPattern) {
-      *ErrorAddress = TempAddress;
-      DEBUG ((EFI_D_ERROR, "Memory test failed at 0x%x.\n", TempAddress));
-      return EFI_DEVICE_ERROR;
-    }
-
-    TempAddress += SpanSize;
-  }
-
-Done:
-  return EFI_SUCCESS;
-}
-
 /** Return info derived from Installing Memory by MemoryInit.
 
   @param[out]      RmuMainBaseAddressPtr   Return RmuMainBaseAddress to this location.
@@ -991,4 +787,208 @@ InfoPostInstallMemory (
   if (RmuMainBaseAddressPtr != NULL) {
     *RmuMainBaseAddressPtr = (UINT32) RmuBaseAddress;
   }
+}
+
+/** Post InstallS3Memory / InstallEfiMemory tasks given MrcData context.
+
+  @param[in]       MrcData  MRC configuration.
+  @param[in]       IsS3     TRUE if after InstallS3Memory.
+
+**/
+VOID
+PostInstallMemory (
+  IN MRC_PARAMS                           *MrcData,
+  IN BOOLEAN                              IsS3
+  )
+{
+  UINT32                            RmuMainDestBaseAddress;
+
+  //
+  // Setup ECC policy (All boot modes).
+  //
+  QNCPolicyDblEccBitErr (V_WDT_CONTROL_DBL_ECC_BIT_ERR_WARM);
+
+  //
+  // Find the 64KB of memory for Rmu Main at the top of available memory.
+  //
+  InfoPostInstallMemory (&RmuMainDestBaseAddress);
+  DEBUG ((EFI_D_INFO, "RmuMain Base Address : 0x%08x\n", RmuMainDestBaseAddress));
+
+  //
+  // Relocate RmuMain.
+  //
+  if (IsS3) {
+    QNCSendOpcodeDramReady (RmuMainDestBaseAddress);
+  } else {
+    RmuMainRelocation (RmuMainDestBaseAddress, GetRmuBaseAddress(), GetRmuLength());
+    QNCSendOpcodeDramReady (RmuMainDestBaseAddress);
+    EccScrubSetup (MrcData);
+  }
+}
+
+/**
+
+  Do memory initialisation for QNC DDR3 SDRAM Controller
+
+  @return EFI_SUCCESS  Memory initialisation completed successfully.
+          All other error conditions encountered result in an ASSERT.
+
+**/
+EFI_STATUS
+MemoryInit (
+  VOID
+  )
+{
+  MRC_PARAMS                                 MrcData;
+  EFI_BOOT_MODE                               BootMode;
+  EFI_STATUS                                  Status;
+  EFI_STATUS_CODE_VALUE                       ErrorCodeValue;
+  UINT16                                      PmswAdr;
+
+  ErrorCodeValue  = 0;
+
+  //
+  // It is critical that both of these data structures are initialized to 0.
+  // This PEIM knows the number of DIMMs in the system and works with that
+  // information.  The MCH PEIM that consumes these data structures does not
+  // know the number of DIMMs so it expects the entire structure to be
+  // properly initialized.  By initializing these to zero, all flags indicating
+  // that the SPD is present or the row should be configured are set to false.
+  //
+  ZeroMem (&MrcData, sizeof(MrcData));
+
+  //
+  // Determine boot mode
+  //
+  BootMode = GetBootMode();
+
+  //
+  // Initialize Error type for reporting status code
+  //
+  switch (BootMode) {
+  case BOOT_ON_FLASH_UPDATE:
+    ErrorCodeValue = EFI_COMPUTING_UNIT_MEMORY + EFI_CU_MEMORY_EC_UPDATE_FAIL;
+    break;
+  case BOOT_ON_S3_RESUME:
+    ErrorCodeValue = EFI_COMPUTING_UNIT_MEMORY + EFI_CU_MEMORY_EC_S3_RESUME_FAIL;
+    break;
+  default:
+    ErrorCodeValue = EFI_COMPUTING_UNIT_MEMORY;
+    break;
+  }
+
+  //
+  // Specify MRC boot mode
+  //
+  switch (BootMode) {
+  case BOOT_ON_S3_RESUME:
+  case BOOT_ON_FLASH_UPDATE:
+    MrcData.boot_mode = bmS3;
+    break;
+  case BOOT_ASSUMING_NO_CONFIGURATION_CHANGES:
+    MrcData.boot_mode = bmFast;
+    break;
+  default:
+    MrcData.boot_mode = bmCold;
+    break;
+  }
+
+  //
+  // Configure MRC input parameters.
+  //
+  MrcConfigureFromMcFuses (&MrcData);
+  MrcConfigureFromInfoHob (&MrcData);
+
+  if (BootMode == BOOT_IN_RECOVERY_MODE) {
+    //
+    // Always do bmCold on recovery.
+    //
+    DEBUG ((DEBUG_INFO, "MemoryInit:Force bmCold on Recovery\n"));
+    MrcData.boot_mode = bmCold;
+  } else {
+
+    //
+    // Get the saved memory data if possible
+    //
+    if ((GetMrcDataPtr() != 0) && (GetMrcDataLength() != 0)) {
+      ASSERT(GetMrcDataLength() == sizeof(MrcData.timings));
+      CopyMem (&MrcData.timings, (void *)GetMrcDataPtr(), GetMrcDataLength());
+    } else {
+      switch (BootMode) {
+      case BOOT_ON_S3_RESUME:
+      case BOOT_ON_FLASH_UPDATE:
+        DEBUG ((DEBUG_ERROR, "ERROR: MRC data missing - reboot\n"));
+        REPORT_STATUS_CODE (
+          EFI_ERROR_CODE + EFI_ERROR_UNRECOVERED,
+          ErrorCodeValue
+        );
+        return FSP_STATUS_RESET_REQUIRED_COLD;
+        break;
+
+      default:
+        MrcData.boot_mode = bmCold;
+        break;
+      }
+    }
+  }
+
+  PmswAdr = (UINT16)(LpcPciCfg32 (R_QNC_LPC_GPE0BLK) & 0xFFFF) + R_QNC_GPE0BLK_PMSW;
+  if( IoRead32 (PmswAdr) & B_QNC_GPE0BLK_PMSW_DRAM_INIT) {
+    // MRC did not complete last execution, force cold boot path
+    MrcData.boot_mode = bmCold;
+  }
+
+  // Mark MRC pending
+  IoOr32 (PmswAdr, (UINT32)B_QNC_GPE0BLK_PMSW_DRAM_INIT);
+
+  //
+  // Call Memory Reference Code's Routines
+  //
+  Mrc (&MrcData);
+
+  // Mark MRC completed
+  IoAnd32 (PmswAdr, ~(UINT32)B_QNC_GPE0BLK_PMSW_DRAM_INIT);
+
+
+  //
+  // Note emulation platform has to read actual memory size
+  // MrcData.mem_size from PcdGet32 (PcdMemorySize);
+
+  if (BootMode == BOOT_ON_S3_RESUME) {
+
+    DEBUG ((EFI_D_INFO, "Following BOOT_ON_S3_RESUME boot path.\n"));
+
+    Status = InstallS3Memory (MrcData.mem_size);
+    if (EFI_ERROR (Status)) {
+      REPORT_STATUS_CODE (
+        EFI_ERROR_CODE + EFI_ERROR_UNRECOVERED,
+        ErrorCodeValue
+      );
+      return FSP_STATUS_RESET_REQUIRED_COLD;
+    }
+    PostInstallMemory (&MrcData, TRUE);
+    return EFI_SUCCESS;
+  }
+
+  //
+  // Assign physical memory to PEI and DXE
+  //
+  DEBUG ((EFI_D_INFO, "InstallEfiMemory, TotalSize = 0x%08x\n", MrcData.mem_size));
+
+  Status = InstallEfiMemory (
+             BootMode,
+             MrcData.mem_size
+             );
+  ASSERT_EFI_ERROR (Status);
+
+  PostInstallMemory (&MrcData, FALSE);
+
+  //
+  // Save current configuration into Hob and will save into Variable later in DXE
+  //
+  DEBUG ((EFI_D_INFO, "SaveConfig.\n"));
+  SaveConfig (&MrcData);
+  DEBUG ((EFI_D_INFO, "MemoryInit Complete.\n"));
+
+  return EFI_SUCCESS;
 }
