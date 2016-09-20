@@ -36,3 +36,4 @@
 
 [Sources]
   Fsp2_0Lib.c
+  StackData.h

@@ -18,6 +18,7 @@
 #include <Library/FspCommonLib.h>
 #include <Library/FspLib.h>
 #include <Library/FspMemoryLib.h>
+#include <Library/FspMemoryInit.h>
 #include <Pi/PiBootMode.h>
 #include <Uefi/UefiMultiPhase.h>
 #include <Pi/PiHob.h>
@@ -25,6 +26,10 @@
 #include <FspmUpd.h>
 #include <FspsUpd.h>
 #include <BootLoaderPlatformData.h>
+#include <Library/QNCAccessLib.h>
+#include "StackData.h"
+
+#define SSKPD0			0x4a
 
 VOID
 BuildFspSmbiosMemoryInfoHob (
@@ -238,6 +243,29 @@ VOID ReturnHobListPointer(VOID *HobList)
   if (HobListPtr != NULL) {
     *HobListPtr = HobList;
   }
+}
+
+VOID SaveStackData(FSP_STACK_DATA *StackData)
+{
+  /* Use a scratch pad register to hold the pointer */
+  QNCPortWrite(QUARK_NC_MEMORY_CONTROLLER_SB_PORT_ID, SSKPD0,
+    (UINT32)StackData);
+}
+
+EFI_STATUS
+CreateStackData(
+  MEMORY_INIT_START MemoryInitStart
+)
+{
+  FSP_STACK_DATA StackData;
+  EFI_STATUS Status;
+
+  // Initialize the temporary data
+  SaveStackData(&StackData);
+
+  // Initialize DRAM
+  Status = MemoryInitStart();
+  return Status;
 }
 
 VOID FspMigrateTemporaryMemory(VOID)

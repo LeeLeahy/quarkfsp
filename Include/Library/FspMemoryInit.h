@@ -16,23 +16,28 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #ifndef __FSP_MEMORY_INIT_H__
 #define __FSP_MEMORY_INIT_H__
 
-#include <Pi/PiBootMode.h>
+typedef struct _FSP_STACK_DATA *PTR_FSP_STACK_DATA;
 
-typedef struct _FSP_STACK_DATA {
-  UINT8 junk;
-} FSP_STACK_DATA;
+typedef
+EFI_STATUS
+(EFIAPI *MEMORY_INIT_START)(
+  VOID
+);
 
 /**
-FspMemoryInit: Initialize DRAM for caller
+CreateStackData: Create the stack data and initialize DRAM for caller
 
-@param  StackData    Pointer to the global FSP stack data structure.
+@param  MemoryInitStart  Routine to execute to initialize DRAM
 
 @return EFI_SUCCESS  Memory initialization completed successfully.
                      Other error conditions are possible.
 **/
 EFI_STATUS
-FspMemoryInit(
-IN  FSP_STACK_DATA *StackData
-);
+EFIAPI
+CreateStackData(
+  MEMORY_INIT_START MemoryInitStart
+  );
+
+VOID SaveStackData(PTR_FSP_STACK_DATA StackData);
 
 #endif // __FSP_MEMORY_INIT_H__

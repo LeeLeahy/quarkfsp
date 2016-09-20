@@ -19,10 +19,15 @@
 #include <Library/FspCommonLib.h>
 #include <Library/FspLib.h>
 #include <Library/FspMemoryLib.h>
+#include <Library/FspMemoryInit.h>
 #include <Pi/PiBootMode.h>
 #include <Pi/PiHob.h>
 #include <Library/HobLib.h>
 #include <FspUpdVpd.h>
+#include <Library/QNCAccessLib.h>
+#include "StackData.h"
+
+#define SSKPD0			0x4a
 
 static FSP_INIT_RT_COMMON_BUFFER *GetFspInitRtBuffer(VOID)
 {
@@ -242,4 +247,27 @@ VOID ReturnHobListPointer(VOID *HobList)
   if ((FspMemoryInitParams->HobListPtr) != NULL) {
     *(FspMemoryInitParams->HobListPtr) = (VOID *)GetHobList();
   }
+}
+
+VOID SaveStackData(FSP_STACK_DATA *StackData)
+{
+  /* Use a scratch pad register to hold the pointer */
+  QNCPortWrite(QUARK_NC_MEMORY_CONTROLLER_SB_PORT_ID, SSKPD0,
+    (UINT32)StackData);
+}
+
+EFI_STATUS
+CreateStackData(
+  MEMORY_INIT_START MemoryInitStart
+)
+{
+  FSP_STACK_DATA StackData;
+  EFI_STATUS Status;
+
+  // Initialize the temporary data
+  SaveStackData(&StackData);
+
+  // Initialize DRAM
+  Status = MemoryInitStart();
+  return Status;
 }

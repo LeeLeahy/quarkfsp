@@ -83,14 +83,12 @@ MrcDone(
 /**
 FspMemoryInit: Initialize DRAM for caller
 
-@param  StackData    Pointer to the global FSP stack data structure.
-
 @return EFI_SUCCESS  Memory initialization completed successfully.
                      Other error conditions are possible.
 **/
 EFI_STATUS
 FspMemoryInit(
-IN  FSP_STACK_DATA *StackData
+  VOID
 )
 {
   EFI_STATUS Status;
@@ -98,16 +96,13 @@ IN  FSP_STACK_DATA *StackData
   //
   // Do SOC pre memory init.
   //
-DEBUG((EFI_D_ERROR, "FspMemoryInit Calling PeiQNCPreMemInit\r\n"));
   PeiQNCPreMemInit ();
 
   //
   // Make legacy SPI READ/WRITE enabled if not a secure build
   //
-DEBUG((EFI_D_ERROR, "FspMemoryInit Calling LpcPciCfg32And\r\n"));
   LpcPciCfg32And (R_QNC_LPC_BIOS_CNTL, ~B_QNC_LPC_BIOS_CNTL_BIOSWE);
 
-DEBUG((EFI_D_ERROR, "FspMemoryInit Calling MemoryInit\r\n"));
   DEBUG((EFI_D_INFO, "MRC Entry\n"));
   Status = MemoryInit();
   if (!EFI_ERROR(Status)) {
@@ -134,11 +129,9 @@ IN       EFI_PEI_FILE_HANDLE  FileHandle,
 IN CONST EFI_PEI_SERVICES     **PeiServices
 )
 {
-  FSP_STACK_DATA StackData;
   EFI_STATUS Status;
 
-  Status = FspMemoryInit(&StackData);
-
+  Status = CreateStackData(FspMemoryInit);
   SetFspApiReturnStatus(Status);
   Pei2LoaderSwitchStack();
   return Status;
