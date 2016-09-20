@@ -146,27 +146,6 @@ EccScrubSetup(
 }
 
 /**
-  This function saves a config to a HOB.
-
-  @param  MrcData         The MRC timing data to save
-**/
-VOID
-SaveConfig (
-  IN MRC_PARAMS *MrcData
-  )
-{
-  //
-  // Build HOB data for Memory Config
-  // HOB data size (stored in variable) is required to be multiple of 8 bytes
-  //
-  BuildGuidDataHob (
-    &gFspNonVolatileStorageHobGuid,
-    (VOID *) &MrcData->timings,
-    ((sizeof (MrcData->timings) + 0x7) & (~0x7))
-    );
-}
-
-/**
 
   This function returns the memory ranges to be enabled, along with information
   describing how the range should be used.
@@ -949,7 +928,6 @@ MemoryInit (
   // Mark MRC completed
   IoAnd32 (PmswAdr, ~(UINT32)B_QNC_GPE0BLK_PMSW_DRAM_INIT);
 
-
   //
   // Note emulation platform has to read actual memory size
   // MrcData.mem_size from PcdGet32 (PcdMemorySize);
@@ -984,11 +962,16 @@ MemoryInit (
   PostInstallMemory (&MrcData, FALSE);
 
   //
-  // Save current configuration into Hob and will save into Variable later in DXE
+  // Save the memory configuration data into a HOB
+  // HOB data size (stored in variable) is required to be multiple of 8 bytes
   //
   DEBUG ((EFI_D_INFO, "SaveConfig.\n"));
-  SaveConfig (&MrcData);
-  DEBUG ((EFI_D_INFO, "MemoryInit Complete.\n"));
+  BuildGuidDataHob (
+    &gFspNonVolatileStorageHobGuid,
+    (VOID *) &MrcData.timings,
+    ((sizeof (MrcData.timings) + 0x7) & (~0x7))
+    );
 
+  DEBUG ((EFI_D_INFO, "MemoryInit Complete.\n"));
   return EFI_SUCCESS;
 }
