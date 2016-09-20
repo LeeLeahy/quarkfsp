@@ -16,6 +16,7 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include "CommonHeader.h"
 #include "MrcWrapper.h"
 #include <Library/DebugLib.h>
+#include <Library/FspMemoryInit.h>
 
 /**
 This function will be called when MRC is done.
@@ -80,6 +81,43 @@ MrcDone(
 }
 
 /**
+FspMemoryInit: Initialize DRAM for caller
+
+@param  StackData    Pointer to the global FSP stack data structure.
+
+@return EFI_SUCCESS  Memory initialization completed successfully.
+                     Other error conditions are possible.
+**/
+EFI_STATUS
+FspMemoryInit(
+IN  FSP_STACK_DATA *StackData
+)
+{
+  EFI_STATUS Status;
+
+  //
+  // Do SOC pre memory init.
+  //
+DEBUG((EFI_D_ERROR, "FspMemoryInit Calling PeiQNCPreMemInit\r\n"));
+  PeiQNCPreMemInit ();
+
+  //
+  // Make legacy SPI READ/WRITE enabled if not a secure build
+  //
+DEBUG((EFI_D_ERROR, "FspMemoryInit Calling LpcPciCfg32And\r\n"));
+  LpcPciCfg32And (R_QNC_LPC_BIOS_CNTL, ~B_QNC_LPC_BIOS_CNTL_BIOSWE);
+
+DEBUG((EFI_D_ERROR, "FspMemoryInit Calling MemoryInit\r\n"));
+  DEBUG((EFI_D_INFO, "MRC Entry\n"));
+  Status = MemoryInit();
+  if (!EFI_ERROR(Status)) {
+    MrcDone();
+  }
+
+  return Status;
+}
+
+/**
 
 Do FSP Pre-Memory initialization
 
@@ -96,26 +134,10 @@ IN       EFI_PEI_FILE_HANDLE  FileHandle,
 IN CONST EFI_PEI_SERVICES     **PeiServices
 )
 {
+  FSP_STACK_DATA StackData;
   EFI_STATUS Status;
 
-  //
-  // Do SOC Init Pre memory init.
-  //
-DEBUG((EFI_D_ERROR, "PeimFspInitPreMem Calling PeiQNCPreMemInit\r\n"));
-  PeiQNCPreMemInit ();
-
-  //
-  // Make legacy SPI READ/WRITE enabled if not a secure build
-  //
-DEBUG((EFI_D_ERROR, "PeimFspInitPreMem Calling LpcPciCfg32And\r\n"));
-  LpcPciCfg32And (R_QNC_LPC_BIOS_CNTL, ~B_QNC_LPC_BIOS_CNTL_BIOSWE);
-
-DEBUG((EFI_D_ERROR, "PeimFspInitPreMem Calling MemoryInit\r\n"));
-  DEBUG((EFI_D_INFO, "MRC Entry\n"));
-  Status = MemoryInit();
-  if (!EFI_ERROR(Status)) {
-    MrcDone();
-  }
+  Status = FspMemoryInit(&StackData);
 
   SetFspApiReturnStatus(Status);
   Pei2LoaderSwitchStack();
