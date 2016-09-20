@@ -38,6 +38,7 @@ CreateStackData(
   MEMORY_INIT_START MemoryInitStart
   );
 
+PTR_FSP_STACK_DATA GetStackData(VOID);
 VOID SaveStackData(PTR_FSP_STACK_DATA StackData);
 
 #endif // __FSP_MEMORY_INIT_H__

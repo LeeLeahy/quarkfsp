@@ -234,6 +234,16 @@ UINT8 GetSmmTsegSize(VOID)
   return FspmUpd->FspmConfig.SmmTsegSize;
 }
 
+FSP_STACK_DATA *GetStackData(VOID)
+{
+  FSP_STACK_DATA *StackData;
+
+  StackData = (FSP_STACK_DATA *)QNCPortRead(
+    QUARK_NC_MEMORY_CONTROLLER_SB_PORT_ID, SSKPD0);
+  ASSERT(StackData != NULL);
+  return StackData;
+}
+
 VOID ReturnHobListPointer(VOID *HobList)
 {
   VOID **HobListPtr;
