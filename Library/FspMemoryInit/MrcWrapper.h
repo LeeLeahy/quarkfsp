@@ -16,8 +16,6 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #ifndef _MRC_WRAPPER_H
 #define _MRC_WRAPPER_H
 
-#include <Ppi/QNCMemoryInit.h>
-
 //
 // Define the default memory areas required
 //

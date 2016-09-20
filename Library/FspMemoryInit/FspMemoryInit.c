@@ -14,7 +14,6 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 **/
 
 #include "CommonHeader.h"
-#include "FspMemoryInit.h"
 #include "MrcWrapper.h"
 #include <Library/DebugLib.h>
 

@@ -23,7 +23,6 @@
 
 [Sources]
   FspMemoryInit.c
-  FspMemoryInit.h
   MrcWrapper.c
   MrcWrapper.h
   CommonHeader.h

@@ -16,46 +16,30 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #define __COMMON_HEADER_H_
 
 #include <PiPei.h>
-#include <IntelQNCPeim.h>
-#include "Ioh.h"
 #include <Platform.h>
 
-#include <IndustryStandard/SmBus.h>
-#include <IndustryStandard/Pci22.h>
+#include <IndustryStandard/SmBios.h>
 
 #include <Guid/AcpiS3Context.h>
 #include <Guid/MemoryTypeInformation.h>
-#include <Guid/MemoryConfigData.h>
-#include <Guid/MemoryOverwriteControl.h>
 #include <Guid/SmramMemoryReserve.h>
 
-#include <Library/DebugLib.h>
-#include <Library/PeimEntryPoint.h>
-#include <Library/BaseLib.h>
-#include <Library/PeiServicesLib.h>
 #include <Library/BaseMemoryLib.h>
-#include <Library/HobLib.h>
-#include <Library/PciCf8Lib.h>
-#include <Library/IoLib.h>
-#include <Library/PciLib.h>
-#include <Library/ReportStatusCodeLib.h>
-#include <Library/IntelQNCLib.h>
-#include <Library/PcdLib.h>
-#include <Library/SmbusLib.h>
-#include <Library/TimerLib.h>
-#include <Library/PrintLib.h>
-#include <Library/MemoryAllocationLib.h>
-#include <Library/PerformanceLib.h>
-#include <Library/CacheMaintenanceLib.h>
-#include <Library/MtrrLib.h>
-#include <Library/QNCAccessLib.h>
+#include <Library/DebugLib.h>
 #include <Library/FspCommonLib.h>
 #include <Library/FspLib.h>
 #include <Library/FspMemoryLib.h>
+#include <Library/FspSwitchStackLib.h>
+#include <Library/HobLib.h>
+#include <Library/IntelQNCLib.h>
+#include <Library/IoLib.h>
+#include <Library/PeiServicesLib.h>
+#include <Library/QNCAccessLib.h>
+#include <Library/ReportStatusCodeLib.h>
 
-#include <Register/Cpuid.h>
+#include <mrc.h>
 
-#define FSP_STATUS_RESET_REQUIRED_COLD		0x40000001
-#define FSP_STATUS_RESET_REQUIRED_WARM		0x40000002
+#define FSP_STATUS_RESET_REQUIRED_COLD  0x40000001
+#define DDRFREQ_800MHZ                  800
 
 #endif
