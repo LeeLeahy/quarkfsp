@@ -17,9 +17,10 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #define __STACK_DATA_H__
 
 #include <Pi/PiBootMode.h>
+#include <FspmUpd.h>
 
 typedef struct _FSP_STACK_DATA {
-  UINT8 junk;
+  FSPM_UPD *Upd;
 } FSP_STACK_DATA;
 
 #endif // __STACK_DATA_H__

@@ -95,11 +95,11 @@ UINT32 GetBootLoaderTolumSize(VOID)
 
 UINT32 GetBootMode(VOID)
 {
-  FSPM_UPD *FspmUpd;
+  FSP_STACK_DATA *StackData;
 
-  FspmUpd = GetFspMemoryInitUpdDataPointer();
-  ASSERT (FspmUpd != NULL);
-  return FspmUpd->FspmArchUpd.BootMode;
+  StackData = GetStackData();
+  ASSERT (StackData != NULL);
+  return StackData->Upd->FspmArchUpd.BootMode;
 }
 
 UINT32 GetEccScrubBlkSize(VOID)
@@ -272,6 +272,8 @@ CreateStackData(
 
   // Initialize the temporary data
   SaveStackData(&StackData);
+  StackData.Upd = GetFspMemoryInitUpdDataPointer();
+  ASSERT (StackData.Upd != NULL);
 
   // Initialize DRAM
   Status = MemoryInitStart();

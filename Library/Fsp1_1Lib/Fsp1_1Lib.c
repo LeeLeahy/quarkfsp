@@ -89,11 +89,10 @@ BuildFspSmbiosMemoryInfoHob (
 
 UINT32 GetBootMode(VOID)
 {
-  FSP_INIT_RT_COMMON_BUFFER *FspInitRtBuffer;
+  FSP_STACK_DATA *StackData;
 
-  FspInitRtBuffer = GetFspInitRtBuffer();
-  ASSERT (FspInitRtBuffer != NULL);
-  return FspInitRtBuffer->BootMode;
+  StackData = GetStackData();
+  return StackData->InitRtBuffer->BootMode;
 }
 
 UINT32 GetBootLoaderTolumSize(VOID)
@@ -276,6 +275,8 @@ CreateStackData(
 
   // Initialize the temporary data
   SaveStackData(&StackData);
+  StackData.InitRtBuffer = GetFspInitRtBuffer();
+  ASSERT (StackData.InitRtBuffer != NULL);
 
   // Initialize DRAM
   Status = MemoryInitStart();
