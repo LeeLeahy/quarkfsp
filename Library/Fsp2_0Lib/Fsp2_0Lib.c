@@ -87,9 +87,18 @@ BuildFspSmbiosMemoryInfoHob (
 UINT32 GetBootLoaderTolumSize(VOID)
 {
   FSPM_UPD *FspmUpd;
+  FSP_STACK_DATA *StackData;
 
-  FspmUpd = GetFspMemoryInitUpdDataPointer();
+  //
+  // Get the UPD pointer
+  //
+  StackData = GetStackData();
+  FspmUpd = StackData->Upd;
   ASSERT (FspmUpd != NULL);
+
+  //
+  // Return the requested value
+  //
   return FspmUpd->FspmArchUpd.BootLoaderTolumSize;
 }
 
@@ -105,27 +114,54 @@ UINT32 GetBootMode(VOID)
 UINT32 GetEccScrubBlkSize(VOID)
 {
   FSPM_UPD *FspmUpd;
+  FSP_STACK_DATA *StackData;
 
-  FspmUpd = GetFspMemoryInitUpdDataPointer();
+  //
+  // Get the UPD pointer
+  //
+  StackData = GetStackData();
+  FspmUpd = StackData->Upd;
   ASSERT (FspmUpd != NULL);
+
+  //
+  // Return the requested value
+  //
   return FspmUpd->FspmConfig.EccScrubBlkSize;
 }
 
 UINT32 GetEccScrubInterval(VOID)
 {
   FSPM_UPD *FspmUpd;
+  FSP_STACK_DATA *StackData;
 
-  FspmUpd = GetFspMemoryInitUpdDataPointer();
+  //
+  // Get the UPD pointer
+  //
+  StackData = GetStackData();
+  FspmUpd = StackData->Upd;
   ASSERT (FspmUpd != NULL);
+
+  //
+  // Return the requested value
+  //
   return FspmUpd->FspmConfig.EccScrubInterval;
 }
 
 UINT32 GetFspReservedMemoryLength(VOID)
 {
   FSPM_UPD *FspmUpd;
+  FSP_STACK_DATA *StackData;
 
-  FspmUpd = GetFspMemoryInitUpdDataPointer();
+  //
+  // Get the UPD pointer
+  //
+  StackData = GetStackData();
+  FspmUpd = StackData->Upd;
   ASSERT (FspmUpd != NULL);
+
+  //
+  // Return the requested value
+  //
   return FspmUpd->FspmConfig.FspReservedMemoryLength;
 }
 
@@ -173,36 +209,72 @@ VOID GetMemoryParameters (
 UINT32 GetMrcDataLength(VOID)
 {
   FSPM_UPD *FspmUpd;
+  FSP_STACK_DATA *StackData;
 
-  FspmUpd = GetFspMemoryInitUpdDataPointer();
+  //
+  // Get the UPD pointer
+  //
+  StackData = GetStackData();
+  FspmUpd = StackData->Upd;
   ASSERT (FspmUpd != NULL);
+
+  //
+  // Return the requested value
+  //
   return FspmUpd->FspmConfig.MrcDataLength;
 }
 
 UINT32 GetMrcDataPtr(VOID)
 {
   FSPM_UPD *FspmUpd;
+  FSP_STACK_DATA *StackData;
 
-  FspmUpd = GetFspMemoryInitUpdDataPointer();
+  //
+  // Get the UPD pointer
+  //
+  StackData = GetStackData();
+  FspmUpd = StackData->Upd;
   ASSERT (FspmUpd != NULL);
+
+  //
+  // Return the requested value
+  //
   return FspmUpd->FspmConfig.MrcDataPtr;
 }
 
 UINT32 GetRmuBaseAddress(VOID)
 {
   FSPM_UPD *FspmUpd;
+  FSP_STACK_DATA *StackData;
 
-  FspmUpd = GetFspMemoryInitUpdDataPointer();
+  //
+  // Get the UPD pointer
+  //
+  StackData = GetStackData();
+  FspmUpd = StackData->Upd;
   ASSERT (FspmUpd != NULL);
+
+  //
+  // Return the requested value
+  //
   return FspmUpd->FspmConfig.RmuBaseAddress;
 }
 
 UINT32 GetRmuLength(VOID)
 {
   FSPM_UPD *FspmUpd;
+  FSP_STACK_DATA *StackData;
 
-  FspmUpd = GetFspMemoryInitUpdDataPointer();
+  //
+  // Get the UPD pointer
+  //
+  StackData = GetStackData();
+  FspmUpd = StackData->Upd;
   ASSERT (FspmUpd != NULL);
+
+  //
+  // Return the requested value
+  //
   return FspmUpd->FspmConfig.RmuLength;
 }
 
@@ -236,9 +308,18 @@ FN_SERIAL_PORT_WRITE_CHAR GetSerialPortWriteChar(VOID)
 UINT8 GetSmmTsegSize(VOID)
 {
   FSPM_UPD *FspmUpd;
+  FSP_STACK_DATA *StackData;
 
-  FspmUpd = GetFspMemoryInitUpdDataPointer();
+  //
+  // Get the UPD pointer
+  //
+  StackData = GetStackData();
+  FspmUpd = StackData->Upd;
   ASSERT (FspmUpd != NULL);
+
+  //
+  // Return the requested value
+  //
   return FspmUpd->FspmConfig.SmmTsegSize;
 }
 
