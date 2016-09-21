@@ -89,7 +89,6 @@
 !endif
   DebugPrintErrorLevelLib|MdePkg/Library/BaseDebugPrintErrorLevelLib/BaseDebugPrintErrorLevelLib.inf
   ExtractGuidedSectionLib|MdePkg/Library/PeiExtractGuidedSectionLib/PeiExtractGuidedSectionLib.inf
-  HobLib|MdePkg/Library/PeiHobLib/PeiHobLib.inf
   MemoryAllocationLib|MdePkg/Library/PeiMemoryAllocationLib/PeiMemoryAllocationLib.inf
   PeCoffExtraActionLib|MdePkg/Library/BasePeCoffExtraActionLibNull/BasePeCoffExtraActionLibNull.inf
   PeCoffGetEntryPointLib|MdePkg/Library/BasePeCoffGetEntryPointLib/BasePeCoffGetEntryPointLib.inf
@@ -142,10 +141,18 @@
   #
   PcdLib|MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
 
-[LibraryClasses.IA32.PEIM,LibraryClasses.IA32.PEI_CORE]
+[LibraryClasses.IA32.PEIM]
   #
   # PEI phase common
   #
+  HobLib|QuarkFspPkg/Library/FspHobLib/FspHobLib.inf
+  PcdLib|MdePkg/Library/PeiPcdLib/PeiPcdLib.inf
+
+[LibraryClasses.IA32.PEI_CORE]
+  #
+  # PEI phase common
+  #
+  HobLib|MdePkg/Library/PeiHobLib/PeiHobLib.inf
   PcdLib|MdePkg/Library/PeiPcdLib/PeiPcdLib.inf
 
 ################################################################################
@@ -263,7 +270,6 @@
   # PEI Core
   #
   MdeModulePkg/Core/Pei/PeiMain.inf
-
   #
   # PEIM
   #

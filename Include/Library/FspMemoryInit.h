@@ -41,4 +41,11 @@ CreateStackData(
 PTR_FSP_STACK_DATA GetStackData(VOID);
 VOID SaveStackData(PTR_FSP_STACK_DATA StackData);
 
+VOID *
+EFIAPI
+InternalPeiCreateHob (
+  IN UINT16 Type,
+  IN UINT16 Length
+  );
+
 #endif // __FSP_MEMORY_INIT_H__

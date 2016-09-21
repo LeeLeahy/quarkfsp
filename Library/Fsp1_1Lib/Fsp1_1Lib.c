@@ -81,6 +81,15 @@ BuildFspSmbiosMemoryInfoHob (
     );
 }
 
+VOID *FspGetHobList (VOID)
+{
+  FSP_STACK_DATA *StackData;
+
+  StackData = GetStackData();
+  ASSERT (StackData->HobList != NULL);
+  return StackData->HobList;
+}
+
 static FSP_INIT_RT_COMMON_BUFFER *FspGetInitRtBuffer(VOID)
 {
   return (FSP_INIT_RT_COMMON_BUFFER *)((FSP_MEMORY_INIT_PARAMS *)GetFspApiParameter())->RtBufferPtr;
@@ -325,13 +334,34 @@ FSP_STACK_DATA *GetStackData(VOID)
   return StackData;
 }
 
+VOID *HobAllocate(UINT32 HobBytes)
+{
+  VOID *Hob;
+  FSP_STACK_DATA *StackData;
+
+  StackData = GetStackData();
+  Hob = StackData->HobList - HobBytes;
+  ASSERT(StackData->HeapStart != NULL);
+  if ((VOID *)Hob < StackData->HeapStart)
+    return NULL;
+
+  //
+  // Allocate and initialize the HOB
+  //
+  StackData->HobList = (VOID *)Hob;
+  return Hob;
+}
+
 VOID ReturnHobListPointer(VOID *HobList)
 {
-  FSP_MEMORY_INIT_PARAMS   *FspMemoryInitParams;
+  FSP_STACK_DATA *StackData;
 
-  FspMemoryInitParams = (FSP_MEMORY_INIT_PARAMS *)GetFspApiParameter();
-  if ((FspMemoryInitParams->HobListPtr) != NULL) {
-    *(FspMemoryInitParams->HobListPtr) = (VOID *)GetHobList();
+  //
+  // Return the HOB list pointer
+  //
+  StackData = GetStackData();
+  if ((StackData->HobListPtr) != NULL) {
+    *(StackData->HobListPtr) = StackData->HobList;
   }
 }
 
@@ -344,19 +374,49 @@ VOID SaveStackData(FSP_STACK_DATA *StackData)
 
 EFI_STATUS CreateStackData(MEMORY_INIT_START MemoryInitStart)
 {
+  FSP_MEMORY_INIT_PARAMS *FspMemoryInitParams;
   FSP_STACK_DATA StackData;
   EFI_STATUS Status;
 
+  //
   // Initialize the temporary data
+  //
   SaveStackData(&StackData);
   StackData.InitRtBuffer = FspGetInitRtBuffer();
   ASSERT (StackData.InitRtBuffer != NULL);
-DEBUG((EFI_D_ERROR, "  Calling GetFspMemoryInitUpdDataPointer\n"));
   StackData.Upd = GetFspMemoryInitUpdDataPointer();
-DEBUG((EFI_D_ERROR, "  0x%08x: StackData.Upd\n", StackData.Upd));
   ASSERT (StackData.Upd != NULL);
+  FspMemoryInitParams = (FSP_MEMORY_INIT_PARAMS *)GetFspApiParameter();
+  StackData.HobListPtr = FspMemoryInitParams->HobListPtr;
+  StackData.HeapStart = NULL;
+  StackData.HobList = NULL;
 
+  //
   // Initialize DRAM
+  //
   Status = MemoryInitStart();
   return Status;
+}
+
+VOID InitializeHeap(UINTN HeapBaseAddress, UINTN HeapBytes)
+{
+  FSP_STACK_DATA *StackData;
+
+  StackData = GetStackData();
+  if (StackData->HeapStart != NULL)
+    return;
+
+  //
+  // Initialize the heap
+  //
+  StackData->HeapStart = (VOID *)HeapBaseAddress;
+  StackData->HobList = StackData->HeapStart + HeapBytes;
+StackData->HobList = StackData->HeapStart + 0x400;
+DEBUG((EFI_D_ERROR, "0x%08x: StackData.HobList\n", StackData->HobList));
+
+  //
+  // Create the end-of-list HOB
+  //
+  InternalPeiCreateHob(EFI_HOB_TYPE_END_OF_HOB_LIST,
+                       sizeof(EFI_HOB_GENERIC_HEADER));
 }

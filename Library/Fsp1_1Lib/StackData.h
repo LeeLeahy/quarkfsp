@@ -20,8 +20,11 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include <FspUpdVpd.h>
 
 typedef struct _FSP_STACK_DATA {
-  FSP_INIT_RT_COMMON_BUFFER *InitRtBuffer;
-  MEMORY_INIT_UPD *Upd;
+  FSP_INIT_RT_COMMON_BUFFER *InitRtBuffer;  // Input to MemoryInit
+  MEMORY_INIT_UPD *Upd; // Input to MemoryInit, parameters for MemoryInit
+  VOID **HobListPtr;    // Input to MemoryInit, buffer to receive HobList ptr
+  VOID *HobList;        // Pointer to end of heap
+  VOID *HeapStart;      // Pointer to beginning of heap
 } FSP_STACK_DATA;
 
 #endif // __STACK_DATA_H__

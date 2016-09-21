@@ -46,7 +46,7 @@ MrcDone(
   BootMode = GetBootMode();
 
   //
-  // Do QNC initialization after MRC
+  // Set SVID and SDID for all devices except root ports
   //
   PeiQNCPostMemInit ();
 

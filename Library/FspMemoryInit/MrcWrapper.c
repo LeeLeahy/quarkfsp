@@ -826,6 +826,7 @@ MemoryInit (
   // HOB data size (stored in variable) is required to be multiple of 8 bytes
   //
   if (BootMode != BOOT_ON_S3_RESUME) {
+    InitializeHeap((UINTN)FspReservedArea, (UINTN)ReservedBytes);
     BuildHobs (MemoryMap,
                NumRanges,
                FspReservedArea,

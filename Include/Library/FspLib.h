@@ -16,6 +16,7 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #ifndef __FSP_LIB_H__
 #define __FSP_LIB_H__
 
+VOID *FspGetHobList (VOID);
 VOID FspMigrateTemporaryMemory(VOID);
 UINT32 GetBootLoaderTolumSize(VOID);
 UINT32 GetBootMode(VOID);
@@ -27,6 +28,8 @@ UINT32 GetMrcDataPtr(VOID);
 UINT32 GetRmuBaseAddress(VOID);
 UINT32 GetRmuLength(VOID);
 UINT8 GetSmmTsegSize(VOID);
+VOID *HobAllocate(UINT32 HobBytes);
+VOID InitializeHeap(UINTN HeapBaseAddress, UINTN HeapBytes);
 VOID ReturnHobListPointer(VOID *HobList);
 
 /**

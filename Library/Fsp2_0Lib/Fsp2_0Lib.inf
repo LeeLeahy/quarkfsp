@@ -1,5 +1,5 @@
 ## @file
-#  FspLib instance for FSP 1.1
+#  FspLib instance for FSP 2.0
 #
 #  Copyright (c) 2016, Intel Corporation. All rights reserved.<BR>
 #  This program and the accompanying materials are licensed and made available
@@ -32,7 +32,6 @@
   BaseLib
   DebugLib
   FspCommonLib
-  HobLib
 
 [Sources]
   Fsp2_0Lib.c

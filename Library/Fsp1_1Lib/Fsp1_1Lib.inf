@@ -32,7 +32,6 @@
   BaseLib
   DebugLib
   FspCommonLib
-  HobLib
 
 [Sources]
   Fsp1_1Lib.c
