@@ -134,10 +134,18 @@ VOID GetMemoryParameters (
   )
 {
   FSPM_UPD *FspmUpd;
+  FSP_STACK_DATA *StackData;
 
-  FspmUpd = GetFspMemoryInitUpdDataPointer();
+  //
+  // Get the UPD pointer
+  //
+  StackData = GetStackData();
+  FspmUpd = StackData->Upd;
   ASSERT (FspmUpd != NULL);
 
+  //
+  // Initialize the MRC data
+  //
   MrcData->channel_enables     = FspmUpd->FspmConfig.ChanMask;
   MrcData->channel_width       = FspmUpd->FspmConfig.ChanWidth;
   MrcData->address_mode        = FspmUpd->FspmConfig.AddrMode;

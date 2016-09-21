@@ -136,12 +136,18 @@ VOID GetMemoryParameters (
   )
 {
   MEMORY_INIT_UPD *MemoryInitUpd;
+  FSP_STACK_DATA *StackData;
 
   //
-  // Get the UPD pointer.
+  // Get the UPD pointer
   //
-  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
+  StackData = GetStackData();
+  MemoryInitUpd = StackData->Upd;
+  ASSERT (MemoryInitUpd != NULL);
 
+  //
+  // Initialize the MRC data
+  //
   MrcData->channel_enables     = MemoryInitUpd->ChanMask;
   MrcData->channel_width       = MemoryInitUpd->ChanWidth;
   MrcData->address_mode        = MemoryInitUpd->AddrMode;
@@ -277,6 +283,10 @@ CreateStackData(
   SaveStackData(&StackData);
   StackData.InitRtBuffer = GetFspInitRtBuffer();
   ASSERT (StackData.InitRtBuffer != NULL);
+DEBUG((EFI_D_ERROR, "  Calling GetFspMemoryInitUpdDataPointer\n"));
+  StackData.Upd = GetFspMemoryInitUpdDataPointer();
+DEBUG((EFI_D_ERROR, "  0x%08x: StackData.Upd\n", StackData.Upd));
+  ASSERT (StackData.Upd != NULL);
 
   // Initialize DRAM
   Status = MemoryInitStart();
