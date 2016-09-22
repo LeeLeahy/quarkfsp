@@ -156,6 +156,7 @@ EccScrubSetup(
   @param  MemoryMap     Buffer to record details of the memory ranges tobe enabled.
   @param  NumRanges     On input, this contains the maximum number of memory ranges that can be described
                         in the MemoryMap buffer.
+  @param  RmuMainMemoryAddress Address of RMU binary in main memory
 
   @return MemoryMap     The buffer will be filled in
           NumRanges     will contain the actual number of memory ranges that are to be anabled.
@@ -164,9 +165,10 @@ EccScrubSetup(
 **/
 EFI_STATUS
 GetMemoryMap (
-  IN     UINT32                                              TotalMemorySize,
-  IN OUT PEI_DUAL_CHANNEL_DDR_MEMORY_MAP_RANGE               *MemoryMap,
-  IN OUT UINT8                                               *NumRanges
+  IN     UINT32                                TotalMemorySize,
+  IN OUT PEI_DUAL_CHANNEL_DDR_MEMORY_MAP_RANGE *MemoryMap,
+  IN OUT UINT8                                 *NumRanges,
+  IN OUT UINT64                                *RmuMainMemoryAddress
   )
 {
   EFI_PHYSICAL_ADDRESS              MemoryAddress;
@@ -274,6 +276,11 @@ GetMemoryMap (
   MemoryMap[ExtendedMemoryIndex].RangeLength -= MemoryMap[*NumRanges].RangeLength;
   MemoryMap[*NumRanges].Type = DualChannelDdrRmuReservedMemory;
   (*NumRanges)++;
+
+  //
+  // Return the RMU base address
+  //
+  *RmuMainMemoryAddress = MemoryAddress;
 
   //
   // Trim off the BIOS reserved area
@@ -598,89 +605,43 @@ BuildHobs (
     );
 }
 
-/** Return info derived from Installing Memory by MemoryInit.
-
-  @param[out]      RmuMainBaseAddressPtr   Return RmuMainBaseAddress to this location.
-
-  @return Address of RMU shadow region at the top of available memory.
-**/
-VOID
-EFIAPI
-InfoPostInstallMemory (
-  OUT     UINT32                    *RmuMainBaseAddressPtr OPTIONAL
-  )
-{
-  EFI_PEI_HOB_POINTERS                  Hob;
-  UINT64                                RmuBaseAddress;
-  UINT32                                RmuIndex;
-
-  ASSERT (RmuMainBaseAddressPtr != NULL);
-
-  //
-  // Determine the location of the RMU reserved memory area
-  //
-  RmuIndex = (GetSmmTsegSize() > 0) ? 2 : 1;
-
-  //
-  // Calculate RMU shadow region base address.
-  // Set to 1 MB. Since 1MB cacheability will always be set
-  // until override by CSM.
-  //
-  RmuBaseAddress = 0;
-
-  Hob.Raw = GetHobList ();
-  while (!END_OF_HOB_LIST (Hob)) {
-    if (Hob.Header->HobType == EFI_HOB_TYPE_RESOURCE_DESCRIPTOR) {
-      if (Hob.ResourceDescriptor->ResourceType == EFI_RESOURCE_MEMORY_RESERVED) {
-        //
-        // Skip the memory region below 1MB
-        //
-        if (RmuIndex-- == 0) {
-          RmuBaseAddress = (UINT64) (Hob.ResourceDescriptor->PhysicalStart);
-        }
-      }
-    }
-    Hob.Raw = GET_NEXT_HOB (Hob);
-  }
-
-  if (RmuMainBaseAddressPtr != NULL) {
-    *RmuMainBaseAddressPtr = (UINT32) RmuBaseAddress;
-  }
-}
-
 /** Post InstallS3Memory / InstallEfiMemory tasks given MrcData context.
 
-  @param[in]       MrcData  MRC configuration.
-  @param[in]       IsS3     TRUE if after InstallS3Memory.
+  @param[in]       MrcData              MRC configuration.
+  @param[in]       IsS3                 TRUE if after InstallS3Memory.
+  @param[in]       RmuMainMemoryAddress Address of RMU binary in main memory
 
 **/
 VOID
 PostInstallMemory (
   IN MRC_PARAMS                           *MrcData,
-  IN BOOLEAN                              IsS3
+  IN BOOLEAN                              IsS3,
+  IN UINT64                               RmuMainMemoryAddress
   )
 {
-  UINT32                            RmuMainDestBaseAddress;
-
   //
   // Setup ECC policy (All boot modes).
   //
   QNCPolicyDblEccBitErr (V_WDT_CONTROL_DBL_ECC_BIT_ERR_WARM);
 
   //
-  // Find the 64KB of memory for Rmu Main at the top of available memory.
+  // Relocate RMU binary into main memory
   //
-  InfoPostInstallMemory (&RmuMainDestBaseAddress);
-  DEBUG ((EFI_D_INFO, "RmuMain Base Address : 0x%08x\n", RmuMainDestBaseAddress));
+  if (!IsS3) {
+    DEBUG((EFI_D_ERROR, "RmuMainMemoryAddress: 0x%08x\n", RmuMainMemoryAddress));
+    CopyMem ((VOID *)(UINTN)RmuMainMemoryAddress,
+      (VOID *)(UINTN)GetRmuBaseAddress(), GetRmuLength());
+  }
 
   //
-  // Relocate RmuMain.
+  // Notify hardware of new RMU binary address
   //
-  if (IsS3) {
-    QNCSendOpcodeDramReady (RmuMainDestBaseAddress);
-  } else {
-    RmuMainRelocation (RmuMainDestBaseAddress, GetRmuBaseAddress(), GetRmuLength());
-    QNCSendOpcodeDramReady (RmuMainDestBaseAddress);
+  QNCSendOpcodeDramReady (RmuMainMemoryAddress);
+
+  //
+  // Scrub the ECC if necessary
+  //
+  if (!IsS3) {
     EccScrubSetup (MrcData);
   }
 }
@@ -708,6 +669,7 @@ MemoryInit (
   EFI_PHYSICAL_ADDRESS                  BadMemoryAddress;
   EFI_PHYSICAL_ADDRESS                  FspReservedArea;
   UINT64                                ReservedBytes;
+  UINT64                                RmuMainMemoryAddress;
 
   ErrorCodeValue  = 0;
 
@@ -821,7 +783,8 @@ MemoryInit (
   Status = GetMemoryMap (
              MrcData.mem_size,
              (PEI_DUAL_CHANNEL_DDR_MEMORY_MAP_RANGE *) MemoryMap,
-             &NumRanges
+             &NumRanges,
+             &RmuMainMemoryAddress
              );
   ASSERT_EFI_ERROR (Status);
   ASSERT(NumRanges <= MAX_RANGES);
@@ -856,7 +819,7 @@ MemoryInit (
   //
   // Enable memory for use
   //
-  PostInstallMemory (&MrcData, FALSE);
+  PostInstallMemory (&MrcData, FALSE, RmuMainMemoryAddress);
 
   //
   // Save the memory configuration data into a HOB
