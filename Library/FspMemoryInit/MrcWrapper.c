@@ -425,71 +425,28 @@ Done:
 
   This function installs memory.
 
-  @param   BootMode        The specific boot path that is being followed
-  @param   TotalMemorySize Size of memory in bytes
-
-  @return  EFI_SUCCESS            The function completed successfully.
-           EFI_INVALID_PARAMETER  One of the input parameters was invalid.
-           EFI_ABORTED            An error occurred.
+  @param   MemoryMap       Array of memory ranges in the system
+  @param   NumRanges       Number of entries in the MemoryMap array
+  @param   FspReservedArea Address of the FSP reserved area
+  @param   ReservedBytes   Size of the FSP reserved area
+  @param   MrcData         Memory data to save for S3
 
 **/
-EFI_STATUS
-InstallEfiMemory (
-  IN      EFI_BOOT_MODE                              BootMode,
-  IN      UINT32                                     TotalMemorySize
+VOID
+BuildHobs (
+  IN      PEI_DUAL_CHANNEL_DDR_MEMORY_MAP_RANGE      *MemoryMap,
+  IN      UINT8                                      NumRanges,
+  IN      EFI_PHYSICAL_ADDRESS                       FspReservedArea,
+  IN      UINT64                                     ReservedBytes,
+  IN      MRC_PARAMS                                 *MrcData
   )
 {
-  EFI_PHYSICAL_ADDRESS                  PeiMemoryBaseAddress;
-  EFI_STATUS                            Status;
-  PEI_DUAL_CHANNEL_DDR_MEMORY_MAP_RANGE MemoryMap[MAX_RANGES];
   UINT8                                 Index;
-  UINT8                                 NumRanges;
-  UINT64                                PeiMemoryLength;
   EFI_RESOURCE_ATTRIBUTE_TYPE           Attribute;
-  EFI_PHYSICAL_ADDRESS                  BadMemoryAddress;
 
   //
-  // Test the memory from 1M->TOM
+  // Build the descriptor for the FSP reserved area
   //
-  if (BootMode != BOOT_ON_FLASH_UPDATE) {
-    Status = BaseMemoryTest (
-              0x100000,
-              (TotalMemorySize - 0x100000),
-              Quick,
-              &BadMemoryAddress
-              );
-  ASSERT_EFI_ERROR (Status);
-  }
-
-
-  //
-  // Get the Memory Map
-  //
-  NumRanges = MAX_RANGES;
-
-  ZeroMem (MemoryMap, sizeof (PEI_DUAL_CHANNEL_DDR_MEMORY_MAP_RANGE) * NumRanges);
-
-  Status = GetMemoryMap (
-             TotalMemorySize,
-             (PEI_DUAL_CHANNEL_DDR_MEMORY_MAP_RANGE *) MemoryMap,
-             &NumRanges
-             );
-  ASSERT_EFI_ERROR (Status);
-  ASSERT(NumRanges <= MAX_RANGES);
-
-  //
-  // Find the highest memory range in processor native address space to give to
-  // PEI. Then take the top.
-  //
-  PeiMemoryBaseAddress = MemoryMap[NumRanges - 1].PhysicalAddress;
-  PeiMemoryLength = MemoryMap[NumRanges - 1].RangeLength;
-
-  //
-  // Carve out the top memory reserved for ACPI
-  //
-  Status = PeiServicesInstallPeiMemory (PeiMemoryBaseAddress, PeiMemoryLength);
-  ASSERT_EFI_ERROR (Status);
-
   BuildResourceDescriptorHob (
    EFI_RESOURCE_SYSTEM_MEMORY,                       // MemoryType,
    (
@@ -501,8 +458,8 @@ InstallEfiMemory (
    EFI_RESOURCE_ATTRIBUTE_WRITE_THROUGH_CACHEABLE |
    EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE
    ),
-   PeiMemoryBaseAddress,                             // MemoryBegin
-   PeiMemoryLength                                   // MemoryLength
+   FspReservedArea,                                  // MemoryBegin
+   ReservedBytes                                     // MemoryLength
    );
 
   //
@@ -630,7 +587,15 @@ InstallEfiMemory (
     }
   }
 
-  return EFI_SUCCESS;
+  //
+  // Save the MRC data for S3
+  //
+  DEBUG ((EFI_D_INFO, "SaveConfig.\n"));
+  BuildGuidDataHob (
+    &gFspNonVolatileStorageHobGuid,
+    (VOID *) &MrcData->timings,
+    ((sizeof (MrcData->timings) + 0x7) & (~0x7))
+    );
 }
 
 /** Return info derived from Installing Memory by MemoryInit.
@@ -738,6 +703,11 @@ MemoryInit (
   EFI_STATUS                                  Status;
   EFI_STATUS_CODE_VALUE                       ErrorCodeValue;
   UINT16                                      PmswAdr;
+  PEI_DUAL_CHANNEL_DDR_MEMORY_MAP_RANGE MemoryMap[MAX_RANGES];
+  UINT8                                 NumRanges;
+  EFI_PHYSICAL_ADDRESS                  BadMemoryAddress;
+  EFI_PHYSICAL_ADDRESS                  FspReservedArea;
+  UINT64                                ReservedBytes;
 
   ErrorCodeValue  = 0;
 
@@ -844,25 +814,42 @@ MemoryInit (
   IoAnd32 (PmswAdr, ~(UINT32)B_QNC_GPE0BLK_PMSW_DRAM_INIT);
 
   //
-  // Note emulation platform has to read actual memory size
-  // MrcData.mem_size from PcdGet32 (PcdMemorySize);
+  // Get the Memory Map
+  //
+  NumRanges = MAX_RANGES;
+  ZeroMem (MemoryMap, sizeof (PEI_DUAL_CHANNEL_DDR_MEMORY_MAP_RANGE) * NumRanges);
+  Status = GetMemoryMap (
+             MrcData.mem_size,
+             (PEI_DUAL_CHANNEL_DDR_MEMORY_MAP_RANGE *) MemoryMap,
+             &NumRanges
+             );
+  ASSERT_EFI_ERROR (Status);
+  ASSERT(NumRanges <= MAX_RANGES);
 
-  if (BootMode == BOOT_ON_S3_RESUME) {
+  //
+  // Locate the FSP reserved memory (last entry).
+  //
+  FspReservedArea = MemoryMap[NumRanges - 1].PhysicalAddress;
+  ReservedBytes = MemoryMap[NumRanges - 1].RangeLength;
 
-    DEBUG ((EFI_D_INFO, "Following BOOT_ON_S3_RESUME boot path.\n"));
-    PostInstallMemory (&MrcData, TRUE);
-    return EFI_SUCCESS;
-  }
-
+  //
+  // Test the memory from 1M->TOM
+  //
   if (BootMode != BOOT_ON_S3_RESUME) {
+    if (BootMode != BOOT_ON_FLASH_UPDATE) {
+      Status = BaseMemoryTest (
+                0x100000,
+                (MrcData.mem_size - 0x100000),
+                Quick,
+                &BadMemoryAddress
+                );
+      ASSERT_EFI_ERROR (Status);
+    }
+
     //
     // Assign physical memory to PEI
     //
-    DEBUG ((EFI_D_INFO, "InstallEfiMemory, TotalSize = 0x%08x\n", MrcData.mem_size));
-    Status = InstallEfiMemory (
-               BootMode,
-               MrcData.mem_size
-               );
+    Status = PeiServicesInstallPeiMemory (FspReservedArea, ReservedBytes);
     ASSERT_EFI_ERROR (Status);
   }
 
@@ -876,12 +863,11 @@ MemoryInit (
   // HOB data size (stored in variable) is required to be multiple of 8 bytes
   //
   if (BootMode != BOOT_ON_S3_RESUME) {
-    DEBUG ((EFI_D_INFO, "SaveConfig.\n"));
-    BuildGuidDataHob (
-      &gFspNonVolatileStorageHobGuid,
-      (VOID *) &MrcData.timings,
-      ((sizeof (MrcData.timings) + 0x7) & (~0x7))
-      );
+    BuildHobs (MemoryMap,
+               NumRanges,
+               FspReservedArea,
+               ReservedBytes,
+               &MrcData);
   }
 
   DEBUG ((EFI_D_INFO, "MemoryInit Complete.\n"));
