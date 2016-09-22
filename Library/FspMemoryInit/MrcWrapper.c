@@ -444,7 +444,6 @@ InstallEfiMemory (
   PEI_DUAL_CHANNEL_DDR_MEMORY_MAP_RANGE MemoryMap[MAX_RANGES];
   UINT8                                 Index;
   UINT8                                 NumRanges;
-  UINT8                                 SmramRanges;
   UINT64                                PeiMemoryLength;
   EFI_RESOURCE_ATTRIBUTE_TYPE           Attribute;
   EFI_PHYSICAL_ADDRESS                  BadMemoryAddress;
@@ -509,7 +508,6 @@ InstallEfiMemory (
   //
   // Install physical memory descriptor hobs for each memory range.
   //
-  SmramRanges = 0;
   for (Index = 0; Index < NumRanges; Index++) {
     Attribute = 0;
     if (MemoryMap[Index].Type == DualChannelDdrMainMemory)
@@ -537,7 +535,6 @@ InstallEfiMemory (
     } else {
       if ((MemoryMap[Index].Type == DualChannelDdrSmramCacheable) ||
           (MemoryMap[Index].Type == DualChannelDdrSmramNonCacheable)) {
-        SmramRanges++;
         DEBUG((EFI_D_ERROR, "0x%08lx - 0x%08lx: SMM\n",
           MemoryMap[Index].PhysicalAddress,
           MemoryMap[Index].PhysicalAddress + MemoryMap[Index].RangeLength));
