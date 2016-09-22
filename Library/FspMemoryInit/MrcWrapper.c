@@ -636,88 +636,6 @@ InstallEfiMemory (
   return EFI_SUCCESS;
 }
 
-/**
-
-  Find memory that is reserved so PEI has some to use.
-
-  @param  TotalMemorySize      Memory size in bytes
-
-  @return EFI_SUCCESS  The function completed successfully.
-                       Error value from LocatePpi()
-
-**/
-EFI_STATUS
-InstallS3Memory (
-  IN      UINT32                                TotalMemorySize
-  )
-{
-  EFI_STATUS                            Status;
-  UINT8                                 SmramRanges;
-  UINT8                                 NumRanges;
-  UINT8                                 Index;
-  UINTN                                 BufferSize;
-  PEI_DUAL_CHANNEL_DDR_MEMORY_MAP_RANGE MemoryMap[MAX_RANGES];
-
-  //
-  // Get the Memory Map
-  //
-  NumRanges = MAX_RANGES;
-
-  ZeroMem (MemoryMap, sizeof (PEI_DUAL_CHANNEL_DDR_MEMORY_MAP_RANGE) * NumRanges);
-
-  Status = GetMemoryMap (
-             TotalMemorySize,
-             (PEI_DUAL_CHANNEL_DDR_MEMORY_MAP_RANGE *) MemoryMap,
-             &NumRanges
-             );
-  ASSERT_EFI_ERROR (Status);
-
-  //
-  // Install physical memory descriptor hobs for each memory range.
-  //
-  SmramRanges = 0;
-  for (Index = 0; Index < NumRanges; Index++) {
-    if ((MemoryMap[Index].Type == DualChannelDdrSmramCacheable)    ||
-       (MemoryMap[Index].Type == DualChannelDdrSmramNonCacheable)) {
-      SmramRanges++;
-    }
-  }
-
-  ASSERT (SmramRanges > 0);
-
-  //
-  // Allocate one extra EFI_SMRAM_DESCRIPTOR to describe a page of SMRAM memory that contains a pointer
-  // to the SMM Services Table that is required on the S3 resume path
-  //
-  BufferSize = sizeof (EFI_SMRAM_HOB_DESCRIPTOR_BLOCK);
-  if (SmramRanges > 0) {
-    BufferSize += ((SmramRanges - 1) * sizeof (EFI_SMRAM_DESCRIPTOR));
-  }
-
-  for (Index = 0; Index < NumRanges; Index++) {
-    if ((MemoryMap[Index].Type == DualChannelDdrMainMemory) &&
-        (MemoryMap[Index].PhysicalAddress + MemoryMap[Index].RangeLength < 0x100000)) {
-      BuildResourceDescriptorHob (
-        EFI_RESOURCE_SYSTEM_MEMORY,
-        (
-        EFI_RESOURCE_ATTRIBUTE_PRESENT |
-        EFI_RESOURCE_ATTRIBUTE_INITIALIZED |
-        EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE |
-        EFI_RESOURCE_ATTRIBUTE_WRITE_COMBINEABLE |
-        EFI_RESOURCE_ATTRIBUTE_WRITE_THROUGH_CACHEABLE |
-        EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE
-        ),
-        MemoryMap[Index].PhysicalAddress,
-        MemoryMap[Index].RangeLength
-        );
-      DEBUG ((EFI_D_INFO, "Build resource HOB for Legacy Region on S3 patch :"));
-      DEBUG ((EFI_D_INFO, " Memory Base:0x%lX Length:0x%lX\n", MemoryMap[Index].PhysicalAddress, MemoryMap[Index].RangeLength));
-    }
-  }
-
-  return EFI_SUCCESS;
-}
-
 /** Return info derived from Installing Memory by MemoryInit.
 
   @param[out]      RmuMainBaseAddressPtr   Return RmuMainBaseAddress to this location.
@@ -935,42 +853,39 @@ MemoryInit (
   if (BootMode == BOOT_ON_S3_RESUME) {
 
     DEBUG ((EFI_D_INFO, "Following BOOT_ON_S3_RESUME boot path.\n"));
-
-    Status = InstallS3Memory (MrcData.mem_size);
-    if (EFI_ERROR (Status)) {
-      REPORT_STATUS_CODE (
-        EFI_ERROR_CODE + EFI_ERROR_UNRECOVERED,
-        ErrorCodeValue
-      );
-      return FSP_STATUS_RESET_REQUIRED_COLD;
-    }
     PostInstallMemory (&MrcData, TRUE);
     return EFI_SUCCESS;
   }
 
-  //
-  // Assign physical memory to PEI and DXE
-  //
-  DEBUG ((EFI_D_INFO, "InstallEfiMemory, TotalSize = 0x%08x\n", MrcData.mem_size));
+  if (BootMode != BOOT_ON_S3_RESUME) {
+    //
+    // Assign physical memory to PEI
+    //
+    DEBUG ((EFI_D_INFO, "InstallEfiMemory, TotalSize = 0x%08x\n", MrcData.mem_size));
+    Status = InstallEfiMemory (
+               BootMode,
+               MrcData.mem_size
+               );
+    ASSERT_EFI_ERROR (Status);
+  }
 
-  Status = InstallEfiMemory (
-             BootMode,
-             MrcData.mem_size
-             );
-  ASSERT_EFI_ERROR (Status);
-
+  //
+  // Enable memory for use
+  //
   PostInstallMemory (&MrcData, FALSE);
 
   //
   // Save the memory configuration data into a HOB
   // HOB data size (stored in variable) is required to be multiple of 8 bytes
   //
-  DEBUG ((EFI_D_INFO, "SaveConfig.\n"));
-  BuildGuidDataHob (
-    &gFspNonVolatileStorageHobGuid,
-    (VOID *) &MrcData.timings,
-    ((sizeof (MrcData.timings) + 0x7) & (~0x7))
-    );
+  if (BootMode != BOOT_ON_S3_RESUME) {
+    DEBUG ((EFI_D_INFO, "SaveConfig.\n"));
+    BuildGuidDataHob (
+      &gFspNonVolatileStorageHobGuid,
+      (VOID *) &MrcData.timings,
+      ((sizeof (MrcData.timings) + 0x7) & (~0x7))
+      );
+  }
 
   DEBUG ((EFI_D_INFO, "MemoryInit Complete.\n"));
   return EFI_SUCCESS;
