@@ -18,25 +18,37 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 
 typedef struct _FSP_STACK_DATA *PTR_FSP_STACK_DATA;
 
-typedef
-EFI_STATUS
-(EFIAPI *MEMORY_INIT_START)(
-  VOID
-);
-
 /**
-CreateStackData: Create the stack data and initialize DRAM for caller
-
-@param  MemoryInitStart  Routine to execute to initialize DRAM
+CreateStackDataForPeim: Create the stack data and initialize DRAM for caller
 
 @return EFI_SUCCESS  Memory initialization completed successfully.
                      Other error conditions are possible.
 **/
 EFI_STATUS
 EFIAPI
-CreateStackData(
-  MEMORY_INIT_START MemoryInitStart
+CreateStackDataForPeim(
+  VOID
   );
+
+/**
+DoMemoryInit: Callback from FspLib to initialize DRAM for caller
+
+@return EFI_SUCCESS  Memory initialization completed successfully.
+                     Other error conditions are possible.
+**/
+EFI_STATUS
+DoMemoryInit(
+  VOID
+);
+
+/**
+This function will be called when MRC is done.
+**/
+VOID
+EFIAPI
+MrcDone(
+  VOID
+);
 
 PTR_FSP_STACK_DATA GetStackData(VOID);
 VOID SaveStackData(PTR_FSP_STACK_DATA StackData);

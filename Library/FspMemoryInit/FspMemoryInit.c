@@ -31,14 +31,6 @@ MrcDone(
 
   DEBUG((DEBUG_INFO, "MrcDone entered\n"));
 
-  //============================================================
-  //  MemoryInit
-  //============================================================
-  //
-  // Migrate bootloader data before destroying CAR
-  //
-  FspMigrateTemporaryMemory();
-
   //
   // Create SMBIOS Memory Info HOB
   //
@@ -64,13 +56,13 @@ MrcDone(
 }
 
 /**
-FspMemoryInit: Initialize DRAM for caller
+DoMemoryInit: Initialize DRAM for caller
 
 @return EFI_SUCCESS  Memory initialization completed successfully.
                      Other error conditions are possible.
 **/
 EFI_STATUS
-FspMemoryInit(
+DoMemoryInit(
   VOID
 )
 {
@@ -88,34 +80,6 @@ FspMemoryInit(
 
   DEBUG((EFI_D_INFO, "MRC Entry\n"));
   Status = MemoryInit();
-  if (!EFI_ERROR(Status)) {
-    MrcDone();
-  }
 
-  return Status;
-}
-
-/**
-
-Do FSP Pre-Memory initialization
-
-@param  FfsHeader    Not used.
-@param  PeiServices  General purpose services available to every PEIM.
-
-@return EFI_SUCCESS  Memory initialization completed successfully.
-All other error conditions encountered result in an ASSERT.
-
-**/
-EFI_STATUS
-PeimFspInitPreMem(
-IN       EFI_PEI_FILE_HANDLE  FileHandle,
-IN CONST EFI_PEI_SERVICES     **PeiServices
-)
-{
-  EFI_STATUS Status;
-
-  Status = CreateStackData(FspMemoryInit);
-  SetFspApiReturnStatus(Status);
-  Pei2LoaderSwitchStack();
   return Status;
 }

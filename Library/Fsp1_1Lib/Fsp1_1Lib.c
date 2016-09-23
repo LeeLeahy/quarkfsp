@@ -12,18 +12,17 @@
 
 **/
 
-#include <Uefi.h>
-#include <FspApi.h>
+#include <PiPei.h>
 #include <Library/DebugLib.h>
-#include <Library/FspCommonLib.h>
 #include <Library/FspLib.h>
 #include <Library/FspMemoryLib.h>
 #include <Library/FspMemoryInit.h>
+#include <Library/HobLib.h>
+#include <Library/QNCAccessLib.h>
 #include <Pi/PiBootMode.h>
 #include <Pi/PiHob.h>
-#include <Library/HobLib.h>
+#include <FspApi.h>
 #include <FspUpdVpd.h>
-#include <Library/QNCAccessLib.h>
 #include "StackData.h"
 
 #define SSKPD0			0x4a
@@ -90,18 +89,13 @@ VOID *FspGetHobList (VOID)
   return StackData->HobList;
 }
 
-static FSP_INIT_RT_COMMON_BUFFER *FspGetInitRtBuffer(VOID)
-{
-  return (FSP_INIT_RT_COMMON_BUFFER *)((FSP_MEMORY_INIT_PARAMS *)GetFspApiParameter())->RtBufferPtr;
-}
-
 UINT32 GetBootLoaderTolumSize(VOID)
 {
-  FSP_INIT_RT_COMMON_BUFFER *FspInitRtBuffer;
+  FSP_STACK_DATA *StackData;
 
-  FspInitRtBuffer = FspGetInitRtBuffer();
-  ASSERT (FspInitRtBuffer != NULL);
-  return FspInitRtBuffer->BootLoaderTolumSize;
+  StackData = GetStackData();
+  ASSERT (StackData->InitRtBuffer != NULL);
+  return StackData->InitRtBuffer->BootLoaderTolumSize;
 }
 
 UINT32 GetBootMode(VOID)
@@ -279,33 +273,6 @@ UINT32 GetRmuLength(VOID)
   return MemoryInitUpd->RmuLength;
 }
 
-FN_SERIAL_PORT_POLL_FOR_CHAR GetSerialPortPollForChar(VOID)
-{
-  MEMORY_INIT_UPD *MemoryInitUpd;
-
-  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
-  ASSERT (MemoryInitUpd != NULL);
-  return (FN_SERIAL_PORT_POLL_FOR_CHAR)MemoryInitUpd->SerialPortPollForChar;
-}
-
-FN_SERIAL_PORT_READ_CHAR GetSerialPortReadChar(VOID)
-{
-  MEMORY_INIT_UPD *MemoryInitUpd;
-
-  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
-  ASSERT (MemoryInitUpd != NULL);
-  return (FN_SERIAL_PORT_READ_CHAR)MemoryInitUpd->SerialPortReadChar;
-}
-
-FN_SERIAL_PORT_WRITE_CHAR GetSerialPortWriteChar(VOID)
-{
-  MEMORY_INIT_UPD *MemoryInitUpd;
-
-  MemoryInitUpd = GetFspMemoryInitUpdDataPointer();
-  ASSERT (MemoryInitUpd != NULL);
-  return (FN_SERIAL_PORT_WRITE_CHAR)MemoryInitUpd->SerialPortWriteChar;
-}
-
 UINT8 GetSmmTsegSize(VOID)
 {
   MEMORY_INIT_UPD *MemoryInitUpd;
@@ -352,52 +319,6 @@ VOID *HobAllocate(UINT32 HobBytes)
   return Hob;
 }
 
-VOID ReturnHobListPointer(VOID *HobList)
-{
-  FSP_STACK_DATA *StackData;
-
-  //
-  // Return the HOB list pointer
-  //
-  StackData = GetStackData();
-  if ((StackData->HobListPtr) != NULL) {
-    *(StackData->HobListPtr) = StackData->HobList;
-  }
-}
-
-VOID SaveStackData(FSP_STACK_DATA *StackData)
-{
-  /* Use a scratch pad register to hold the pointer */
-  QNCPortWrite(QUARK_NC_MEMORY_CONTROLLER_SB_PORT_ID, SSKPD0,
-    (UINT32)StackData);
-}
-
-EFI_STATUS CreateStackData(MEMORY_INIT_START MemoryInitStart)
-{
-  FSP_MEMORY_INIT_PARAMS *FspMemoryInitParams;
-  FSP_STACK_DATA StackData;
-  EFI_STATUS Status;
-
-  //
-  // Initialize the temporary data
-  //
-  SaveStackData(&StackData);
-  StackData.InitRtBuffer = FspGetInitRtBuffer();
-  ASSERT (StackData.InitRtBuffer != NULL);
-  StackData.Upd = GetFspMemoryInitUpdDataPointer();
-  ASSERT (StackData.Upd != NULL);
-  FspMemoryInitParams = (FSP_MEMORY_INIT_PARAMS *)GetFspApiParameter();
-  StackData.HobListPtr = FspMemoryInitParams->HobListPtr;
-  StackData.HeapStart = NULL;
-  StackData.HobList = NULL;
-
-  //
-  // Initialize DRAM
-  //
-  Status = MemoryInitStart();
-  return Status;
-}
-
 VOID InitializeHeap(UINTN HeapBaseAddress, UINTN HeapBytes)
 {
   FSP_STACK_DATA *StackData;
@@ -419,4 +340,24 @@ DEBUG((EFI_D_ERROR, "0x%08x: StackData.HobList\n", StackData->HobList));
   //
   InternalPeiCreateHob(EFI_HOB_TYPE_END_OF_HOB_LIST,
                        sizeof(EFI_HOB_GENERIC_HEADER));
+}
+
+VOID ReturnHobListPointer(VOID *HobList)
+{
+  FSP_STACK_DATA *StackData;
+
+  //
+  // Return the HOB list pointer
+  //
+  StackData = GetStackData();
+  if ((StackData->HobListPtr) != NULL) {
+    *(StackData->HobListPtr) = StackData->HobList;
+  }
+}
+
+VOID SaveStackData(FSP_STACK_DATA *StackData)
+{
+  /* Use a scratch pad register to hold the pointer */
+  QNCPortWrite(QUARK_NC_MEMORY_CONTROLLER_SB_PORT_ID, SSKPD0,
+    (UINT32)StackData);
 }

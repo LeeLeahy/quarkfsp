@@ -27,4 +27,18 @@ typedef struct _FSP_STACK_DATA {
   VOID *HeapStart;      // Pointer to beginning of heap
 } FSP_STACK_DATA;
 
+/**
+FspMemoryInit: Initialize DRAM for caller
+
+@param StackData     Pointer to the temporary data structure with only the
+                     InitRtBuffer, Upd and HobListPtr fields initialized.
+
+@return EFI_SUCCESS  Memory initialization completed successfully.
+                     Other error conditions are possible.
+**/
+EFI_STATUS
+FspMemoryInit(
+  FSP_STACK_DATA *StackData
+);
+
 #endif // __STACK_DATA_H__

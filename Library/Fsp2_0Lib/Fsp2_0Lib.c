@@ -12,20 +12,17 @@
 
 **/
 
-#include <Base.h>
+#include <PiPei.h>
 #include <Library/DebugLib.h>
-#include <Library/FspCommonLib.h>
 #include <Library/FspLib.h>
 #include <Library/FspMemoryLib.h>
 #include <Library/FspMemoryInit.h>
-#include <Pi/PiBootMode.h>
-#include <Uefi/UefiMultiPhase.h>
-#include <Pi/PiHob.h>
 #include <Library/HobLib.h>
-#include <FspmUpd.h>
-#include <FspsUpd.h>
-#include <BootLoaderPlatformData.h>
 #include <Library/QNCAccessLib.h>
+#include <Pi/PiBootMode.h>
+#include <Pi/PiHob.h>
+#include <FspmUpd.h>
+#include <BootLoaderPlatformData.h>
 #include "StackData.h"
 
 #define SSKPD0			0x4a
@@ -90,10 +87,6 @@ VOID *FspGetHobList (VOID)
   StackData = GetStackData();
   ASSERT (StackData->HobList != NULL);
   return StackData->HobList;
-}
-
-VOID FspMigrateTemporaryMemory(VOID)
-{
 }
 
 UINT32 GetBootLoaderTolumSize(VOID)
@@ -290,33 +283,6 @@ UINT32 GetRmuLength(VOID)
   return FspmUpd->FspmConfig.RmuLength;
 }
 
-FN_SERIAL_PORT_POLL_FOR_CHAR GetSerialPortPollForChar(VOID)
-{
-  FSPM_UPD *FspmUpd;
-
-  FspmUpd = GetFspMemoryInitUpdDataPointer();
-  ASSERT (FspmUpd != NULL);
-  return (FN_SERIAL_PORT_POLL_FOR_CHAR)FspmUpd->FspmConfig.SerialPortPollForChar;
-}
-
-FN_SERIAL_PORT_READ_CHAR GetSerialPortReadChar(VOID)
-{
-  FSPM_UPD *FspmUpd;
-
-  FspmUpd = GetFspMemoryInitUpdDataPointer();
-  ASSERT (FspmUpd != NULL);
-  return (FN_SERIAL_PORT_READ_CHAR)FspmUpd->FspmConfig.SerialPortReadChar;
-}
-
-FN_SERIAL_PORT_WRITE_CHAR GetSerialPortWriteChar(VOID)
-{
-  FSPM_UPD *FspmUpd;
-
-  FspmUpd = GetFspMemoryInitUpdDataPointer();
-  ASSERT (FspmUpd != NULL);
-  return (FN_SERIAL_PORT_WRITE_CHAR)FspmUpd->FspmConfig.SerialPortWriteChar;
-}
-
 UINT8 GetSmmTsegSize(VOID)
 {
   FSPM_UPD *FspmUpd;
@@ -363,42 +329,6 @@ VOID *HobAllocate(UINT32 HobBytes)
   return Hob;
 }
 
-VOID ReturnHobListPointer(VOID *HobList)
-{
-  VOID **HobListPtr;
-
-  /* Return the address of the HOB list */
-  HobListPtr = (VOID *)GetFspApiParameter2();
-  if (HobListPtr != NULL) {
-    *HobListPtr = HobList;
-  }
-}
-
-VOID SaveStackData(FSP_STACK_DATA *StackData)
-{
-  /* Use a scratch pad register to hold the pointer */
-  QNCPortWrite(QUARK_NC_MEMORY_CONTROLLER_SB_PORT_ID, SSKPD0,
-    (UINT32)StackData);
-}
-
-EFI_STATUS CreateStackData(MEMORY_INIT_START MemoryInitStart)
-{
-  FSP_STACK_DATA StackData;
-  EFI_STATUS Status;
-
-  // Initialize the temporary data
-  SaveStackData(&StackData);
-  StackData.Upd = GetFspMemoryInitUpdDataPointer();
-  ASSERT (StackData.Upd != NULL);
-  StackData.HobListPtr = (VOID *)GetFspApiParameter2();
-  StackData.HeapStart = NULL;
-  StackData.HobList = NULL;
-
-  // Initialize DRAM
-  Status = MemoryInitStart();
-  return Status;
-}
-
 VOID InitializeHeap(UINTN HeapBaseAddress, UINTN HeapBytes)
 {
   FSP_STACK_DATA *StackData;
@@ -420,4 +350,21 @@ DEBUG((EFI_D_ERROR, "0x%08x: StackData.HobList\n", StackData->HobList));
   //
   InternalPeiCreateHob(EFI_HOB_TYPE_END_OF_HOB_LIST,
                        sizeof(EFI_HOB_GENERIC_HEADER));
+}
+VOID ReturnHobListPointer(VOID *HobList)
+{
+  FSP_STACK_DATA *StackData;
+
+  /* Return the address of the HOB list */
+  StackData = GetStackData();
+  if (StackData->HobListPtr != NULL) {
+    *StackData->HobListPtr = HobList;
+  }
+}
+
+VOID SaveStackData(FSP_STACK_DATA *StackData)
+{
+  /* Use a scratch pad register to hold the pointer */
+  QNCPortWrite(QUARK_NC_MEMORY_CONTROLLER_SB_PORT_ID, SSKPD0,
+    (UINT32)StackData);
 }

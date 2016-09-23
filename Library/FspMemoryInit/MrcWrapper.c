@@ -812,8 +812,7 @@ MemoryInit (
     //
     // Assign physical memory to PEI
     //
-    Status = PeiServicesInstallPeiMemory (FspReservedArea, ReservedBytes);
-    ASSERT_EFI_ERROR (Status);
+    FspInstallPeiMemory (FspReservedArea, ReservedBytes);
   }
 
   //

@@ -35,4 +35,5 @@
 
 [Sources]
   Fsp1_1Lib.c
+  Peim.c
   StackData.h

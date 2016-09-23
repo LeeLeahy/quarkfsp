@@ -33,7 +33,6 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include <Library/HobLib.h>
 #include <Library/IntelQNCLib.h>
 #include <Library/IoLib.h>
-#include <Library/PeiServicesLib.h>
 #include <Library/QNCAccessLib.h>
 #include <Library/ReportStatusCodeLib.h>
 

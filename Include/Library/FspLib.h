@@ -17,6 +17,8 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #define __FSP_LIB_H__
 
 VOID *FspGetHobList (VOID);
+VOID FspInstallPeiMemory(EFI_PHYSICAL_ADDRESS FspReservedArea,
+  UINT64 ReservedBytes);
 VOID FspMigrateTemporaryMemory(VOID);
 UINT32 GetBootLoaderTolumSize(VOID);
 UINT32 GetBootMode(VOID);
