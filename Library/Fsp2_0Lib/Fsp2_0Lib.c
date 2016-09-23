@@ -83,6 +83,10 @@ BuildFspSmbiosMemoryInfoHob (
     );
 }
 
+VOID FspMigrateTemporaryMemory(VOID)
+{
+}
+
 UINT32 GetBootLoaderTolumSize(VOID)
 {
   FSPM_UPD *FspmUpd;
@@ -350,10 +354,7 @@ VOID SaveStackData(FSP_STACK_DATA *StackData)
     (UINT32)StackData);
 }
 
-EFI_STATUS
-CreateStackData(
-  MEMORY_INIT_START MemoryInitStart
-)
+EFI_STATUS CreateStackData(MEMORY_INIT_START MemoryInitStart)
 {
   FSP_STACK_DATA StackData;
   EFI_STATUS Status;
@@ -366,8 +367,4 @@ CreateStackData(
   // Initialize DRAM
   Status = MemoryInitStart();
   return Status;
-}
-
-VOID FspMigrateTemporaryMemory(VOID)
-{
 }

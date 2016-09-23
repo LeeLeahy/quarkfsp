@@ -28,11 +28,6 @@
 
 #define SSKPD0			0x4a
 
-static FSP_INIT_RT_COMMON_BUFFER *GetFspInitRtBuffer(VOID)
-{
-  return (FSP_INIT_RT_COMMON_BUFFER *)((FSP_MEMORY_INIT_PARAMS *)GetFspApiParameter())->RtBufferPtr;
-}
-
 VOID
 BuildFspSmbiosMemoryInfoHob (
   UINT8  MemoryType,
@@ -86,21 +81,26 @@ BuildFspSmbiosMemoryInfoHob (
     );
 }
 
-UINT32 GetBootMode(VOID)
+static FSP_INIT_RT_COMMON_BUFFER *FspGetInitRtBuffer(VOID)
 {
-  FSP_STACK_DATA *StackData;
-
-  StackData = GetStackData();
-  return StackData->InitRtBuffer->BootMode;
+  return (FSP_INIT_RT_COMMON_BUFFER *)((FSP_MEMORY_INIT_PARAMS *)GetFspApiParameter())->RtBufferPtr;
 }
 
 UINT32 GetBootLoaderTolumSize(VOID)
 {
   FSP_INIT_RT_COMMON_BUFFER *FspInitRtBuffer;
 
-  FspInitRtBuffer = GetFspInitRtBuffer();
+  FspInitRtBuffer = FspGetInitRtBuffer();
   ASSERT (FspInitRtBuffer != NULL);
   return FspInitRtBuffer->BootLoaderTolumSize;
+}
+
+UINT32 GetBootMode(VOID)
+{
+  FSP_STACK_DATA *StackData;
+
+  StackData = GetStackData();
+  return StackData->InitRtBuffer->BootMode;
 }
 
 UINT32 GetEccScrubBlkSize(VOID)
@@ -342,17 +342,14 @@ VOID SaveStackData(FSP_STACK_DATA *StackData)
     (UINT32)StackData);
 }
 
-EFI_STATUS
-CreateStackData(
-  MEMORY_INIT_START MemoryInitStart
-)
+EFI_STATUS CreateStackData(MEMORY_INIT_START MemoryInitStart)
 {
   FSP_STACK_DATA StackData;
   EFI_STATUS Status;
 
   // Initialize the temporary data
   SaveStackData(&StackData);
-  StackData.InitRtBuffer = GetFspInitRtBuffer();
+  StackData.InitRtBuffer = FspGetInitRtBuffer();
   ASSERT (StackData.InitRtBuffer != NULL);
 DEBUG((EFI_D_ERROR, "  Calling GetFspMemoryInitUpdDataPointer\n"));
   StackData.Upd = GetFspMemoryInitUpdDataPointer();
