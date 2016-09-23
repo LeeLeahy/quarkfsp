@@ -307,7 +307,7 @@ VOID *HobAllocate(UINT32 HobBytes)
   FSP_STACK_DATA *StackData;
 
   StackData = GetStackData();
-  Hob = StackData->HobList - HobBytes;
+  Hob = (VOID *)((UINT8 *)StackData->HobList - HobBytes);
   ASSERT(StackData->HeapStart != NULL);
   if ((VOID *)Hob < StackData->HeapStart)
     return NULL;
@@ -331,8 +331,8 @@ VOID InitializeHeap(UINTN HeapBaseAddress, UINTN HeapBytes)
   // Initialize the heap
   //
   StackData->HeapStart = (VOID *)HeapBaseAddress;
-  StackData->HobList = StackData->HeapStart + HeapBytes;
-StackData->HobList = StackData->HeapStart + 0x400;
+  StackData->HobList = (VOID *)((UINT8 *)StackData->HeapStart + HeapBytes);
+StackData->HobList = (VOID *)((UINT8 *)StackData->HeapStart + 0x400);
 DEBUG((EFI_D_ERROR, "0x%08x: StackData.HobList\n", StackData->HobList));
 
   //

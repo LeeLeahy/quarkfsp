@@ -32,8 +32,10 @@
   BaseLib
   DebugLib
   FspCommonLib
+  IntelQNCLib
 
 [Sources]
   Fsp1_1Lib.c
+  FspCommonSerial.c
   Peim.c
   StackData.h

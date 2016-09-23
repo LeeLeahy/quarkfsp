@@ -53,30 +53,3 @@ VOID FspInstallPeiMemory(EFI_PHYSICAL_ADDRESS FspReservedArea,
   Status = PeiServicesInstallPeiMemory (FspReservedArea, ReservedBytes);
   ASSERT_EFI_ERROR (Status);
 }
-
-FN_SERIAL_PORT_POLL_FOR_CHAR GetSerialPortPollForChar(VOID)
-{
-  FSPM_UPD *FspmUpd;
-
-  FspmUpd = GetFspMemoryInitUpdDataPointer();
-  ASSERT (FspmUpd != NULL);
-  return (FN_SERIAL_PORT_POLL_FOR_CHAR)FspmUpd->FspmConfig.SerialPortPollForChar;
-}
-
-FN_SERIAL_PORT_READ_CHAR GetSerialPortReadChar(VOID)
-{
-  FSPM_UPD *FspmUpd;
-
-  FspmUpd = GetFspMemoryInitUpdDataPointer();
-  ASSERT (FspmUpd != NULL);
-  return (FN_SERIAL_PORT_READ_CHAR)FspmUpd->FspmConfig.SerialPortReadChar;
-}
-
-FN_SERIAL_PORT_WRITE_CHAR GetSerialPortWriteChar(VOID)
-{
-  FSPM_UPD *FspmUpd;
-
-  FspmUpd = GetFspMemoryInitUpdDataPointer();
-  ASSERT (FspmUpd != NULL);
-  return (FN_SERIAL_PORT_WRITE_CHAR)FspmUpd->FspmConfig.SerialPortWriteChar;
-}

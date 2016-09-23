@@ -227,7 +227,7 @@ InternalPeiCreateHob (
   IN UINT16                      Length
   )
 {
-  UINT32 HobBytes;
+  UINT16 HobBytes;
   EFI_HOB_GENERIC_HEADER *Hob;
 
   //
@@ -244,55 +244,6 @@ InternalPeiCreateHob (
   Hob->HobType = Type;
   Hob->HobLength = HobBytes;
   return (VOID *)Hob;
-}
-
-/**
-  Builds a HOB for a loaded PE32 module.
-
-  This function builds a HOB for a loaded PE32 module.
-  It can only be invoked during PEI phase;
-  for DXE phase, it will ASSERT() since PEI HOB is read-only for DXE phase.
-
-  If ModuleName is NULL, then ASSERT().
-  If there is no additional space for HOB creation, then ASSERT().
-
-  @param  ModuleName              The GUID File Name of the module.
-  @param  MemoryAllocationModule  The 64 bit physical address of the module.
-  @param  ModuleLength            The length of the module in bytes.
-  @param  EntryPoint              The 64 bit physical address of the module entry point.
-
-**/
-VOID
-EFIAPI
-BuildModuleHob (
-  IN CONST EFI_GUID         *ModuleName,
-  IN EFI_PHYSICAL_ADDRESS   MemoryAllocationModule,
-  IN UINT64                 ModuleLength,
-  IN EFI_PHYSICAL_ADDRESS   EntryPoint
-  )
-{
-  EFI_HOB_MEMORY_ALLOCATION_MODULE  *Hob;
-
-  ASSERT (((MemoryAllocationModule & (EFI_PAGE_SIZE - 1)) == 0) &&
-          ((ModuleLength & (EFI_PAGE_SIZE - 1)) == 0));
-
-  Hob = InternalPeiCreateHob (EFI_HOB_TYPE_MEMORY_ALLOCATION, (UINT16) sizeof (EFI_HOB_MEMORY_ALLOCATION_MODULE));
-  if (Hob == NULL) {
-    return;
-  }
-
-  CopyGuid (&(Hob->MemoryAllocationHeader.Name), &gEfiHobMemoryAllocModuleGuid);
-  Hob->MemoryAllocationHeader.MemoryBaseAddress = MemoryAllocationModule;
-  Hob->MemoryAllocationHeader.MemoryLength      = ModuleLength;
-  Hob->MemoryAllocationHeader.MemoryType        = EfiBootServicesCode;
-
-  //
-  // Zero the reserved space to match HOB spec
-  //
-  ZeroMem (Hob->MemoryAllocationHeader.Reserved, sizeof (Hob->MemoryAllocationHeader.Reserved));
-
-  CopyGuid (&Hob->ModuleName, ModuleName);
-  Hob->EntryPoint = EntryPoint;
 }
 
 /**
@@ -602,90 +553,6 @@ BuildCpuHob (
   // Zero the reserved space to match HOB spec
   //
   ZeroMem (Hob->Reserved, sizeof (Hob->Reserved));
-}
-
-/**
-  Builds a HOB for the Stack.
-
-  This function builds a HOB for the stack.
-  It can only be invoked during PEI phase;
-  for DXE phase, it will ASSERT() since PEI HOB is read-only for DXE phase.
-
-  If there is no additional space for HOB creation, then ASSERT().
-
-  @param  BaseAddress   The 64 bit physical address of the Stack.
-  @param  Length        The length of the stack in bytes.
-
-**/
-VOID
-EFIAPI
-BuildStackHob (
-  IN EFI_PHYSICAL_ADDRESS        BaseAddress,
-  IN UINT64                      Length
-  )
-{
-  EFI_HOB_MEMORY_ALLOCATION_STACK  *Hob;
-
-  ASSERT (((BaseAddress & (EFI_PAGE_SIZE - 1)) == 0) &&
-          ((Length & (EFI_PAGE_SIZE - 1)) == 0));
-
-  Hob = InternalPeiCreateHob (EFI_HOB_TYPE_MEMORY_ALLOCATION, (UINT16) sizeof (EFI_HOB_MEMORY_ALLOCATION_STACK));
-  if (Hob == NULL) {
-    return;
-  }
-
-  CopyGuid (&(Hob->AllocDescriptor.Name), &gEfiHobMemoryAllocStackGuid);
-  Hob->AllocDescriptor.MemoryBaseAddress = BaseAddress;
-  Hob->AllocDescriptor.MemoryLength      = Length;
-  Hob->AllocDescriptor.MemoryType        = EfiBootServicesData;
-
-  //
-  // Zero the reserved space to match HOB spec
-  //
-  ZeroMem (Hob->AllocDescriptor.Reserved, sizeof (Hob->AllocDescriptor.Reserved));
-}
-
-/**
-  Builds a HOB for the BSP store.
-
-  This function builds a HOB for BSP store.
-  It can only be invoked during PEI phase;
-  for DXE phase, it will ASSERT() since PEI HOB is read-only for DXE phase.
-
-  If there is no additional space for HOB creation, then ASSERT().
-
-  @param  BaseAddress   The 64 bit physical address of the BSP.
-  @param  Length        The length of the BSP store in bytes.
-  @param  MemoryType    The type of memory allocated by this HOB.
-
-**/
-VOID
-EFIAPI
-BuildBspStoreHob (
-  IN EFI_PHYSICAL_ADDRESS        BaseAddress,
-  IN UINT64                      Length,
-  IN EFI_MEMORY_TYPE             MemoryType
-  )
-{
-  EFI_HOB_MEMORY_ALLOCATION_BSP_STORE  *Hob;
-
-  ASSERT (((BaseAddress & (EFI_PAGE_SIZE - 1)) == 0) &&
-          ((Length & (EFI_PAGE_SIZE - 1)) == 0));
-
-  Hob = InternalPeiCreateHob (EFI_HOB_TYPE_MEMORY_ALLOCATION, (UINT16) sizeof (EFI_HOB_MEMORY_ALLOCATION_BSP_STORE));
-  if (Hob == NULL) {
-    return;
-  }
-
-  CopyGuid (&(Hob->AllocDescriptor.Name), &gEfiHobMemoryAllocBspStoreGuid);
-  Hob->AllocDescriptor.MemoryBaseAddress = BaseAddress;
-  Hob->AllocDescriptor.MemoryLength      = Length;
-  Hob->AllocDescriptor.MemoryType        = MemoryType;
-
-  //
-  // Zero the reserved space to match HOB spec
-  //
-  ZeroMem (Hob->AllocDescriptor.Reserved, sizeof (Hob->AllocDescriptor.Reserved));
 }
 
 /**

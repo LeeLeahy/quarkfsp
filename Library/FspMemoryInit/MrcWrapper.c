@@ -168,7 +168,7 @@ GetMemoryMap (
   IN     UINT32                                TotalMemorySize,
   IN OUT PEI_DUAL_CHANNEL_DDR_MEMORY_MAP_RANGE *MemoryMap,
   IN OUT UINT8                                 *NumRanges,
-  IN OUT UINT64                                *RmuMainMemoryAddress
+  IN OUT UINT32                                *RmuMainMemoryAddress
   )
 {
   EFI_PHYSICAL_ADDRESS              MemoryAddress;
@@ -280,7 +280,7 @@ GetMemoryMap (
   //
   // Return the RMU base address
   //
-  *RmuMainMemoryAddress = MemoryAddress;
+  *RmuMainMemoryAddress = (UINT32)MemoryAddress;
 
   //
   // Trim off the BIOS reserved area
@@ -616,7 +616,7 @@ VOID
 PostInstallMemory (
   IN MRC_PARAMS                           *MrcData,
   IN BOOLEAN                              IsS3,
-  IN UINT64                               RmuMainMemoryAddress
+  IN UINT32                               RmuMainMemoryAddress
   )
 {
   //
@@ -669,7 +669,7 @@ MemoryInit (
   EFI_PHYSICAL_ADDRESS                  BadMemoryAddress;
   EFI_PHYSICAL_ADDRESS                  FspReservedArea;
   UINT64                                ReservedBytes;
-  UINT64                                RmuMainMemoryAddress;
+  UINT32                                RmuMainMemoryAddress;
 
   ErrorCodeValue  = 0;
 
