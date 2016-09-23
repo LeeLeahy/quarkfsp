@@ -28,7 +28,6 @@ MrcDone(
 )
 {
   EFI_BOOT_MODE          BootMode;
-  UINT32                 RegData32;
 
   DEBUG((DEBUG_INFO, "MrcDone entered\n"));
 
@@ -41,25 +40,9 @@ MrcDone(
   FspMigrateTemporaryMemory();
 
   //
-  // Get Boot Mode
-  //
-  BootMode = GetBootMode();
-
-  //
-  // Set SVID and SDID for all devices except root ports
-  //
-  PeiQNCPostMemInit ();
-
-  //
-  // Set E000/F000 Routing
-  //
-  RegData32 = QNCPortRead (QUARK_NC_HOST_BRIDGE_SB_PORT_ID, QNC_MSG_FSBIC_REG_HMISC);
-  RegData32 |= (BIT2|BIT1);
-  QNCPortWrite (QUARK_NC_HOST_BRIDGE_SB_PORT_ID, QNC_MSG_FSBIC_REG_HMISC, RegData32);
-
-  //
   // Create SMBIOS Memory Info HOB
   //
+  BootMode = GetBootMode();
   if (BootMode != BOOT_ON_S3_RESUME) {
     DEBUG((DEBUG_INFO | DEBUG_INIT, "BuildFspSmbiosMemoryInfoHob\n"));
     BuildFspSmbiosMemoryInfoHob (MemoryTypeDdr3, DDRFREQ_800MHZ, 128, 16,
