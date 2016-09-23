@@ -17,14 +17,13 @@
   INF_VERSION                    = 0x00010005
   BASE_NAME                      = FspInitPreMem
   FILE_GUID                      = 3B8DEEBB-A3D0-4d4f-89F0-2846F3259DB1
-  MODULE_TYPE                    = PEIM
+  MODULE_TYPE                    = BASE
   VERSION_STRING                 = 1.0
-  ENTRY_POINT                    = PeimFspInitPreMem
+  LIBRARY_CLASS                  = FspLib
 
 [Sources]
   FspMemoryInit.c
   MrcWrapper.c
-  Peim.c
   MrcWrapper.h
   CommonHeader.h
 

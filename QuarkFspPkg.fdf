@@ -98,7 +98,7 @@ FvNameGuid         = 52F1AFB6-78A6-448f-8274-F370549AC5D0
 # on the PCD PEIM!
 #
 APRIORI PEI {
-    INF QuarkFspPkg/Library/FspMemoryInit/FspMemoryInit.inf
+    INF QuarkFspPkg/MemoryInitPeim/MemoryInitPeim.inf
 }
 
 #
@@ -125,7 +125,7 @@ FILE RAW = 06A70056-3D0F-4A94-A743-5491CC9391D3 {
 INF RuleOverride = RELOC QuarkFspPkg/Override/IntelFspPkg/FspSecCore/FspSecCore.inf
 INF MdeModulePkg/Core/Pei/PeiMain.inf
 
-INF  QuarkFspPkg/Library/FspMemoryInit/FspMemoryInit.inf
+INF  QuarkFspPkg/MemoryInitPeim/MemoryInitPeim.inf
 
 [FV.QUARKFV2]
 BlockSize          = 0x00001000

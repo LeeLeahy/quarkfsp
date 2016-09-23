@@ -146,6 +146,7 @@
   #
   FspCommonLib|IntelFsp2Pkg/Library/BaseFspCommonLib/BaseFspCommonLib.inf
   FspLib|QuarkFspPkg/Library/Fsp2_0Lib/Fsp2_0Lib.inf
+  FspMemoryInit|QuarkFspPkg/Library/FspMemoryInit/FspMemoryInit.inf
   FspPlatformLib|IntelFsp2Pkg/Library/BaseFspPlatformLib/BaseFspPlatformLib.inf
   FspSwitchStackLib|IntelFsp2Pkg/Library/BaseFspSwitchStackLib/BaseFspSwitchStackLib.inf
 
@@ -633,7 +634,7 @@
   #
   # PEIM
   #
-  QuarkFspPkg/Library/FspMemoryInit/FspMemoryInit.inf
+  QuarkFspPkg/MemoryInitPeim/MemoryInitPeim.inf
 
   #
   # FSP INFO Header

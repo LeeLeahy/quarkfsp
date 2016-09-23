@@ -13,10 +13,11 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 
 **/
 
-#include "CommonHeader.h"
-#include "MrcWrapper.h"
+#include <PiPei.h>
 #include <Library/DebugLib.h>
+#include <Library/FspCommonLib.h>
 #include <Library/FspMemoryInit.h>
+#include <Library/FspSwitchStackLib.h>
 
 /**
 
