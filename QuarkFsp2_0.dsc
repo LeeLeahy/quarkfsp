@@ -84,12 +84,6 @@
 ################################################################################
 [LibraryClasses]
   #
-  # Entry point
-  #
-  PeiCoreEntryPoint|MdePkg/Library/PeiCoreEntryPoint/PeiCoreEntryPoint.inf
-  PeimEntryPoint|MdePkg/Library/PeimEntryPoint/PeimEntryPoint.inf
-
-  #
   # Basic
   #
   BaseLib|MdePkg/Library/BaseLib/BaseLib.inf
@@ -118,8 +112,6 @@
   #
   # PI Support
   #
-  PeiServicesLib|MdePkg/Library/PeiServicesLib/PeiServicesLib.inf
-  PeiServicesTablePointerLib|MdePkg/Library/PeiServicesTablePointerLibIdt/PeiServicesTablePointerLibIdt.inf
   UefiDecompressLib|IntelFrameworkModulePkg/Library/BaseUefiTianoCustomDecompressLib/BaseUefiTianoCustomDecompressLib.inf
 
   #
@@ -149,26 +141,13 @@
   FspMemoryInit|QuarkFspPkg/Library/FspMemoryInit/FspMemoryInit.inf
   FspPlatformLib|IntelFsp2Pkg/Library/BaseFspPlatformLib/BaseFspPlatformLib.inf
   FspSwitchStackLib|IntelFsp2Pkg/Library/BaseFspSwitchStackLib/BaseFspSwitchStackLib.inf
+  HobLib|QuarkFspPkg/Library/FspHobLib/FspHobLib.inf
 
 [LibraryClasses.common.SEC]
   #
   # SEC specific phase
   #
   PcdLib|MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
-
-[LibraryClasses.IA32.PEIM]
-  #
-  # PEI phase common
-  #
-  HobLib|QuarkFspPkg/Library/FspHobLib/FspHobLib.inf
-  PcdLib|MdePkg/Library/PeiPcdLib/PeiPcdLib.inf
-
-[LibraryClasses.IA32.PEI_CORE]
-  #
-  # PEI phase common
-  #
-  HobLib|MdePkg/Library/PeiHobLib/PeiHobLib.inf
-  PcdLib|MdePkg/Library/PeiPcdLib/PeiPcdLib.inf
 
 ################################################################################
 #
@@ -625,16 +604,6 @@
   $(FSP_PACKAGE)/Override/IntelFsp2Pkg/FspSecCore/FspSecCoreT.inf
   $(FSP_PACKAGE)/Override/IntelFsp2Pkg/FspSecCore/FspSecCoreM.inf
   $(FSP_PACKAGE)/Override/IntelFsp2Pkg/FspSecCore/FspSecCoreS.inf
-
-  #
-  # PEI Core
-  #
-  MdeModulePkg/Core/Pei/PeiMain.inf
-
-  #
-  # PEIM
-  #
-  QuarkFspPkg/MemoryInitPeim/MemoryInitPeim.inf
 
   #
   # FSP INFO Header

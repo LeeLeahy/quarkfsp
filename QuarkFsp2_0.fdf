@@ -141,64 +141,15 @@ READ_LOCK_CAP      = TRUE
 READ_LOCK_STATUS   = TRUE
 FvNameGuid         = 87c50b02-8ba6-4bde-b680-dca1fc066e8a
 
-# Adding APRIORI PEI below causes
-#
-#    python IntelFsp2Pkg/Tools/SplitFspBin.py  \
-#        split  \
-#        -n "FSP.fd"  \
-#        -f $WORKSPACE/$FSP_BIN_PKG_NAME/$BD_TARGET/QUARK.fd  \
-#        -o $WORKSPACE/$FSP_BIN_PKG_NAME/$BD_TARGET
-#
-# to fail with:
-#
-#     Traceback (most recent call last):
-#       File "IntelFsp2Pkg/Tools/SplitFspBin.py", line 679, in <module>
-#         sys.exit(main())
-#       File "IntelFsp2Pkg/Tools/SplitFspBin.py", line 668, in main
-#         SplitFspBin (args.FspBinary, args.OutputDir, args.NameTemplate)
-#       File "IntelFsp2Pkg/Tools/SplitFspBin.py", line 540, in SplitFspBin
-#         fd.ParseFd  ()
-#       File "IntelFsp2Pkg/Tools/SplitFspBin.py", line 369, in ParseFd
-#         fv.ParseFv ()
-#       File "IntelFsp2Pkg/Tools/SplitFspBin.py", line 307, in ParseFv
-#         ffs = FirmwareFile (offset, self.FvData[offset:offset + int(ffshdr.Size)])
-#       File "IntelFsp2Pkg/Tools/SplitFspBin.py", line 268, in __init__
-#         self.FfsHdr   = EFI_FFS_FILE_HEADER.from_buffer (filedata, 0)
-#     ValueError: Buffer size too small (0 instead of at least 24 bytes)
-#
-# Tell the PEI dispatcher that FSP does not require the PCD PEIM.
-# Without the APRIORI, the dispatcher automatically adds a dependency
-# on the PCD PEIM!
-#
-#APRIORI PEI {
-#    INF $(FSP_PACKAGE)/MemoryInitPeim/MemoryInitPeim.inf
-#}
-
 #
 # FSP header - First file header in the firmware volume
 #
 INF RuleOverride = FSPHEADER   $(FSP_PACKAGE)/Fsp2Header/FspHeader.inf
 
 #
-# Manually add the PEI APRIORI file - Contains file GUIDs, 16 bytes each
-#     MemoryInitPeim/MemoryInitPeim.inf
-#
-FILE FREEFORM = 1B45CC0A-156A-428A-AF62-49864DA0E6E6 {
-    SECTION RAW = $(FSP_PACKAGE)/MemoryInitPeim/MemoryInitPeimGuid.bin
-}
-
-#
-# It is important to keep the proper order for these PEIMs
-# for this implementation
+# MemoryInit
 #
 INF RuleOverride = RELOC   $(FSP_PACKAGE)/Override/IntelFsp2Pkg/FspSecCore/FspSecCoreM.inf
-
-INF MdeModulePkg/Core/Pei/PeiMain.inf
-
-#
-# Project specific PEIMs
-#
-INF $(FSP_PACKAGE)/MemoryInitPeim/MemoryInitPeim.inf
 
 #
 # Description file
@@ -242,8 +193,7 @@ FvNameGuid         = 526facba-2f7c-4548-888f-f9e11aa44e73
 INF RuleOverride = FSPHEADER   $(FSP_PACKAGE)/Fsp2Header/FspHeader.inf
 
 #
-# It is important to keep the proper order for these PEIMs
-# for this implementation
+# SiliconInit and FspNotify
 #
 INF RuleOverride = RELOC   $(FSP_PACKAGE)/Override/IntelFsp2Pkg/FspSecCore/FspSecCoreS.inf
 
@@ -271,39 +221,6 @@ FILE RAW = $(FSP_S_UPD_FFS_GUID) {
 [Rule.Common.SEC.RELOC]
   FILE SEC = $(NAMED_GUID) {
     TE  TE    Align = 8       $(INF_OUTPUT)/$(MODULE_NAME).efi
-  }
-
-[Rule.Common.PEI_CORE]
-  FILE PEI_CORE = $(NAMED_GUID)            {
-    TE       TE               $(INF_OUTPUT)/$(MODULE_NAME).efi
-    UI       STRING="$(MODULE_NAME)" Optional
-    VERSION  STRING="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
-  }
-
-[Rule.Common.PEIM.NORELOC]
-  FILE PEIM = $(NAMED_GUID) RELOCS_STRIPPED  {
-     PEI_DEPEX PEI_DEPEX Optional        $(INF_OUTPUT)/$(MODULE_NAME).depex
-     TE        TE                        $(INF_OUTPUT)/$(MODULE_NAME).efi
-     UI        STRING="$(MODULE_NAME)" Optional
-     VERSION   STRING="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
-  }
-
-[Rule.Common.PEIM]
-  FILE PEIM = $(NAMED_GUID)               {
-     PEI_DEPEX PEI_DEPEX Optional        $(INF_OUTPUT)/$(MODULE_NAME).depex
-     TE        TE                        $(INF_OUTPUT)/$(MODULE_NAME).efi
-     UI        STRING="$(MODULE_NAME)" Optional
-     VERSION   STRING="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
-  }
-
-[Rule.Common.PEIM.PE32]
-  FILE PEIM = $(NAMED_GUID)               {
-     PEI_DEPEX PEI_DEPEX Optional        $(INF_OUTPUT)/$(MODULE_NAME).depex
-     COMPRESS {
-        PE32      PE32                   $(INF_OUTPUT)/$(MODULE_NAME).efi
-        UI        STRING="$(MODULE_NAME)" Optional
-        VERSION   STRING="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
-     }
   }
 
 [Rule.Common.USER_DEFINED.FSPHEADER]
