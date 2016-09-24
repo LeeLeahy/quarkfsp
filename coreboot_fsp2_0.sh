@@ -37,19 +37,10 @@ then
   mkdir $COREBOOT_DIR/3rdparty/blobs/soc/intel/quark/
 fi
 
-pushd $COREBOOT_DIR/src/drivers/intel/fsp2_0/header_util/
-chmod +x fspupdvpd_sanitize.sh
-cp   $EDK2_DIR/QuarkFsp2_0BinPkg/Include/FspmUpd.h   ../../../../soc/intel/quark/include/soc/fsp/FspmUpd.h
-./fspupdvpd_sanitize.sh   ../../../../soc/intel/quark/include/soc/fsp/FspmUpd.h > /dev/null
-echo FspmUpd.h - Updated
-cp   $EDK2_DIR/QuarkFsp2_0BinPkg/Include/FspsUpd.h   ../../../../soc/intel/quark/include/soc/fsp/FspsUpd.h
-./fspupdvpd_sanitize.sh   ../../../../soc/intel/quark/include/soc/fsp/FspsUpd.h > /dev/null
-echo FspsUpd.h - Updated
-cp   $EDK2_DIR/QuarkFsp2_0BinPkg/Include/FsptUpd.h   ../../../../soc/intel/quark/include/soc/fsp/FsptUpd.h
-./fspupdvpd_sanitize.sh   ../../../../soc/intel/quark/include/soc/fsp/FsptUpd.h > /dev/null
-echo FsptUpd.h - Updated
-cp   $EDK2_DIR/QuarkFsp2_0BinPkg/Include/FspUpd.h   ../../../../soc/intel/quark/include/soc/fsp/FspUpd.h
-./fspupdvpd_sanitize.sh   ../../../../soc/intel/quark/include/soc/fsp/FspUpd.h > /dev/null
-echo FspUpd.h  - Updated
+pushd $COREBOOT_DIR/src/soc/intel/quark/include/soc/fsp
+cp   $EDK2_DIR/QuarkFsp2_0BinPkg/Include/FspmUpd.h   FspmUpd.h
+cp   $EDK2_DIR/QuarkFsp2_0BinPkg/Include/FspsUpd.h   FspsUpd.h
+cp   $EDK2_DIR/QuarkFsp2_0BinPkg/Include/FsptUpd.h   FsptUpd.h
+cp   $EDK2_DIR/QuarkFsp2_0BinPkg/Include/FspUpd.h    FspUpd.h
 popd
 cp $EDK2_DIR/QuarkFsp2_0BinPkg/$BUILD_TYPE/*.fd $COREBOOT_DIR/3rdparty/blobs/soc/intel/quark/
