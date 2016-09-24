@@ -15,11 +15,11 @@
 
 [Defines]
   INF_VERSION                    = 0x00010005
-  BASE_NAME                      = FspInitPreMem
+  BASE_NAME                      = FspMemoryInit
   FILE_GUID                      = 3B8DEEBB-A3D0-4d4f-89F0-2846F3259DB1
   MODULE_TYPE                    = BASE
   VERSION_STRING                 = 1.0
-  LIBRARY_CLASS                  = FspLib
+  LIBRARY_CLASS                  = FspMemoryInit
 
 [Sources]
   FspMemoryInit.c
