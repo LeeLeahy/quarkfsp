@@ -17,8 +17,9 @@
 #!/bin/sh
 
 FSP_PACKAGE=QuarkFspPkg
-FSP_BIN_PKG_NAME=QuarkFsp2_0BinPkg
+FSP_BIN_PKG_NAME=QuarkFspBinPkg
 PLATFORM_NAME=QuarkFsp2_0
+BIN_SUB_DIR=Fsp2_0
 FSP_PKG_CONF_NAME=QuarkFspPkgConfig
 FSP_PKG_EXT_CONF_NAME=QuarkFspPkgExtConfig
 TOOL_CHAIN=GCC48
@@ -34,7 +35,7 @@ export TOOL_CHAIN
 function USAGE()
 {
   echo
-  echo  "$0 \[-h \| -? \| -r32 \| -tr32 \| -d32 \| -clean\]"
+  echo  "$0 \[-h \| -? \| -r32 \| -fr32 \| -d32 \| -clean\]"
   echo
   return 1
 }
@@ -219,16 +220,16 @@ function PreBuild(){
     echo UPD header files were generated successfully!
 
     echo Generate BSF File ...
-    if [ -f $FSP_BIN_PKG_NAME/fsp.bsf ]
+    if [ -f $FSP_BIN_PKG_NAME/$BIN_SUB_DIR/fsp.bsf ]
      then
-      rm -f $FSP_BIN_PKG_NAME/fsp.bsf
+      rm -f $FSP_BIN_PKG_NAME/$BIN_SUB_DIR/fsp.bsf
     fi
 
     python IntelFsp2Pkg/Tools/GenCfgOpt.py  \
           GENBSF  \
           $FSP_PACKAGE/$PLATFORM_NAME.dsc  \
           $OUT_DIR/$PLATFORM_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV  \
-          $FSP_BIN_PKG_NAME/Fsp.bsf  \
+          $FSP_BIN_PKG_NAME/$BIN_SUB_DIR/Fsp.bsf  \
           $BD_MACRO
 
     if [ $? -eq "1" ]
@@ -406,47 +407,42 @@ function DebugBuild32(){
 
 function CopyFspBinaryToBinPkg(){
     # Create the necessary directories
-    if [ ! -e $WORKSPACE/$FSP_BIN_PKG_NAME ]
+    if [ ! -e $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR/$BD_TARGET ]
     then
-      mkdir $WORKSPACE/$FSP_BIN_PKG_NAME
+      mkdir $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR/$BD_TARGET
     fi
 
-    if [ ! -e $WORKSPACE/$FSP_BIN_PKG_NAME/$BD_TARGET ]
+    if [ ! -e $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR/Include ]
     then
-      mkdir $WORKSPACE/$FSP_BIN_PKG_NAME/$BD_TARGET
-    fi
-
-    if [ ! -e $WORKSPACE/$FSP_BIN_PKG_NAME/Include ]
-    then
-      mkdir $WORKSPACE/$FSP_BIN_PKG_NAME/Include
+      mkdir $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR/Include
     fi
 
     # Delete the output files
-    if [ -e $WORKSPACE/$FSP_BIN_PKG_NAME/Include/FspmUpd.h ]
+    if [ -e $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR/Include/FspmUpd.h ]
     then
-      chmod +w $WORKSPACE/$FSP_BIN_PKG_NAME/Include/*
-      rm $WORKSPACE/$FSP_BIN_PKG_NAME/Include/*
+      chmod +w $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR/Include/*
+      rm $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR/Include/*
     fi
-    if [ -e $WORKSPACE/$FSP_BIN_PKG_NAME/$BD_TARGET/QUARK.fd ]
+    if [ -e $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR/$BD_TARGET/QUARK.fd ]
     then
-      chmod +w $WORKSPACE/$FSP_BIN_PKG_NAME/$BD_TARGET/*
-      rm $WORKSPACE/$FSP_BIN_PKG_NAME/$BD_TARGET/*
+      chmod +w $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR/$BD_TARGET/*
+      rm $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR/$BD_TARGET/*
     fi
 
     # Copy the header files
-    echo Copy FSP files to $FSP_BIN_PKG_NAME
-    cp $OUT_DIR/$PLATFORM_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/*.h $WORKSPACE/$FSP_BIN_PKG_NAME/Include/
+    echo Copy FSP files to $FSP_BIN_PKG_NAME/$BIN_SUB_DIR
+    cp $OUT_DIR/$PLATFORM_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/*.h $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR/Include/
 
     # Copy the .FD file
-    cp $OUT_DIR/$PLATFORM_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/QUARK.fd $WORKSPACE/$FSP_BIN_PKG_NAME/$BD_TARGET/
+    cp $OUT_DIR/$PLATFORM_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/QUARK.fd $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR/$BD_TARGET/
 
     # Split the .FD file
     echo Split the FSP Image ...
     python IntelFsp2Pkg/Tools/SplitFspBin.py  \
         split  \
         -n "FSP.fd"  \
-        -f $WORKSPACE/$FSP_BIN_PKG_NAME/$BD_TARGET/QUARK.fd  \
-        -o $WORKSPACE/$FSP_BIN_PKG_NAME/$BD_TARGET
+        -f $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR/$BD_TARGET/QUARK.fd  \
+        -o $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR/$BD_TARGET
 }
 
 function OverrideBaseTools() {
@@ -475,6 +471,11 @@ if [ ! -d $WORKSPACE/$FSP_BIN_PKG_NAME ]
  then
    mkdir $WORKSPACE/$FSP_BIN_PKG_NAME
 fi
+if [ ! -d $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR ]
+ then
+   mkdir $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR
+fi
+
 
 if [ "$1" = "-clean" ]
  then

@@ -21,11 +21,11 @@
 ################################################################################
 [Defines]
   DSC_SPECIFICATION              = 0x00010005
-  PLATFORM_NAME                  = QuarkFsp
+  PLATFORM_NAME                  = QuarkFsp1_1
   PLATFORM_GUID                  = 2655F3CF-4CC7-4e17-A62D-77FE3F10AE7F
   PLATFORM_VERSION               = 0.1
-  FLASH_DEFINITION               = QuarkFspPkg/QuarkFspPkg.fdf
-  OUTPUT_DIRECTORY               = Build/QuarkFspPkg
+  FLASH_DEFINITION               = QuarkFspPkg/$(PLATFORM_NAME).fdf
+  OUTPUT_DIRECTORY               = Build/$(PLATFORM_NAME)
   SUPPORTED_ARCHITECTURES        = IA32
   BUILD_TARGETS                  = DEBUG|RELEASE
   SKUID_IDENTIFIER               = DEFAULT
