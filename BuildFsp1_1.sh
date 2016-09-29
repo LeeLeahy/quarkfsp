@@ -16,8 +16,11 @@
 ##
 #!/bin/sh
 
-FSP_PKG_NAME=QuarkFspPkg
+FSP_PACKAGE=QuarkFspPkg
 FSP_BIN_PKG_NAME=QuarkFspBinPkg
+PLATFORM_NAME=QuarkFsp1_1
+BIN_SUB_DIR=Fsp1_1
+VPD_FILE_NAME=QuarkFspPkgVpd.dsc
 TOOL_CHAIN=GCC48
 Edksetup=edksetup.sh
 UPD_GUID=3E18A0B3-C3B5-492b-86B4-53E3D401C249
@@ -55,9 +58,9 @@ function Clean(){
 
 
 function  PreBuildFail(){
-  if [ -f $OUT_DIR/$FSP_PKG_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/FspUpdVpd.h ]
+  if [ -f $OUT_DIR/$PLATFORM_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/FspUpdVpd.h ]
    then
-    rm  $OUT_DIR/$FSP_PKG_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/FspUpdVpd.h
+    rm  $OUT_DIR/$PLATFORM_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/FspUpdVpd.h
   fi
   #/q /f
   return 0
@@ -91,7 +94,7 @@ function CopyBin(){
 
 function PreBuild(){
 
-  python_command="python IntelFspPkg/Tools/GenCfgOpt.py UPDTXT  $FSP_PKG_NAME/$FSP_PKG_NAME"Vpd".dsc  $OUT_DIR/$FSP_PKG_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV"
+  python_command="python IntelFspPkg/Tools/GenCfgOpt.py UPDTXT  $FSP_PACKAGE/$VPD_FILE_NAME  $OUT_DIR/$PLATFORM_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV"
   echo $python_command
   $python_command
 
@@ -110,12 +113,12 @@ function PreBuild(){
   echo UPD TXT file was generated successfully !
 
   echo Generate VPD Header File ...
-  rm  $OUT_DIR/$FSP_PKG_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/$UPD_GUID.bin \
-            $OUT_DIR/$FSP_PKG_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/$UPD_GUID.map
+  rm  $OUT_DIR/$PLATFORM_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/$UPD_GUID.bin \
+            $OUT_DIR/$PLATFORM_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/$UPD_GUID.map
  #2>nul
 
 
-  bpdg_command="BaseTools/BinWrappers/PosixLike/BPDG  $OUT_DIR/$FSP_PKG_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/$UPD_GUID.txt  -o $OUT_DIR/$FSP_PKG_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/$UPD_GUID.bin  -m $OUT_DIR/$FSP_PKG_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/$UPD_GUID.map"
+  bpdg_command="BaseTools/BinWrappers/PosixLike/BPDG  $OUT_DIR/$PLATFORM_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/$UPD_GUID.txt  -o $OUT_DIR/$PLATFORM_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/$UPD_GUID.bin  -m $OUT_DIR/$PLATFORM_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/$UPD_GUID.map"
   echo $bpdg_command
   $bpdg_command
 
@@ -126,8 +129,8 @@ function PreBuild(){
   fi
 
 
-  touch $FSP_PKG_NAME/Include/BootLoaderPlatformData.h
-  python_command="python IntelFspPkg/Tools/GenCfgOpt.py HEADER  $FSP_PKG_NAME/$FSP_PKG_NAME"Vpd".dsc  $OUT_DIR/$FSP_PKG_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV  $FSP_PKG_NAME/Include/BootLoaderPlatformData.h  $BD_MACRO"
+  touch $FSP_PACKAGE/Include/BootLoaderPlatformData.h
+  python_command="python IntelFspPkg/Tools/GenCfgOpt.py HEADER  $FSP_PACKAGE/$VPD_FILE_NAME  $OUT_DIR/$PLATFORM_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV  $FSP_PACKAGE/Include/BootLoaderPlatformData.h  $BD_MACRO"
   echo $python_command
   $python_command
 
@@ -148,7 +151,7 @@ function PreBuild(){
      then
       rm -f $FSP_BIN_PKG_NAME/fsp.bsf
     fi
-    python_command="python IntelFspPkg/Tools/GenCfgOpt.py GENBSF  $FSP_PKG_NAME/$FSP_PKG_NAME"Vpd".dsc  $OUT_DIR/$FSP_PKG_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV  $FSP_BIN_PKG_NAME/fsp.bsf  $BD_MACRO"
+    python_command="python IntelFspPkg/Tools/GenCfgOpt.py GENBSF  $FSP_PACKAGE/$VPD_FILE_NAME  $OUT_DIR/$PLATFORM_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV  $FSP_BIN_PKG_NAME/$BIN_SUB_DIR/fsp.bsf  $BD_MACRO"
     echo $python_command
     $python_command
 
@@ -159,9 +162,9 @@ function PreBuild(){
 
     echo BSF file was generated successfully !
 
-    if [ -f $OUT_DIR/$FSP_PKG_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/FspUpdVpd.h ]
+    if [ -f $OUT_DIR/$PLATFORM_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/FspUpdVpd.h ]
      then
-      cp $OUT_DIR/$FSP_PKG_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/FspUpdVpd.h  $FSP_PKG_NAME/Include/FspUpdVpd.h
+      cp $OUT_DIR/$PLATFORM_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/FspUpdVpd.h  $FSP_PACKAGE/Include/FspUpdVpd.h
     fi
   fi
 }
@@ -171,7 +174,7 @@ function PostBuild(){
   echo Start of PostBuild ...
   echo Patch FD Image ...
    python IntelFspPkg/Tools/PatchFv.py \
-     $OUT_DIR/$FSP_PKG_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV \
+     $OUT_DIR/$PLATFORM_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV \
      QUARKFV1:QUARKFV2:QUARK \
      "0xFFFFFFFC, [0x000000B0],                               @FVBASE" \
      "0xFFFFFFE0, PeiCore:__ModuleEntryPoint - [0x000000B0],  @PeiCore Entry" \
@@ -194,10 +197,10 @@ function PostBuild(){
 function  Build32(){
 
    make -C ./BaseTools/Source/C
-   chmod +w $FSP_PKG_NAME/$FSP_PKG_NAME.dsc
+   chmod +w $FSP_PACKAGE/$PLATFORM_NAME.dsc
    gcc -v
    OverrideBaseTools $*
-   build -m $FSP_PKG_NAME/FspHeader/FspHeader.inf $BD_ARGS -DCFG_PREBUILD
+   build -m $FSP_PACKAGE/FspHeader/FspHeader.inf $BD_ARGS -DCFG_PREBUILD
    if [ $? -ne 0 ]
    then
      exit 1
@@ -225,7 +228,7 @@ function  Build32(){
 function ReleaseBuild32(){
   BD_TARGET=RELEASE
   BD_MACRO="-D CFG_OUTDIR="$OUT_DIR
-  DSCFILE="-p "$FSP_PKG_NAME/$FSP_PKG_NAME.dsc #" -y ReleaseBuild32Log.log"
+  DSCFILE="-p "$FSP_PACKAGE/$PLATFORM_NAME.dsc #" -y ReleaseBuild32Log.log"
   BD_ARGS=$DSCFILE" -b RELEASE "$BD_MACRO" -a IA32 -n 1 -t "$TOOL_CHAIN
   Build32 $*
   patchFspInfoHeader
@@ -234,7 +237,7 @@ function ReleaseBuild32(){
 function DebugBuild32(){
   BD_TARGET=DEBUG
   BD_MACRO="-D CFG_DEBUG=1 -D DEBUG_BIOS_ENABLE=TRUE -D CFG_OUTDIR="$OUT_DIR
-  DSCFILE="-p "$FSP_PKG_NAME/$FSP_PKG_NAME.dsc   #" -y DebugBuild32Log.log"
+  DSCFILE="-p "$FSP_PACKAGE/$PLATFORM_NAME.dsc   #" -y DebugBuild32Log.log"
   #echo $DSCFILE
 
   BD_ARGS=$DSCFILE" -b DEBUG "$BD_MACRO" -a IA32 -n 1 -t "$TOOL_CHAIN
@@ -245,7 +248,7 @@ function DebugBuild32(){
 function patchFspInfoHeader(){
     #Patch FspInfoHeader relative offset
     python IntelFspPkg/Tools/PatchFv.py \
-     $OUT_DIR/$FSP_PKG_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV \
+     $OUT_DIR/$PLATFORM_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV \
      QUARKFV1:QUARKFV2:QUARK  \
     "FspSecCore:_FspInfoHeaderRelativeOff, FspSecCore:_AsmGetFspBaseAddress - {912740BE-2284-4734-B971-84B027353F0C:0x1C}, @FSP Header Offset"
 
@@ -258,52 +261,58 @@ function patchFspInfoHeader(){
 }
 
 function CopyFspBinaryToBinPkg(){
-    echo Copy FSP binary to QuarkFspBinPkg
+    echo Copy FSP binary to $FSP_BIN_PKG_NAME
 
-    if [ ! -d $WORKSPACE/$FSP_BIN_PKG_NAME/$BD_TARGET ]
-      then mkdir $WORKSPACE/$FSP_BIN_PKG_NAME/$BD_TARGET
+    if [ ! -d $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR/Include ]
+      then mkdir $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR/Include
     fi
-    if [ -f $WORKSPACE/$FSP_BIN_PKG_NAME/$BD_TARGET/fsp.bin ]
-      then rm -f $WORKSPACE/$FSP_BIN_PKG_NAME/$BD_TARGET/fsp.bin
+    if [ ! -d $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR/$BD_TARGET ]
+      then mkdir $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR/$BD_TARGET
     fi
-    cp $OUT_DIR/$FSP_PKG_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/QUARK.fd $WORKSPACE/$FSP_BIN_PKG_NAME/$BD_TARGET/fsp.bin
+    if [ -f $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR/$BD_TARGET/FSP.fd ]
+      then rm -f $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR/$BD_TARGET/FSP.fd
+    fi
+    cp $OUT_DIR/$PLATFORM_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/QUARK.fd $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR/$BD_TARGET/FSP.fd
 
-    if [ -f $WORKSPACE/$FSP_BIN_PKG_NAME/FspUpdVpd.h ]
-      then rm -f $WORKSPACE/$FSP_BIN_PKG_NAME/FspUpdVpd.h
+    if [ -f $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR/Include/FspUpdVpd.h ]
+      then rm -f $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR/Include/FspUpdVpd.h
     fi
-    if [ -f $OUT_DIR/$FSP_PKG_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/FspUpdVpd.h ]
-      then cp $OUT_DIR/$FSP_PKG_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/FspUpdVpd.h $WORKSPACE/$FSP_BIN_PKG_NAME
+    if [ -f $OUT_DIR/$PLATFORM_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/FspUpdVpd.h ]
+      then cp $OUT_DIR/$PLATFORM_NAME/$BD_TARGET"_"$TOOL_CHAIN/FV/FspUpdVpd.h $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR/Include
     fi
 }
 
 function OverrideBaseTools() {
-   if [ -e $FSP_PKG_NAME/Override/BaseTools/Conf/build_rule.template ]
+   if [ -e $FSP_PACKAGE/Override/BaseTools/Conf/build_rule.template ]
     then
      echo Overriding build_rule.template...
-      cp -f $FSP_PKG_NAME/Override/BaseTools/Conf/build_rule.template Conf/build_rule.txt
+      cp -f $FSP_PACKAGE/Override/BaseTools/Conf/build_rule.template Conf/build_rule.txt
    fi
 
-   if [ -e $FSP_PKG_NAME/Override/BaseTools/Conf/tools_def.template ]
+   if [ -e $FSP_PACKAGE/Override/BaseTools/Conf/tools_def.template ]
      then
      echo Overriding tools_def.template...
-      cp -f $FSP_PKG_NAME/Override/BaseTools/Conf/tools_def.template Conf/tools_def.txt
+      cp -f $FSP_PACKAGE/Override/BaseTools/Conf/tools_def.template Conf/tools_def.txt
   fi
 
  }
 
 
-if [ -d Conf ]
+if [ ! -d Conf ]
  then
-   . ./$Edksetup
- else
    mkdir Conf
-   . ./$Edksetup
 fi
+. ./$Edksetup
 
 if [ ! -d $WORKSPACE/$FSP_BIN_PKG_NAME ]
  then
    mkdir $WORKSPACE/$FSP_BIN_PKG_NAME
 fi
+if [ ! -d $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR ]
+ then
+   mkdir $WORKSPACE/$FSP_BIN_PKG_NAME/$BIN_SUB_DIR
+fi
+
 
 if [ "$1" = "-clean" ]
  then
